@@ -1,18 +1,38 @@
-// tailwind.config.ts
-import type { Config } from "tailwindcss";
+const {
+  flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette");
 
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./app/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
-      colors: {
-        primary: {
-          100: "oklch(var(--primary-100) / <alpha-value>)",
-          DEFAULT: "oklch(var(--primary) / <alpha-value>)",
-          foreground: "oklch(var(--primary-foreground) / <alpha-value>)",
+      animation: {
+        aurora: "aurora 60s linear infinite",
+      },
+      keyframes: {
+        aurora: {
+          from: {
+            backgroundPosition: "50% 50%, 50% 50%",
+          },
+          to: {
+            backgroundPosition: "350% 50%, 350% 50%",
+          },
         },
       },
     },
   },
-  content: ["./app/**/*.{ts,tsx,js,jsx,html}"],
+  plugins: [],
 };
-export default config;
+
+function addVariablesForColors({ addBase, theme }: any) {
+  let allColors = flattenColorPalette(theme("colors"));
+  let newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+  );
+
+  addBase({
+    ":root": newVars,
+  });
+}

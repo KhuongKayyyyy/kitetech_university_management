@@ -1,12 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
+@plugin "daisyui";
+@config "../tailwind.config.ts";
 @custom-variant dark (&:is(.dark *));
-
 
 @theme {
   --color-avocado-600: oklch(0.53 0.12 118.34);
-  /* --color-primary: oklch(0.6 0.118 184.704); */
+  --color-secondary: oklch(0.57 0.228 282.34);
+  --color-warning: oklch(0.74 0.1639 61.45);
+  --color-error: oklch(0.66 0.2308 22.14);
+  --color-success: oklch(0.87 0.2012 149.35);
+  --color-green: oklch(0.76 0.1732 157.74);
+  --color-custom-blue: oklch(0.47 0.2575 265.16);
 }
 
 @layer utilities {
@@ -83,6 +88,12 @@ a {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-brand: var(----brand);
+  --color-color-5: var(----color-5);
+  --color-color-4: var(----color-4);
+  --color-color-3: var(----color-3);
+  --color-color-2: var(----color-2);
+  --color-color-1: var(----color-1);
 }
 
 :root {
@@ -94,7 +105,7 @@ a {
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.6 0.118 184.704);
+  --primary: oklch(0.58 0.2362 296.17);
   --color-primary-100: oklch(0.398 0.07 227.392);
   --primary-foreground: oklch(0.984 0.003 247.858);
   --secondary: oklch(0.968 0.007 247.896);
@@ -120,6 +131,12 @@ a {
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --color-1: hsl(330 100% 40%);
+  --color-2: hsl(140 100% 55%);
+  --color-3: hsl(210 100% 30%);
+  --color-4: hsl(60 100% 70%);
+  --color-5: hsl(295 100% 45%);
+  --brand: hsl(50 100% 50%);
 }
 
 .dark {
@@ -154,6 +171,12 @@ a {
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  --color-1: hsl(330 100% 40%);
+  --color-2: hsl(140 100% 55%);
+  --color-3: hsl(210 100% 30%);
+  --color-4: hsl(60 100% 70%);
+  --color-5: hsl(295 100% 45%);
+  --brand: hsl(50 100% 50%);
 }
 
 @layer base {

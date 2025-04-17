@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   AudioWaveform,
+  Book,
   BookOpen,
   Bot,
   Command,
@@ -13,12 +14,12 @@ import {
   SchoolIcon,
   Settings2,
   SquareTerminal,
+  User,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -38,60 +39,52 @@ const data = {
     email: "zzkhngzz@gmail.com",
     avatar: DEFAULT_AVATAR,
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
-      title: "Dashboard",
+      title: "Users",
       url: "/admin",
-      icon: SquareTerminal,
+      icon: User,
       isActive: true,
       items: [
         {
           title: "Overview",
-          url: "/admin",
+          url: "/admin/users",
         },
         {
           title: "Student",
-          url: "/admin/student",
+          url: "/admin/users/student",
         },
         {
           title: "Teacher",
-          url: "/admin/teacher",
+          url: "/admin/users/teacher",
         },
       ],
     },
     {
-      title: "Models",
+      title: "Education",
       url: "#",
-      icon: Bot,
+      icon: Book,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "Department",
+          url: "/admin/education/department",
         },
         {
-          title: "Explorer",
-          url: "#",
+          title: "Major",
+          url: "/admin/education/major",
+        },
+
+        {
+          title: "Subject",
+          url: "/admin/education/subject",
         },
         {
-          title: "Quantum",
-          url: "#",
+          title: "Curriculum",
+          url: "/admin/education/curriculum",
+        },
+        {
+          title: "Class",
+          url: "/admin/education/class",
         },
       ],
     },

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn, getClassNameById, getDepartmentNameById, getMajorNameById } from "@/lib/utils";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -79,36 +79,30 @@ import {
     Filter,
     ListFilter,
     Plus,
-    Sheet,
     Trash,
 } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
-
-type Item = {
-    id: string;
-    name: string;
-    email: string;
-    location: string;
-    flag: string;
-    status: "Active" | "Inactive" | "Pending";
-    balance: number;
-};
+import AddStudentSheet from "./AddStudentSheet";
+import { classes, departmentData, students } from "@/app/api/fakedata";
+import { Student } from "@/app/api/model/model";
+import React from "react";
+import StudentDetailDialog from "./StudentDetailDialog";
 
 // Custom filter function for multi-column searching
-const multiColumnFilterFn: FilterFn<Item> = (row, columnId, filterValue) => {
-    const searchableRowContent = `${row.original.name} ${row.original.email}`.toLowerCase();
+const multiColumnFilterFn: FilterFn<Student> = (row, filterValue) => {
+    const searchableRowContent = `${row.original.name} ${row.original.studentEmail}`.toLowerCase();
     const searchTerm = (filterValue ?? "").toLowerCase();
     return searchableRowContent.includes(searchTerm);
 };
 
-const statusFilterFn: FilterFn<Item> = (row, columnId, filterValue: string[]) => {
+const statusFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
     if (!filterValue?.length) return true;
     const status = row.getValue(columnId) as string;
     return filterValue.includes(status);
 };
 
-const columns: ColumnDef<Item>[] = [
+
+const columns: ColumnDef<Student>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -131,6 +125,15 @@ const columns: ColumnDef<Item>[] = [
         enableSorting: false,
         enableHiding: false,
     },
+
+    {
+        header: "Student ID",
+        accessorKey: "studentId",
+        cell: ({ row }) => <div className="font-medium">{row.original.studentId}</div>,
+        size: 180,
+        filterFn: multiColumnFilterFn,
+        enableHiding: false,
+    },
     {
         header: "Name",
         accessorKey: "name",
@@ -142,6 +145,11 @@ const columns: ColumnDef<Item>[] = [
     {
         header: "Email",
         accessorKey: "email",
+        cell: ({ row }) => (
+            <div>
+                <span className="font-medium leading-none">{row.original.studentEmail}</span>
+            </div>
+        ),
         size: 220,
     },
     {
@@ -149,49 +157,69 @@ const columns: ColumnDef<Item>[] = [
         accessorKey: "location",
         cell: ({ row }) => (
             <div>
-                <span className="text-lg leading-none">{row.original.flag}</span> {row.getValue("location")}
+                <span className="font-medium leading-none">{row.original.location}</span>
             </div>
         ),
         size: 180,
     },
     {
+        header: "Birthday",
+        accessorKey: "birthday",
+        cell: ({ row }) => (
+            <div>
+                <span className="font-medium leading-none">{row.original.birthday}</span>
+            </div>
+        ),
+        size: 120,
+    },
+    {
+        header: "Major",
+        accessorKey: "majorId",
+        cell: ({ row }) => (
+            <div>
+                <span className="font-medium leading-none">{getMajorNameById(row.original.majorId)}</span>
+            </div>
+        ),
+        size: 120,
+    },
+    {
+        header: "Department",
+        accessorKey: "departmentId",
+        cell: ({ row }) => (
+            <div>
+                <span className="font-medium leading-none">{getDepartmentNameById(row.original.departmentId)}</span>
+            </div>
+        ),
+        size: 120,
+    },
+    {
+        header: "Class",
+        accessorKey: "classId",
+        cell: ({ row }) => (
+            <div>
+                <span className="font-medium leading-none">{getClassNameById(row.original.classId)}</span>
+            </div>
+        ),
+        size: 120,
+    },
+    {
         header: "Status",
-        accessorKey: "status",
+        accessorKey: "isActivated",
         cell: ({ row }) => (
             <Badge
                 className={cn(
-                    row.getValue("status") === "Inactive" && "bg-muted-foreground/60 text-primary-foreground",
-                )}
+                    row.getValue("isActivated") === true
+                        ? "bg-green-500 text-white"
+                        : "bg-muted-foreground/60 text-primary-foreground",
+                )
+                }
             >
-                {row.getValue("status")}
+                {row.getValue("isActivated") === true ? "Active" : "Inactive"}
             </Badge>
         ),
         size: 100,
         filterFn: statusFilterFn,
     },
-    {
-        header: "Performance",
-        accessorKey: "performance",
-    },
-    {
-        header: "Balance",
-        accessorKey: "balance",
-        cell: ({ row }) => {
-            const amount = parseFloat(row.getValue("balance"));
-            const formatted = new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-            }).format(amount);
-            return formatted;
-        },
-        size: 120,
-    },
-    // {
-    //     header: "Student id",
-    //     accessorKey: "studentId",
-    //     cell: ({ row }) => row.getValue("studentId"),
-    //     size: 20,
-    // },
     {
         id: "actions",
         header: () => <span className="sr-only">Actions</span>,
@@ -218,13 +246,15 @@ export default function Database() {
         },
     ]);
 
-    const [data, setData] = useState<Item[]>([]);
+    const [data, setData] = useState<Student[]>([]);
     useEffect(() => {
         async function fetchPosts() {
-            const res = await fetch(
-                "https://res.cloudinary.com/dlzlfasou/raw/upload/users-01_fertyx.json",
-            );
-            const data = await res.json();
+            // test fetch data
+            // const res = await fetch(
+            //     "https://res.cloudinary.com/dlzlfasou/raw/upload/users-01_fertyx.json",
+            // );
+            // const data = await res.json();
+            const data = students;
             setData(data);
         }
         fetchPosts();
@@ -233,7 +263,7 @@ export default function Database() {
     const handleDeleteRows = () => {
         const selectedRows = table.getSelectedRowModel().rows;
         const updatedData = data.filter(
-            (item) => !selectedRows.some((row) => row.original.id === item.id),
+            (item) => !selectedRows.some((row) => String(row.original.id) === String(item.id)),
         );
         setData(updatedData);
         table.resetRowSelection();
@@ -260,29 +290,29 @@ export default function Database() {
         },
     });
     const uniqueStatusValues = useMemo(() => {
-        const statusColumn = table.getColumn("status");
+        const statusColumn = table.getColumn("isActivated");
 
         if (!statusColumn) return [];
 
         const values = Array.from(statusColumn.getFacetedUniqueValues().keys());
 
         return values.sort();
-    }, [table.getColumn("status")?.getFacetedUniqueValues()]);
+    }, [table.getColumn("isActivated")?.getFacetedUniqueValues()]);
 
     // Get counts for each status
     const statusCounts = useMemo(() => {
-        const statusColumn = table.getColumn("status");
+        const statusColumn = table.getColumn("isActivated");
         if (!statusColumn) return new Map();
         return statusColumn.getFacetedUniqueValues();
-    }, [table.getColumn("status")?.getFacetedUniqueValues()]);
+    }, [table.getColumn("isActivated")?.getFacetedUniqueValues()]);
 
     const selectedStatuses = useMemo(() => {
-        const filterValue = table.getColumn("status")?.getFilterValue() as string[];
+        const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
         return filterValue ?? [];
-    }, [table.getColumn("status")?.getFilterValue()]);
+    }, [table.getColumn("isActivated")?.getFilterValue()]);
 
     const handleStatusChange = (checked: boolean, value: string) => {
-        const filterValue = table.getColumn("status")?.getFilterValue() as string[];
+        const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
         const newFilterValue = filterValue ? [...filterValue] : [];
 
         if (checked) {
@@ -294,11 +324,11 @@ export default function Database() {
             }
         }
 
-        table.getColumn("status")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+        table.getColumn("isActivated")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
     };
 
     return (
-        <div className="space-y-4 max-w-full overflow-x-auto">
+        <div className="space-y-4 max-w-full overflow-x-auto py-5">
             {/* Filters */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
@@ -309,23 +339,28 @@ export default function Database() {
                             ref={inputRef}
                             className={cn(
                                 "peer min-w-60 ps-9 shadow-md",
-                                Boolean(table.getColumn("name")?.getFilterValue()) && "pe-9",
+                                Boolean(table.getColumn("name")?.getFilterValue() || table.getColumn("studentId")?.getFilterValue()) && "pe-9",
                             )}
-                            value={(table.getColumn("name")?.getFilterValue() ?? "") as string}
-                            onChange={(e) => table.getColumn("name")?.setFilterValue(e.target.value)}
-                            placeholder="Filter by name or email..."
+                            value={(table.getColumn("name")?.getFilterValue() ?? table.getColumn("studentId")?.getFilterValue() ?? "") as string}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                table.getColumn("name")?.setFilterValue(value);
+                                table.getColumn("studentId")?.setFilterValue(value);
+                            }}
+                            placeholder="Filter by name, email, or student ID..."
                             type="text"
-                            aria-label="Filter by name or email"
+                            aria-label="Filter by name, email, or student ID"
                         />
                         <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
                             <ListFilter size={16} strokeWidth={2} aria-hidden="true" />
                         </div>
-                        {Boolean(table.getColumn("name")?.getFilterValue()) && (
+                        {Boolean(table.getColumn("name")?.getFilterValue() || table.getColumn("studentId")?.getFilterValue()) && (
                             <button
-                                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                                className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label="Clear filter"
                                 onClick={() => {
                                     table.getColumn("name")?.setFilterValue("");
+                                    table.getColumn("studentId")?.setFilterValue("");
                                     if (inputRef.current) {
                                         inputRef.current.focus();
                                     }
@@ -362,7 +397,9 @@ export default function Database() {
                                             />
                                             <Label htmlFor={`${id}-${i}`} className="flex grow justify-between gap-2 font-normal">
                                                 {value}
-                                                <span className="ms-2 text-xs text-muted-foreground">{statusCounts.get(value)}</span>
+                                                <span className="ms-2 text-xs text-muted-foreground">
+                                                    {value === true ? "Active" : "Inactive"} ({statusCounts.get(value)} )
+                                                </span>
                                             </Label>
                                         </div>
                                     ))}
@@ -433,11 +470,9 @@ export default function Database() {
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-
-                    <Button className="shadow-md w-full sm:w-auto" variant="outline">
-                        <Plus className="-ms-1 me-2 opacity-60" size={16} strokeWidth={2} aria-hidden="true" />
-                        Add
-                    </Button>
+                    <div>
+                        <AddStudentSheet></AddStudentSheet>
+                    </div>
                 </div>
             </div>
 
@@ -632,57 +667,71 @@ export default function Database() {
     );
 }
 
-function RowActions({ row }: { row: Row<Item> }) {
+function RowActions({ row }: { row: Row<Student> }) {
+
+    const student = row.original;
+    const [openDialog, setOpenDialog] = React.useState(false);
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <div className="flex justify-end">
-                    <Button size="icon" variant="ghost" className="shadow-none" aria-label="Edit item">
-                        <Ellipsis size={16} strokeWidth={2} aria-hidden="true" />
-                    </Button>
-                </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuGroup>
-                    <DropdownMenuItem>
-                        <span>Edit</span>
-                        <DropdownMenuShortcut>⌘E</DropdownMenuShortcut>
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <div className="flex justify-end">
+                        <Button size="icon" variant="ghost" className="shadow-none" aria-label="Edit item">
+                            <Ellipsis size={16} strokeWidth={2} aria-hidden="true" />
+                        </Button>
+                    </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuGroup>
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem onClick={() => setOpenDialog(true)}>
+                                <span>Edit</span>
+                                <DropdownMenuShortcut>⌘E</DropdownMenuShortcut>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuItem>
+                            <span>Duplicate</span>
+                            <DropdownMenuShortcut>⌘D</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem>
+                            <span>Archive</span>
+                            <DropdownMenuShortcut>⌘A</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>More</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem>Move to project</DropdownMenuItem>
+                                    <DropdownMenuItem>Move to folder</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>Advanced options</DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem>Share</DropdownMenuItem>
+                        <DropdownMenuItem>Add to favorites</DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <span>Delete</span>
+                        <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <span>Duplicate</span>
-                        <DropdownMenuShortcut>⌘D</DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                    <DropdownMenuItem>
-                        <span>Archive</span>
-                        <DropdownMenuShortcut>⌘A</DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>More</DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem>Move to project</DropdownMenuItem>
-                                <DropdownMenuItem>Move to folder</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Advanced options</DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                    <DropdownMenuItem>Share</DropdownMenuItem>
-                    <DropdownMenuItem>Add to favorites</DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                    <span>Delete</span>
-                    <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            {/* Ensure StudentDetailDialog is imported or defined */}
+            <StudentDetailDialog
+                student={student}
+                open={openDialog}
+                onOpenChange={setOpenDialog}
+            ></StudentDetailDialog>
+        </>
+
     );
 }
 

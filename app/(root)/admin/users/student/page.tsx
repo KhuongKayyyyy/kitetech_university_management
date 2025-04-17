@@ -1,4 +1,5 @@
-import Database from '@/components/ui/Database'
+
+import Database from '@/components/ui/custom/user/student/StudentDatabase'
 import React from 'react'
 
 const page = () => {
@@ -6,7 +7,7 @@ const page = () => {
         <>
             <div className='px-5'>
                 <h1 className='text-4xl font-extrabold pb-5'>
-                    Teacher Database
+                    Student Database
                 </h1>
                 <Database></Database>
             </div>

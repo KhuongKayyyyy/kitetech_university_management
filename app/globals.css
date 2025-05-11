@@ -15,6 +15,71 @@
 }
 
 @layer utilities {
+  .container-box {
+    @apply flex flex-col box-border appearance-none outline-none min-w-[350px] min-h-[200px] m-2.5 rounded-[5px] bg-[#f6f6f6] border border-black/5 text-base transition-colors duration-[350ms] ease-in-out;
+  }
+
+  .container-ul {
+    @apply grid gap-[10px] list-none p-5 m-0;
+    grid-template-columns: repeat(var(--columns, 1), 1fr);
+  }
+
+  .container-scrollable>ul {
+    @apply overflow-y-auto;
+  }
+
+  .container-placeholder {
+    @apply justify-center items-center cursor-pointer text-black/50 bg-transparent border-dashed border-black/10;
+  }
+
+  .container-placeholder:hover {
+    @apply border-black/20;
+  }
+
+  .container-hover {
+    @apply bg-[#ebebeb];
+  }
+
+  .container-unstyled {
+    @apply overflow-visible bg-transparent border-none;
+  }
+
+  .container-horizontal {
+    @apply w-full;
+  }
+
+  .container-horizontal>ul {
+    grid-auto-flow: column;
+  }
+
+  .container-shadow {
+    @apply shadow-md;
+  }
+
+  .container-focus-visible:focus-visible {
+    @apply ring-2 ring-[#4c9ffe];
+  }
+
+  .container-header {
+    @apply flex items-center justify-between px-5 py-1 pr-2 bg-white rounded-t-[5px] border-b border-black/10;
+  }
+
+  .container-actions {
+    @apply flex;
+  }
+
+  .container-actions>*:first-child:not(:last-child) {
+    @apply opacity-0;
+  }
+
+  .container-actions>*:first-child:not(:last-child):focus-visible {
+    @apply opacity-100;
+  }
+
+  .container-header:hover .container-actions>* {
+    @apply opacity-100;
+  }
+
   .main-heading {
     @apply text-3xl font-bold text-amber-500 bg-avocado-600;
   }

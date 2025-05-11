@@ -1,9 +1,11 @@
+
+import { AddNewCurriculumDialog } from '@/components/ui/custom/education/curriculum/AddNewCurriculumnDialog'
 import React from 'react'
 
-const page = () => {
+const Page = () => {
     return (
-        <div>Curriculum Page</div>
+        <AddNewCurriculumDialog></AddNewCurriculumDialog>
     )
 }
 
-export default page
+export default Page

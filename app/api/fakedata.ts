@@ -6,6 +6,7 @@ import {
   TextSearchIcon,
 } from "lucide-react";
 import { Class, Department, Student, Subject, Teacher } from "./model/model";
+import { Formula } from "./model/FormulaModel";
 
 export const teachers: Teacher[] = [
   {
@@ -2053,5 +2054,59 @@ export const skillSubjects: Subject[] = [
     description: "Effective communication and relationship building in professional settings.",
     majorId: 4,
     departmentId: 6,
+  }
+]
+
+
+export const formulaSubjects: Formula[] = [
+  {
+    id: 1,
+    name: "Standard Weighted Average",
+    description: "Basic weighted formula combining participation, tests, and final exam",
+    formula: "(participation * 0.1) + (midtermTest * 0.2) + (midtermReport * 0.3) + (final * 0.4)",
+    participation: 10,
+    midtermTest: 20,
+    midtermReport: 30,
+    final: 40
+  },
+  {
+    id: 2,
+    name: "Heavy Final Emphasis",
+    description: "Formula that heavily weights the final examination",
+    formula: "(participation * 0.05) + (midtermTest * 0.15) + (midtermReport * 0.2) + (final * 0.6)",
+    participation: 5,
+    midtermTest: 15,
+    midtermReport: 20,
+    final: 60
+  },
+  {
+    id: 3,
+    name: "Continuous Assessment",
+    description: "Balanced approach emphasizing ongoing evaluation",
+    formula: "(participation * 0.25) + (midtermTest * 0.25) + (midtermReport * 0.25) + (final * 0.25)",
+    participation: 25,
+    midtermTest: 25,
+    midtermReport: 25,
+    final: 25
+  },
+  {
+    id: 4,
+    name: "Participation Focused",
+    description: "Formula that values active participation and engagement",
+    formula: "(participation * 0.3) + (midtermTest * 0.2) + (midtermReport * 0.2) + (final * 0.3)",
+    participation: 30,
+    midtermTest: 20,
+    midtermReport: 20,
+    final: 30
+  },
+  {
+    id: 5,
+    name: "Research Intensive",
+    description: "Emphasizes midterm reports and research projects",
+    formula: "(participation * 0.1) + (midtermTest * 0.15) + (midtermReport * 0.5) + (final * 0.25)",
+    participation: 10,
+    midtermTest: 15,
+    midtermReport: 50,
+    final: 25
   }
 ]

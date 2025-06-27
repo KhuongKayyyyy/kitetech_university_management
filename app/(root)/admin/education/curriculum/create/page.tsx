@@ -70,7 +70,7 @@ export default function CreateCurriculumPage() {
     { id: 5, name: "Philosophy", type: "philosophy" },
   ];
 
-  // Add a new board
+  //  new board
   const addBoard = (type: "core" | "pe" | "skill" | "english" | "philosophy") => {
     setState((prev) => ({
       ...prev,
@@ -158,18 +158,25 @@ export default function CreateCurriculumPage() {
     setOpenSearch(true);
   };
 
-  const handleSelectSubject = (subject: Subject, columnId: string, boardId: string) => {
-    if (!columnId || !boardId) return;
+  const handleSelectSubjects = (subjects: Subject[], columnId: string, boardId: string) => {
+    if (!columnId || !boardId || subjects.length === 0) return;
 
     const board = state.boards.find((b) => b.id === boardId);
     if (!board) return;
 
-    const newSubjectId = `subject-${subject.subjectId}-${Date.now()}`;
-    const newSubject = {
-      id: newSubjectId,
-      content: subject.name,
-      type: board.type,
-    };
+    const newSubjects: { [key: string]: any } = {};
+    const newSubjectIds: string[] = [];
+
+    subjects.forEach((subject) => {
+      const newSubjectId = `subject-${subject.subjectId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newSubject = {
+        id: newSubjectId,
+        content: subject.name,
+        type: board.type,
+      };
+      newSubjects[newSubjectId] = newSubject;
+      newSubjectIds.push(newSubjectId);
+    });
 
     setState((prev) => {
       const boards = prev.boards.map((board) => {
@@ -181,7 +188,7 @@ export default function CreateCurriculumPage() {
             ...board.semesterColumn,
             [columnId]: {
               ...column,
-              subjectIds: [...column.subjectIds, newSubjectId],
+              subjectIds: [...column.subjectIds, ...newSubjectIds],
             },
           },
         };
@@ -191,7 +198,7 @@ export default function CreateCurriculumPage() {
         boards,
         subjects: {
           ...prev.subjects,
-          [newSubjectId]: newSubject,
+          ...newSubjects,
         },
       };
     });
@@ -389,8 +396,8 @@ export default function CreateCurriculumPage() {
         onOpenChange={setOpenSearch}
         departmentId={Number(departmentId)}
         subjectType={steps[currentStep - 1].type as "core" | "pe" | "skill" | "english" | "philosophy"}
-        onSelect={(subject) => {
-          if (targetColumnId && targetBoardId) handleSelectSubject(subject, targetColumnId, targetBoardId);
+        onSelect={(subjects) => {
+          if (targetColumnId && targetBoardId) handleSelectSubjects(subjects, targetColumnId, targetBoardId);
         }}
       />
 
@@ -472,7 +479,7 @@ export default function CreateCurriculumPage() {
       <div className="mt-8 flex justify-end">
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="gap-2" size="lg">
+            <Button className="gap-2" size="lg" disabled={currentStep < steps.length}>
               Save Curriculum
               <ArrowUpRight size={16} />
             </Button>

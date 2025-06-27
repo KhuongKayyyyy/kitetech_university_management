@@ -11,16 +11,17 @@ import {
   subjects,
 } from "@/app/api/fakedata";
 import { Subject } from "@/app/api/model/model";
+import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
 import { cn, getDepartmentNameById } from "@/lib/utils";
-import { BookCopyIcon, BookOpen, Dumbbell, GraduationCap, Languages, Wrench } from "lucide-react";
+import { BookCopyIcon, BookOpen, Check, Dumbbell, GraduationCap, Languages, Plus, Trash, Wrench } from "lucide-react";
 
 import SubjectItem from "../subject/SubjectItem";
 
 type SubjectSearchDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect?: (subject: Subject) => void;
+  onSelect?: (subjects: Subject[]) => void;
   subjectType: string;
   departmentId: number;
 };
@@ -76,6 +77,8 @@ export default function SubjectSearchDialog({
   const [hoveredSubject, setHoveredSubject] = React.useState<Subject | null>(null);
   const [selectedMajorId, setSelectedMajorId] = React.useState<number | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedSubjects, setSelectedSubjects] = React.useState<Subject[]>([]);
+
   const department = departmentData.find((d) => d.id === departmentId);
   const majors = department?.majors ?? [];
 
@@ -85,6 +88,31 @@ export default function SubjectSearchDialog({
     const matchesSearch = subject.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesDepartment && matchesMajor && matchesSearch;
   });
+
+  const handleSubjectToggle = (subject: Subject) => {
+    setSelectedSubjects((prev) => {
+      const isSelected = prev.some((s) => s.subjectId === subject.subjectId);
+      if (isSelected) {
+        return prev.filter((s) => s.subjectId !== subject.subjectId);
+      } else {
+        return [...prev, subject];
+      }
+    });
+  };
+
+  const isSubjectSelected = (subject: Subject) => {
+    return selectedSubjects.some((s) => s.subjectId === subject.subjectId);
+  };
+
+  const handleRemoveSubject = (subject: Subject) => {
+    setSelectedSubjects((prev) => prev.filter((s) => s.subjectId !== subject.subjectId));
+  };
+
+  const handleAddSubjects = () => {
+    onSelect?.(selectedSubjects);
+    setSelectedSubjects([]);
+    onOpenChange(false);
+  };
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -125,6 +153,17 @@ export default function SubjectSearchDialog({
             ))}
           </div>
         )}
+        {selectedSubjects.length > 0 && (
+          <div className="flex items-center justify-between p-3 bg-muted/50">
+            <span className="text-sm text-muted-foreground">
+              {selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""} selected
+            </span>
+            <Button onClick={handleAddSubjects} size="sm" className="gap-2">
+              <Plus size={14} />
+              Add Selected
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex h-[60vh] max-h-[70vh] overflow-hidden">
@@ -135,12 +174,20 @@ export default function SubjectSearchDialog({
                 filteredSubjects.map((subject) => (
                   <CommandItem
                     key={subject.subjectId}
-                    onSelect={() => onSelect?.(subject)}
+                    onSelect={() => handleSubjectToggle(subject)}
                     onMouseEnter={() => setHoveredSubject(subject)}
                     onMouseLeave={() => setHoveredSubject(null)}
                     className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
                   >
                     <div className="flex items-center gap-2 w-full">
+                      <div
+                        className={cn(
+                          "w-4 h-4 border-2 rounded flex items-center justify-center",
+                          isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
+                        )}
+                      >
+                        {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+                      </div>
                       <GraduationCap size={18} className="text-primary" />
                       <span className="font-medium">{subject.name}</span>
                       <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
@@ -163,12 +210,20 @@ export default function SubjectSearchDialog({
               {PESubjects.map((subject) => (
                 <CommandItem
                   key={subject.subjectId}
-                  onSelect={() => onSelect?.(subject)}
+                  onSelect={() => handleSubjectToggle(subject)}
                   onMouseEnter={() => setHoveredSubject(subject)}
                   onMouseLeave={() => setHoveredSubject(null)}
                   className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
                 >
                   <div className="flex items-center gap-2 w-full">
+                    <div
+                      className={cn(
+                        "w-4 h-4 border-2 rounded flex items-center justify-center",
+                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
+                      )}
+                    >
+                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+                    </div>
                     <Dumbbell size={16} className="text-blue-500" />
                     <span className="font-medium">{subject.name}</span>
                     <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
@@ -186,12 +241,20 @@ export default function SubjectSearchDialog({
               {philosophySubjects.map((subject) => (
                 <CommandItem
                   key={subject.subjectId}
-                  onSelect={() => onSelect?.(subject)}
+                  onSelect={() => handleSubjectToggle(subject)}
                   onMouseEnter={() => setHoveredSubject(subject)}
                   onMouseLeave={() => setHoveredSubject(null)}
                   className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
                 >
                   <div className="flex items-center gap-2 w-full">
+                    <div
+                      className={cn(
+                        "w-4 h-4 border-2 rounded flex items-center justify-center",
+                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
+                      )}
+                    >
+                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+                    </div>
                     <BookOpen size={16} className="text-purple-500" />
                     <span className="font-medium">{subject.name}</span>
                     <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
@@ -209,12 +272,20 @@ export default function SubjectSearchDialog({
               {englishSubjects.map((subject) => (
                 <CommandItem
                   key={subject.subjectId}
-                  onSelect={() => onSelect?.(subject)}
+                  onSelect={() => handleSubjectToggle(subject)}
                   onMouseEnter={() => setHoveredSubject(subject)}
                   onMouseLeave={() => setHoveredSubject(null)}
                   className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
                 >
                   <div className="flex items-center gap-2 w-full">
+                    <div
+                      className={cn(
+                        "w-4 h-4 border-2 rounded flex items-center justify-center",
+                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
+                      )}
+                    >
+                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+                    </div>
                     <Languages size={16} className="text-green-500" />
                     <span className="font-medium">{subject.name}</span>
                     <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
@@ -232,12 +303,20 @@ export default function SubjectSearchDialog({
               {skillSubjects.map((subject) => (
                 <CommandItem
                   key={subject.subjectId}
-                  onSelect={() => onSelect?.(subject)}
+                  onSelect={() => handleSubjectToggle(subject)}
                   onMouseEnter={() => setHoveredSubject(subject)}
                   onMouseLeave={() => setHoveredSubject(null)}
                   className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
                 >
                   <div className="flex items-center gap-2 w-full">
+                    <div
+                      className={cn(
+                        "w-4 h-4 border-2 rounded flex items-center justify-center",
+                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
+                      )}
+                    >
+                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+                    </div>
                     <Wrench size={16} className="text-orange-500" />
                     <span className="font-medium">{subject.name}</span>
                     <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
@@ -251,19 +330,55 @@ export default function SubjectSearchDialog({
           )}
         </div>
 
-        <div className="w-1/2 p-6 bg-muted/10">
-          {hoveredSubject ? (
-            <div className="space-y-4 animate-in fade-in-50">
-              <SubjectItem subject={hoveredSubject} />
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <BookCopyIcon size={32} className="mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Hover on a subject to see details</p>
+        <div className="w-1/2 flex flex-col">
+          {/* Upper half - Subject details */}
+          <div className="h-1/2 p-4 bg-muted/10 border-b">
+            {hoveredSubject ? (
+              <div className="space-y-4 animate-in fade-in-50">
+                <SubjectItem subject={hoveredSubject} />
               </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <BookCopyIcon size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Hover on a subject to see details</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Lower half - Selected subjects */}
+          <div className="h-1/2 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-sm">Selected Subjects</h3>
+              <span className="text-xs text-muted-foreground">
+                {selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""}
+              </span>
             </div>
-          )}
+            <div className="space-y-2 max-h-full overflow-y-auto">
+              {selectedSubjects.length > 0 ? (
+                selectedSubjects.map((subject) => (
+                  <div key={subject.subjectId} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{subject.name}</div>
+                      <div className="text-xs text-muted-foreground">{subject.subjectId}</div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveSubject(subject)}
+                      className="p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                    >
+                      <Trash size={14} />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground text-sm py-8">
+                  <div className="mb-2">No subjects selected</div>
+                  <div className="text-xs">Click on subjects to add them</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </CommandDialog>

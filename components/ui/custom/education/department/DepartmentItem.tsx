@@ -1,60 +1,60 @@
-import React, { useMemo } from 'react'
-import {
-    Calculator,
-    DraftingCompass,
-    LampWallDown,
-    ScanEyeIcon,
-    TextSearchIcon,
-} from 'lucide-react'
-import { Department } from '@/app/api/model/model'
-import { Card } from '../../../card'
-import { DepartmentDialog } from './DepartmentDialog'
+import React, { useMemo } from "react";
+
+import { Department } from "@/app/api/model/model";
+import { Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
+
+import { Card } from "../../../card";
+import { DepartmentDialog } from "./DepartmentDialog";
 
 const iconColors = [
-    { bg: 'bg-red-100', text: 'text-red-600' },
-    { bg: 'bg-yellow-100', text: 'text-yellow-600' },
-    { bg: 'bg-green-100', text: 'text-green-600' },
-    { bg: 'bg-blue-100', text: 'text-blue-600' },
-    { bg: 'bg-purple-100', text: 'text-purple-600' },
-    { bg: 'bg-pink-100', text: 'text-pink-600' },
-    { bg: 'bg-teal-100', text: 'text-teal-600' },
-    { bg: 'bg-orange-100', text: 'text-orange-600' },
-]
+  { bg: "bg-red-50", text: "text-red-600", border: "border-red-200" },
+  { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" },
+  { bg: "bg-green-50", text: "text-green-600", border: "border-green-200" },
+  { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" },
+  { bg: "bg-purple-50", text: "text-purple-600", border: "border-purple-200" },
+  { bg: "bg-pink-50", text: "text-pink-600", border: "border-pink-200" },
+  { bg: "bg-teal-50", text: "text-teal-600", border: "border-teal-200" },
+  { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200" },
+];
 
 // 🔥 Icon map declared inline in the same file
 const iconMap = {
-    Calculator,
-    DraftingCompass,
-    LampWallDown,
-    ScanEyeIcon,
-    TextSearchIcon,
-}
+  Calculator,
+  DraftingCompass,
+  LampWallDown,
+  ScanEyeIcon,
+  TextSearchIcon,
+};
 
 const DepartmentItem = ({ department }: { department: Department }) => {
-    const { bg, text } = useMemo(() => {
-        const random = Math.floor(Math.random() * iconColors.length)
-        return iconColors[random]
-    }, [])
+  const { bg, text, border } = useMemo(() => {
+    const random = Math.floor(Math.random() * iconColors.length);
+    return iconColors[random];
+  }, []);
 
-    // 🔁 Resolve the icon from the string
-    const Icon = iconMap[department.icon as keyof typeof iconMap]
+  // 🔁 Resolve the icon from the string
+  const Icon = iconMap[department.icon as keyof typeof iconMap];
 
-    return (
-        <Card className="relative flex items-center flex-row px-6 py-4 sm:px-8 md:px-10 max-w-full overflow-hidden">
-            <div className={`flex items-center justify-center w-12 h-12 rounded-full shrink-0 ${bg}`}>
-                {Icon && <Icon className={`w-6 h-6 ${text}`} strokeWidth={2} />}
-            </div>
-            <div className="flex flex-col gap-1 ml-4 overflow-hidden">
-                <h1 className="text-lg sm:text-xl md:text-2xl font-bold leading-tight break-words">
-                    {department.name}
-                </h1>
-                <p className="text-xs sm:text-sm md:text-base text-muted-foreground break-words">
-                    {department.majors.length} majors
-                </p>
-            </div>
-            <DepartmentDialog department={department} isIcon={true} />
-        </Card>
-    )
-}
+  return (
+    <Card className="group relative flex items-center flex-row px-6 py-5 sm:px-8 md:px-10 max-w-full overflow-hidden hover:shadow-lg transition-all duration-200 border-0 ring-1 ring-border hover:ring-2 hover:ring-primary/20 cursor-pointer">
+      <div
+        className={`flex items-center justify-center w-14 h-14 rounded-xl shrink-0 ${bg} ${border} border-2 shadow-sm group-hover:scale-105 transition-transform duration-200`}
+      >
+        {Icon && <Icon className={`w-7 h-7 ${text}`} strokeWidth={2} />}
+      </div>
+      <div className="flex flex-col gap-2 ml-5 overflow-hidden flex-1">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold leading-tight break-words text-foreground group-hover:text-primary transition-colors duration-200">
+          {department.name}
+        </h1>
+        <p className="text-sm sm:text-sm md:text-base text-muted-foreground break-words font-medium">
+          {department.majors.length} {department.majors.length === 1 ? "major" : "majors"}
+        </p>
+      </div>
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-4">
+        <DepartmentDialog department={department} isIcon={true} />
+      </div>
+    </Card>
+  );
+};
 
-export default DepartmentItem
+export default DepartmentItem;

@@ -212,19 +212,9 @@ export function DepartmentTable({ departments }: { departments: Department[] }) 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
 
   return (
-    <Card className="w-full shadow-lg border-0 bg-card">
-      <CardHeader className="pb-4">
+    <Card className="w-full shadow-lg border-0 bg-card p-5">
+      <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search departments..."
-              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-              onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
-              className="pl-10 shadow-sm border-2 focus:border-primary/50 transition-colors"
-            />
-          </div>
-
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

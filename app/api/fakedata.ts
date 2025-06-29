@@ -2110,3 +2110,87 @@ export const formulaSubjects: Formula[] = [
     final: 25
   }
 ]
+
+
+export const curriculumData = [
+  {
+    id: 1,
+    name: "Sơ đồ đào tạo - Khoa học máy tính",
+    academicYear: "2025",
+    department: "Khoa Công nghệ thông tin",
+    major: "Khoa học máy tính",
+    totalCredits: 120,
+    totalCourses: 40,
+    status: "active"
+  },
+  {
+    id: 2,
+    name: "Sơ đồ đào tạo - Mạng máy tính",
+    academicYear: "2025",
+    department: "Khoa Công nghệ thông tin",
+    major: "Mạng máy tính",
+    totalCredits: 125,
+    totalCourses: 42,
+    status: "active"
+  },
+  {
+    id: 3,
+    name: "Sơ đồ đào tạo - An toàn thông tin",
+    academicYear: "2024",
+    department: "Khoa Công nghệ thông tin",
+    major: "An toàn thông tin",
+    totalCredits: 130,
+    totalCourses: 45,
+    status: "inactive"
+  },
+  {
+    id: 4,
+    name: "Sơ đồ đào tạo - Kỹ thuật phần mềm",
+    academicYear: "2025",
+    department: "Khoa Công nghệ thông tin",
+    major: "Kỹ thuật phần mềm",
+    totalCredits: 128,
+    totalCourses: 43,
+    status: "draft"
+  },
+  {
+    id: 5,
+    name: "Sơ đồ đào tạo - Trí tuệ nhân tạo",
+    academicYear: "2025",
+    department: "Khoa Công nghệ thông tin",
+    major: "Trí tuệ nhân tạo",
+    totalCredits: 135,
+    totalCourses: 46,
+    status: "active"
+  },
+  {
+    id: 6,
+    name: "Sơ đồ đào tạo - Kinh tế",
+    academicYear: "2025",
+    department: "Khoa Kinh tế",
+    major: "Kinh tế học",
+    totalCredits: 110,
+    totalCourses: 38,
+    status: "active"
+  },
+  {
+    id: 7,
+    name: "Sơ đồ đào tạo - Quản trị kinh doanh",
+    academicYear: "2024",
+    department: "Khoa Kinh tế",
+    major: "Quản trị kinh doanh",
+    totalCredits: 115,
+    totalCourses: 40,
+    status: "inactive"
+  },
+  {
+    id: 8,
+    name: "Sơ đồ đào tạo - Tài chính ngân hàng",
+    academicYear: "2025",
+    department: "Khoa Kinh tế",
+    major: "Tài chính ngân hàng",
+    totalCredits: 118,
+    totalCourses: 41,
+    status: "draft"
+  }
+]

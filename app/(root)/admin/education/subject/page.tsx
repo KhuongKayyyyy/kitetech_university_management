@@ -4,12 +4,13 @@ import React, { useMemo, useState } from "react";
 
 import { departmentData, formulaSubjects, subjects } from "@/app/api/fakedata";
 import { Subject } from "@/app/api/model/model";
+import { Button } from "@/components/ui/button";
 import { AddSubjectDialog } from "@/components/ui/custom/education/subject/AddSubjectDialog";
 import AddFormulaDialog from "@/components/ui/custom/education/subject/formula/AddFormulaDialog";
 import FormulaItem from "@/components/ui/custom/education/subject/formula/FormulaItem";
 import SubjectItem from "@/components/ui/custom/education/subject/SubjectItem";
 import { SubjectTable } from "@/components/ui/custom/education/subject/SubjectTable";
-import { BookOpen, Calculator, Filter, Plus, Search } from "lucide-react";
+import { BookOpen, Calculator, Filter, Grid, List, Plus, Search } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 // Helper to flatten all majors and map by ID
@@ -30,7 +31,7 @@ const SubjectPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedMajor, setSelectedMajor] = useState("all");
-  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [activeTab, setActiveTab] = useState<"subjects" | "formulas">("subjects");
   const [openAddSubjectDialog, setOpenAddSubjectDialog] = useState(false);
   const majorMap = getMajorMap();
@@ -181,23 +182,23 @@ const SubjectPage = () => {
                   </select>
 
                   {/* View Mode Toggle */}
-                  <div className="flex bg-white border border-gray-300 rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setViewMode("table")}
-                      className={`px-3 py-2 text-sm font-medium transition-colors ${
-                        viewMode === "table" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      Table
-                    </button>
-                    <button
+                  <div className="flex items-center border border-gray-300 rounded-lg p-1">
+                    <Button
+                      variant={viewMode === "cards" ? "default" : "ghost"}
+                      size="sm"
                       onClick={() => setViewMode("cards")}
-                      className={`px-3 py-2 text-sm font-medium transition-colors ${
-                        viewMode === "cards" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"
-                      }`}
+                      className="h-8 px-3"
                     >
-                      Cards
-                    </button>
+                      <Grid className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "table" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("table")}
+                      className="h-8 px-3"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
                   </div>
 
                   {/* Reset Filters */}
@@ -218,9 +219,7 @@ const SubjectPage = () => {
               </div>
 
               {/* Content Display */}
-              {viewMode === "table" ? (
-                <SubjectTable subjects={filteredSubjects} />
-              ) : (
+              {viewMode === "cards" ? (
                 <div className="space-y-8">
                   {Object.keys(groupedSubjects).length === 0 ? (
                     <div className="text-center py-12">
@@ -251,6 +250,8 @@ const SubjectPage = () => {
                     })
                   )}
                 </div>
+              ) : (
+                <SubjectTable subjects={filteredSubjects} />
               )}
             </>
           )}

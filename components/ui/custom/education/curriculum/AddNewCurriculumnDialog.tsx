@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import { departmentData, majors } from "@/app/api/fakedata";
+import { CurriculumModel } from "@/app/api/model/CurriculumModel";
 import { useCharacterLimit } from "@/components/hooks/use-character-limit";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
-function AddNewCurriculumDialog() {
+interface AddNewCurriculumDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onSubmit: (curriculum: CurriculumModel) => void;
+}
+
+function AddNewCurriculumDialog({ open, setOpen, onSubmit }: AddNewCurriculumDialogProps) {
   const maxLength = 180;
   const {
     value,
@@ -43,9 +50,6 @@ function AddNewCurriculumDialog() {
   };
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Add New Curriculum</Button>
-      </DialogTrigger>
       <DialogContent className="flex flex-col gap-0 overflow-y-visible p-0 sm:max-w-lg [&>button:last-child]:top-3.5">
         <DialogHeader className="contents space-y-0 text-left">
           <DialogTitle className="border-b border-border px-6 py-4 text-base">Edit profile</DialogTitle>

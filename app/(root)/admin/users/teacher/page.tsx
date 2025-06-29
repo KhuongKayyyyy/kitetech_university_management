@@ -1,137 +1,190 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import TeacherItem from "@/components/ui/custom/user/teacher/TeacherItem"
-import TeachDetailInformation from "@/components/ui/custom/user/teacher/TeachDetailInformation"
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination"
-import { ChevronFirst, ChevronLast } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { teachers } from "@/app/api/fakedata"
+import React, { useMemo, useState } from "react";
 
-// const mockTeachers = Array.from({ length: 100 }, (_, i) => ({
-//     id: i + 1,
-//     name: `Teacher ${i + 1}`,
-// }))
+import { teachers } from "@/app/api/fakedata";
+import { Button } from "@/components/ui/button";
+import TeacherItem from "@/components/ui/custom/user/teacher/TeacherItem";
+import TeacherTable from "@/components/ui/custom/user/teacher/TeacherTable";
+import { ChevronLeft, ChevronRight, Grid, List, Plus, Search, Users } from "lucide-react";
 
-const Page = () => {
-    const [currentPage, setCurrentPage] = useState(1)
-    const [pageSize, setPageSize] = useState(25)
-    const [selectedTeacher, setSelectedTeacher] = useState<{ id: number; name: string } | null>(null)
+export default function TeacherPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [openAddTeacherDialog, setOpenAddTeacherDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12; // 3x3 grid for cards
 
-    const totalPages = Math.ceil(teachers.length / pageSize)
-
-
-    const handleNext = () => {
-        if (currentPage < totalPages) setCurrentPage((p) => p + 1)
+  // Filter teachers based on search term
+  const filteredTeachers = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return teachers;
     }
 
-    const handlePrevious = () => {
-        if (currentPage > 1) setCurrentPage((p) => p - 1)
-    }
+    const searchLower = searchTerm.toLowerCase();
+    return teachers.filter(
+      (teacher) =>
+        teacher.name.toLowerCase().includes(searchLower) ||
+        teacher.teacherEmail.toLowerCase().includes(searchLower) ||
+        teacher.location.toLowerCase().includes(searchLower),
+    );
+  }, [searchTerm]);
 
-    const handleFirst = () => setCurrentPage(1)
-    const handleLast = () => setCurrentPage(totalPages)
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTeachers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTeachers = filteredTeachers.slice(startIndex, endIndex);
 
-    const currentTeachers = teachers.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    )
+  // Reset to first page when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
-    return (
-        <div className="px-5 bg-primary-foreground py-5 min-h-full">
-            <h1 className="text-4xl font-extrabold pb-5">Teacher Database</h1>
+  return (
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Users className="w-6 h-6 text-primary" />
+              Teacher Management
+            </h1>
+            <p className="text-gray-600 mt-1">Manage teacher profiles, departments, and academic information</p>
+          </div>
 
-            {/* Grid + Detail Panel */}
-            <div className="flex flex-col lg:flex-row gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 flex-1">
-                    {currentTeachers.map((t) => (
-                        <TeacherItem
-                            key={t.id}
-                            teacher={t}
-                        // onViewProfile={() => setSelectedTeacher(t)}
-                        />
-                    ))}
-                </div>
-
-                {/* Detail Card */}
-                {selectedTeacher && (
-                    <div className="hidden lg:block w-full lg:w-1/3">
-                        <TeachDetailInformation teacher={selectedTeacher} onClose={() => setSelectedTeacher(null)}
-                        />
-                    </div>
-                )}
-            </div>
-
-            {/* Pagination */}
-            <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-end w-full gap-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Rows per page:</span>
-                    <Select
-                        value={pageSize.toString()}
-                        onValueChange={(value) => {
-                            setPageSize(Number(value))
-                            setCurrentPage(1)
-                        }}
-                    >
-                        <SelectTrigger className="w-[80px] h-8">
-                            <SelectValue placeholder="Rows" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {[5, 10, 25, 50].map((size) => (
-                                <SelectItem key={size} value={size.toString()}>
-                                    {size}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex items-center gap-4 ml-auto">
-                    <p className="text-sm text-muted-foreground whitespace-nowrap">
-                        Showing {(currentPage - 1) * pageSize + 1} -{" "}
-                        {Math.min(currentPage * pageSize, teachers.length)} of {teachers.length}
-                    </p>
-                    <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={handleFirst}
-                                    disabled={currentPage === 1}
-                                >
-                                    <ChevronFirst size={16} />
-                                </Button>
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationPrevious onClick={handlePrevious} />
-                            </PaginationItem>
-                            <PaginationItem>
-                                <PaginationNext onClick={handleNext} />
-                            </PaginationItem>
-                            <PaginationItem>
-                                <Button
-                                    size="icon"
-                                    variant="outline"
-                                    onClick={handleLast}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    <ChevronLast size={16} />
-                                </Button>
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-            </div>
+          {/* Add Teacher Button */}
+          <Button
+            onClick={() => setOpenAddTeacherDialog(true)}
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          >
+            <Plus className="w-4 h-4" />
+            Add Teacher
+          </Button>
         </div>
-    )
-}
+      </div>
 
-export default Page
+      {/* Controls Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search teachers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+            />
+          </div>
+
+          {/* View Toggle and Stats */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              {filteredTeachers.length} of {teachers.length} teachers
+            </span>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center border border-gray-300 rounded-lg p-1">
+              <Button
+                variant={viewMode === "cards" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("cards")}
+                className="h-8 px-3"
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("table")}
+                className="h-8 px-3"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      {filteredTeachers.length === 0 ? (
+        <div className="text-center py-12">
+          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No teachers found</h3>
+          <p className="text-gray-600">
+            {searchTerm ? "Try adjusting your search criteria." : "Get started by adding your first teacher."}
+          </p>
+          {!searchTerm && (
+            <Button className="mt-4" variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Teacher
+            </Button>
+          )}
+        </div>
+      ) : viewMode === "cards" ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedTeachers.map((teacher) => (
+              <TeacherItem key={teacher.id} teacher={teacher} />
+            ))}
+          </div>
+
+          {/* Pagination for Cards */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-8">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredTeachers.length)} of {filteredTeachers.length}{" "}
+                teachers
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <TeacherTable teachers={filteredTeachers} />
+        </div>
+      )}
+    </div>
+  );
+}

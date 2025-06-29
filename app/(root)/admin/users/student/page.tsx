@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import AddStudentDialog from "@/components/ui/custom/user/student/AddStudentDialog";
 import StudentDatabase from "@/components/ui/custom/user/student/StudentDatabase";
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
-import { GraduationCap, Grid, List, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
 
 export default function StudentPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [openAddStudentDialog, setOpenAddStudentDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9; // 3x4 grid for cards
+
   // Filter students based on search term
   const filteredStudents = useMemo(() => {
     if (!searchTerm.trim()) {
@@ -27,6 +30,17 @@ export default function StudentPage() {
         student.studentId.toLowerCase().includes(searchLower) ||
         student.location.toLowerCase().includes(searchLower),
     );
+  }, [searchTerm]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
   }, [searchTerm]);
 
   return (
@@ -113,11 +127,61 @@ export default function StudentPage() {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStudents.map((student) => (
-            <StudentItem key={student.id} student={student} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedStudents.map((student) => (
+              <StudentItem key={student.id} student={student} />
+            ))}
+          </div>
+
+          {/* Pagination for Cards */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-8">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredStudents.length)} of {filteredStudents.length}{" "}
+                students
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <StudentDatabase students={filteredStudents} />

@@ -6,6 +6,7 @@ import { curriculumData } from "@/app/api/fakedata";
 import { Button } from "@/components/ui/button";
 import { AddNewCurriculumDialog } from "@/components/ui/custom/education/curriculum/AddNewCurriculumnDialog";
 import CurriculumItem from "@/components/ui/custom/education/curriculum/CurriculumItem";
+import { CurriculumTable } from "@/components/ui/custom/education/curriculum/CurriculumTable";
 import { BookOpen, Grid, List, Plus, Search } from "lucide-react";
 
 const Page = () => {
@@ -115,42 +116,7 @@ const Page = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-900">Name</th>
-                  {/* <th className="text-left px-6 py-4 text-sm font-medium text-gray-900">Description</th> */}
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-900">Status</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredCurriculums.map((curriculum) => (
-                  <tr key={curriculum.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{curriculum.name}</div>
-                    </td>
-                    {/* <td className="px-6 py-4">
-                      <div className="text-gray-600 max-w-xs truncate">
-                        {curriculum.description || "No description"}
-                      </div>
-                    </td> */}
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <CurriculumItem key={curriculum.id} curriculum={curriculum} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CurriculumTable curriculums={filteredCurriculums} />
       )}
 
       <AddNewCurriculumDialog open={openAddDialog} setOpen={setOpenAddDialog} onSubmit={() => {}} />

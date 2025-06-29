@@ -107,7 +107,7 @@ const DepartmentPage = () => {
           <p className="text-gray-600">Try adjusting your search criteria.</p>
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDepartments.map((department) => (
             <DepartmentItem key={department.id} department={department} />
           ))}

@@ -1,214 +1,141 @@
 import React from "react";
 
+import { subjects } from "@/app/api/fakedata";
+import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { Subject } from "@/app/api/model/model";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { Draggable } from "@hello-pangea/dnd";
-import { BookOpen, Clock, GripVertical, Trash } from "lucide-react";
-import styled from "styled-components";
+import { BookOpen, Clock, GripVertical, Trash, X } from "lucide-react";
 
-interface ContainerProps {
-  isDragging: boolean;
-}
-
-const RemoveButton = styled.button`
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 6px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.7;
-
-  &:hover {
-    color: #ef4444;
-    background-color: #fef2f2;
-    opacity: 1;
-    transform: scale(1.05);
-  }
-`;
-
-const DragHandle = styled.div`
-  color: #cbd5e1;
-  margin-right: 12px;
-  cursor: grab;
-  transition: color 0.2s ease;
-  display: flex;
-  align-items: center;
-
-  &:hover {
-    color: #64748b;
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
-`;
-
-const Container = styled.div.withConfig({
-  shouldForwardProp: (prop) => prop !== "isDragging" && prop !== "isGhost",
-})<ContainerProps & { isGhost?: boolean }>`
-  border: 1px solid ${(props) => (props.isDragging ? "#22c55e" : "#e2e8f0")};
-  border-radius: 12px;
-  padding: 16px;
-  background-color: ${(props) =>
-    props.isDragging
-      ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
-      : "linear-gradient(135deg, #ffffff 0%, #fafafa 100%)"};
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  box-shadow: ${(props) =>
-    props.isDragging
-      ? "0 8px 25px rgba(34, 197, 94, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1)"
-      : "0 2px 8px rgba(0, 0, 0, 0.06)"};
-  opacity: ${(props) => (props.isGhost ? 0.4 : 1)};
-  cursor: grab;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: ${(props) =>
-      props.isDragging ? "linear-gradient(90deg, #22c55e, #16a34a)" : "linear-gradient(90deg, #3b82f6, #1d4ed8)"};
-    opacity: ${(props) => (props.isDragging ? 1 : 0)};
-    transition: opacity 0.3s ease;
-  }
-
-  &:hover {
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.1),
-      0 2px 4px rgba(0, 0, 0, 0.06);
-    transform: translateY(-1px);
-    border-color: #cbd5e1;
-
-    &::before {
-      opacity: 0.6;
-    }
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
-`;
+import AddSubjectPrerequisite from "../../education/subject/AddSubjectPrerequisite";
 
 interface SubjectProps {
-  task: {
-    id: string;
-    content: string;
-    credit?: number;
-  };
+  subject: CurriculumnSubject;
   index: number;
   isGhost?: boolean;
   onRemove?: () => void;
 }
 
-const Content = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
+const SubjectCurriItem: React.FC<SubjectProps> = ({ subject: curriSubject, index, isGhost, onRemove }) => {
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRemove?.();
+  };
 
-const SubjectName = styled.div`
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 8px;
-  font-size: 15px;
-  line-height: 1.4;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
+  const [prerequisitesState, setPrerequisitesState] = React.useState<Subject[]>(
+    curriSubject.PrerequisiteSubjects || [],
+  );
 
-const SubjectIcon = styled.div`
-  color: #3b82f6;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-`;
+  const handleAddPrerequisite = (newSubject: Subject) => {
+    setPrerequisitesState((prev) => [...prev, newSubject]);
+  };
 
-const SubjectMeta = styled.div`
-  font-size: 13px;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-weight: 500;
-`;
+  const handleRemovePrerequisite = (prerequisiteId: string) => {
+    setPrerequisitesState((prev) => prev.filter((p) => p.id !== prerequisiteId));
+  };
 
-const MetaItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background-color: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-`;
-
-const CreditBadge = styled.div`
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-`;
-
-export default class SubjectCurriItem extends React.Component<SubjectProps> {
-  render() {
-    const { id, content, credit = 3 } = this.props.task;
-    const subjectId = id.split("-")[1]; // Extract subject ID if it exists
-
-    return (
-      <Draggable draggableId={id} index={this.props.index}>
-        {(provided, snapshot) => (
-          <Container
-            ref={provided.innerRef}
-            {...provided.draggableProps}
+  return (
+    <Draggable
+      key={curriSubject.SubjectID}
+      draggableId={curriSubject.SubjectID}
+      index={index}
+      shouldRespectForcePress={false}
+    >
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{
+            ...provided.draggableProps.style,
+            display: "block",
+            visibility: "visible",
+          }}
+        >
+          <div
             {...provided.dragHandleProps}
             tabIndex={0}
-            isDragging={snapshot.isDragging}
-            isGhost={this.props.isGhost}
-          >
-            <DragHandle>
-              <GripVertical size={16} />
-            </DragHandle>
-            <Content>
-              <SubjectName>
-                <SubjectIcon>
-                  <BookOpen size={16} />
-                </SubjectIcon>
-                {content}
-              </SubjectName>
-              <SubjectMeta>
-                <MetaItem>
-                  <span>ID: {subjectId || id}</span>
-                </MetaItem>
-                <CreditBadge>
-                  <Clock size={12} />
-                  <span>{credit} Credits</span>
-                </CreditBadge>
-              </SubjectMeta>
-            </Content>
-            {this.props.onRemove && (
-              <RemoveButton onClick={this.props.onRemove}>
-                <Trash size={16} />
-              </RemoveButton>
+            className={cn(
+              "relative border rounded-xl p-4 mb-3 flex items-start gap-3 cursor-grab",
+              "transition-all duration-300 ease-out transform-gpu",
+              "bg-white/95 shadow-sm",
+              "hover:shadow-lg hover:-translate-y-1",
+              snapshot.isDragging
+                ? "border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-lg shadow-green-500/20 scale-[1.02]"
+                : "border-slate-200 hover:border-blue-400",
+              isGhost && "opacity-40",
+              "active:cursor-grabbing active:scale-95 active:shadow-inner active:translate-y-0",
             )}
-          </Container>
-        )}
-      </Draggable>
-    );
-  }
-}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-slate-400 cursor-grab transition-colors duration-200 flex items-center p-1.5 rounded-lg hover:text-slate-600 hover:bg-slate-100/80 active:cursor-grabbing">
+                  <GripVertical size={16} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Drag to reorder</TooltipContent>
+            </Tooltip>
+
+            <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+              <div className="flex items-center gap-3">
+                <div className="text-blue-500 flex items-center flex-shrink-0 bg-blue-50 p-1.5 rounded-lg transition-colors hover:bg-blue-100">
+                  <BookOpen size={18} />
+                </div>
+                <div className="font-semibold text-slate-800 text-[15px] leading-normal flex-1 transition-colors hover:text-blue-700">
+                  {curriSubject.SubjectName}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-200/80 text-xs text-slate-600 font-medium hover:bg-slate-100 hover:border-slate-300 transition-colors">
+                      ID: {curriSubject.SubjectID}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Subject ID</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-sm hover:shadow-md hover:from-blue-600 hover:to-blue-700 transition-all">
+                      <Clock size={14} />
+                      {curriSubject.TotalCredits} Credits
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Credit hours</TooltipContent>
+                </Tooltip>
+
+                <div className="z-10">
+                  <AddSubjectPrerequisite
+                    currentSubject={curriSubject}
+                    subjects={subjects}
+                    selectedPrerequisites={prerequisitesState}
+                    onAddPrerequisite={handleAddPrerequisite}
+                    onRemovePrerequisite={handleRemovePrerequisite}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {onRemove && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleRemoveClick}
+                    className="bg-transparent border-none text-slate-400 cursor-pointer transition-all duration-200 p-2.5 rounded-lg opacity-70 flex items-center justify-center flex-shrink-0 hover:text-red-500 hover:bg-red-50 hover:opacity-100 hover:scale-110 hover:shadow-sm active:scale-95"
+                  >
+                    <Trash size={18} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Remove subject</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+export default SubjectCurriItem;

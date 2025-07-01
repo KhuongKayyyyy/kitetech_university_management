@@ -49,7 +49,7 @@ function AddNewCurriculumDialog({ open, setOpen, onSubmit }: AddNewCurriculumDia
     );
   };
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="flex flex-col gap-0 overflow-y-visible p-0 sm:max-w-lg [&>button:last-child]:top-3.5">
         <DialogHeader className="contents space-y-0 text-left">
           <DialogTitle className="border-b border-border px-6 py-4 text-base">Edit profile</DialogTitle>

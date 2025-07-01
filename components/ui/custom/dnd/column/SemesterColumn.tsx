@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { CirclePlus, Edit2, GripVertical, Save, Trash } from "lucide-react";
 import styled from "styled-components";
@@ -8,7 +9,7 @@ import SubjectCurriItem from "../task/SubjectCurriItem";
 
 interface SemesterColumnProps {
   column: { id: string; title: string; subjectIds: string[] };
-  subjects: { id: string; content: string }[];
+  subjects: CurriculumnSubject[];
   index: number;
   onAddSubject: (columnId: string) => void;
   onRemoveSubject: (columnId: string, subjectId: string) => void;
@@ -373,11 +374,11 @@ export const SemesterColumn: React.FC<SemesterColumnProps> = ({
                     </EmptyState>
                   ) : (
                     subjects.map((subject, index) => (
-                      <div key={subject.id} style={{ width: "100%", marginBottom: "12px" }}>
+                      <div key={subject.SubjectID} style={{ width: "100%", marginBottom: "12px" }}>
                         <SubjectCurriItem
-                          task={subject}
+                          subject={subject}
                           index={index}
-                          onRemove={() => onRemoveSubject(column.id, subject.id)}
+                          onRemove={() => onRemoveSubject(column.id, subject.SubjectID)}
                         />
                       </div>
                     ))

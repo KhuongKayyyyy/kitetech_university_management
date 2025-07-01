@@ -176,12 +176,6 @@ export function CurriculumTable({ curriculums }: { curriculums: CurriculumModel[
   return (
     <div className="w-full flex flex-col">
       <div className="flex items-center py-4 gap-4">
-        <Input
-          placeholder="Filter curriculums..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
-          className="max-w-sm shadow-md"
-        />
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

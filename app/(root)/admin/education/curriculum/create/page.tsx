@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 
+import { CurriculumnSubject, defaultCurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
 import { Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { SemesterColumn } from "@/components/ui/custom/dnd/column/SemesterColumn";
@@ -15,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { ArrowUpRight, CheckCircle2, CircleFadingPlus, FileInput, FolderPlus, Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import styled from "styled-components";
@@ -52,10 +53,11 @@ export default function CreateCurriculumPage() {
   const [targetColumnId, setTargetColumnId] = useState<string | null>(null);
   const [targetBoardId, setTargetBoardId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
 
   const [state, setState] = useState<{
     boards: Board[];
-    subjects: { [key: string]: { id: string; content: string; type: string } };
+    subjects: { [key: string]: CurriculumnSubject };
   }>({
     boards: [],
     subjects: {},
@@ -151,8 +153,35 @@ export default function CreateCurriculumPage() {
     });
   };
 
+  // Get currently selected subjects for a specific column and board
+  const getCurrentlySelectedSubjects = (columnId: string, boardId: string): Subject[] => {
+    const board = state.boards.find((b) => b.id === boardId);
+    if (!board || !board.semesterColumn[columnId]) return [];
+
+    const column = board.semesterColumn[columnId];
+    const currentSubjects: Subject[] = [];
+
+    column.subjectIds.forEach((subjectId) => {
+      const subject = state.subjects[subjectId];
+      if (subject) {
+        currentSubjects.push({
+          id: subject.SubjectID,
+          subjectId: subject.SubjectID,
+          name: subject.SubjectName,
+          credits: subject.TotalCredits,
+          majorId: subject.MajorID,
+          departmentId: 1,
+        });
+      }
+    });
+
+    return currentSubjects;
+  };
+
   // Open subject search dialog for a specific column and board
   const openSearchDialog = (columnId: string, boardId: string) => {
+    const currentlySelected = getCurrentlySelectedSubjects(columnId, boardId);
+    setSelectedSubjects(currentlySelected);
     setTargetColumnId(columnId);
     setTargetBoardId(boardId);
     setOpenSearch(true);
@@ -164,15 +193,66 @@ export default function CreateCurriculumPage() {
     const board = state.boards.find((b) => b.id === boardId);
     if (!board) return;
 
-    const newSubjects: { [key: string]: any } = {};
+    const newSubjects: { [key: string]: CurriculumnSubject } = {};
     const newSubjectIds: string[] = [];
 
     subjects.forEach((subject) => {
-      const newSubjectId = `subject-${subject.subjectId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const newSubject = {
-        id: newSubjectId,
-        content: subject.name,
-        type: board.type,
+      // const newSubjectId = `subject-${subject.subjectId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newSubjectId = subject.subjectId;
+      const newSubject: CurriculumnSubject = {
+        SubjectID: newSubjectId,
+        SubjectName: subject.name,
+        SubjectName_EN: subject.name,
+        TotalCredits: subject.credits,
+        MajorID: subject.majorId,
+        Semester: board.columnOrder.indexOf(columnId) + 1,
+        ProgramSemester: board.columnOrder.indexOf(columnId) + 1,
+        IsRequired: true,
+        CourseTypeID: 1,
+        TrainingMajorCode: subject.majorId,
+        CourseTypeName: board.type,
+        CourseTypeName_EN: board.type,
+        LectureHours: 0,
+        PracticeHours: 0,
+        EducationProgramID: "",
+        AcademicYear: 0,
+        AcademicYearID: 0,
+        LectureCredits: 0,
+        PracticeCredits: 0,
+        SelfStudyCredits: 0,
+        InitialStatus: 0,
+        SubjectDetailInfo: "",
+        SubjectTooltip: "",
+        PrerequisiteType: 0,
+        HasPrerequisite: false,
+        TotalPrerequisiteTypes: 0,
+        CourseTypeColorBackground: null,
+        CourseTypeColorFont: null,
+        SemesterName: "",
+        IsSummerSemester: false,
+        AUN_Info: "",
+        CourseGroupID: "",
+        Notes: null,
+        AccumulatedCredits: 0,
+        GPAAccumulated: 0,
+        BachelorCredits: 0,
+        EngineerCredits: 0,
+        IsPartOfNonBachelorGroup: false,
+        IsExcludedFromEngineerProgram: false,
+        HasEngineerGroup: false,
+        MappedCourseGroupID: null,
+        ElectiveCredits: 0,
+        MappedCourseGroupName: null,
+        MappedCourseGroupName_EN: null,
+        IsMapped: 0,
+        ParentCourseGroupID: null,
+        IsRequiredElective: 0,
+        PracticeHoursCount: 0,
+        LectureHoursCount: 0,
+        SelfStudyHoursCount: 0,
+        IsCountedForGPA: false,
+        IsCountedForCredits: false,
+        PrerequisiteSubjects: [],
       };
       newSubjects[newSubjectId] = newSubject;
       newSubjectIds.push(newSubjectId);
@@ -209,91 +289,99 @@ export default function CreateCurriculumPage() {
   const onDragEnd = (result: any, boardId: string) => {
     const { destination, source, draggableId, type } = result;
 
-    // If there's no destination or item was dropped in the same spot, do nothing
-    if (!destination) return;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+    // Exit if no destination or dropped in the same position
+    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+      return;
+    }
 
     setState((prev) => {
-      // Find the current board
-      const currentBoard = prev.boards.find((board) => board.id === boardId);
-      if (!currentBoard) return prev;
+      const board = prev.boards.find((b) => b.id === boardId);
+      if (!board) return prev;
 
-      // If we're dragging columns
+      // Reordering columns
       if (type === "column") {
-        const newColumnOrder = Array.from(currentBoard.columnOrder);
+        const newColumnOrder = [...board.columnOrder];
         newColumnOrder.splice(source.index, 1);
         newColumnOrder.splice(destination.index, 0, draggableId);
 
-        // Return updated state with new column order
         return {
           ...prev,
-          boards: prev.boards.map((board) =>
-            board.id === boardId ? { ...board, columnOrder: newColumnOrder } : board,
-          ),
+          boards: prev.boards.map((b) => (b.id === boardId ? { ...b, columnOrder: newColumnOrder } : b)),
         };
       }
 
-      // If we're dragging subjects:
-      // Get the source and destination columns
-      const sourceColumn = currentBoard.semesterColumn[source.droppableId];
-      const destColumn = currentBoard.semesterColumn[destination.droppableId];
+      // Reordering or moving subjects
+      const sourceColumn = board.semesterColumn[source.droppableId];
+      const destColumn = board.semesterColumn[destination.droppableId];
 
-      // If source and destination are the same column
+      if (!sourceColumn || !destColumn) return prev;
+
+      const newSourceSubjectIds = [...sourceColumn.subjectIds];
+      const [movedSubjectId] = newSourceSubjectIds.splice(source.index, 1);
+
       if (sourceColumn.id === destColumn.id) {
-        const newSubjectIds = Array.from(sourceColumn.subjectIds);
-        newSubjectIds.splice(source.index, 1);
-        newSubjectIds.splice(destination.index, 0, draggableId);
+        // Reorder within the same column
+        newSourceSubjectIds.splice(destination.index, 0, movedSubjectId);
 
-        // Return updated state with reordered subjects in the same column
         return {
           ...prev,
-          boards: prev.boards.map((board) =>
-            board.id === boardId
+          boards: prev.boards.map((b) =>
+            b.id === boardId
               ? {
-                  ...board,
+                  ...b,
                   semesterColumn: {
-                    ...board.semesterColumn,
+                    ...b.semesterColumn,
                     [sourceColumn.id]: {
                       ...sourceColumn,
-                      subjectIds: newSubjectIds,
+                      subjectIds: newSourceSubjectIds,
                     },
                   },
                 }
-              : board,
+              : b,
           ),
         };
+      } else {
+        // Move to a different column
+        const newDestSubjectIds = [...destColumn.subjectIds];
+        newDestSubjectIds.splice(destination.index, 0, movedSubjectId);
+
+        // Update semester number when moving between columns
+        const subject = prev.subjects[movedSubjectId];
+        const newSemester = board.columnOrder.indexOf(destination.droppableId) + 1;
+        const updatedSubject = {
+          ...subject,
+          semester: newSemester,
+        };
+
+        return {
+          ...prev,
+          boards: prev.boards.map((b) =>
+            b.id === boardId
+              ? {
+                  ...b,
+                  semesterColumn: {
+                    ...b.semesterColumn,
+                    [sourceColumn.id]: {
+                      ...sourceColumn,
+                      subjectIds: newSourceSubjectIds,
+                    },
+                    [destColumn.id]: {
+                      ...destColumn,
+                      subjectIds: newDestSubjectIds,
+                    },
+                  },
+                }
+              : b,
+          ),
+          subjects: {
+            ...prev.subjects,
+            [movedSubjectId]: updatedSubject,
+          },
+        };
       }
-
-      // If dragging between different columns
-      const sourceSubjectIds = Array.from(sourceColumn.subjectIds);
-      sourceSubjectIds.splice(source.index, 1);
-
-      const destSubjectIds = Array.from(destColumn.subjectIds);
-      destSubjectIds.splice(destination.index, 0, draggableId);
-
-      return {
-        ...prev,
-        boards: prev.boards.map((board) =>
-          board.id === boardId
-            ? {
-                ...board,
-                semesterColumn: {
-                  ...board.semesterColumn,
-                  [sourceColumn.id]: {
-                    ...sourceColumn,
-                    subjectIds: sourceSubjectIds,
-                  },
-                  [destColumn.id]: {
-                    ...destColumn,
-                    subjectIds: destSubjectIds,
-                  },
-                },
-              }
-            : board,
-        ),
-      };
     });
   };
+
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
@@ -379,7 +467,12 @@ export default function CreateCurriculumPage() {
       <div className="flex justify-between items-center mb-6">
         <button
           className="inline-flex h-10 w-fit rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-          onClick={() => setOpenSearch(true)}
+          onClick={() => {
+            setSelectedSubjects([]);
+            setTargetColumnId(null);
+            setTargetBoardId(null);
+            setOpenSearch(true);
+          }}
         >
           <span className="flex items-center gap-2">
             <Search size={16} strokeWidth={2} />
@@ -392,6 +485,7 @@ export default function CreateCurriculumPage() {
       </div>
 
       <SubjectSearchDialog
+        selectedSubjects={selectedSubjects}
         open={openSearch}
         onOpenChange={setOpenSearch}
         departmentId={Number(departmentId)}
@@ -425,12 +519,22 @@ export default function CreateCurriculumPage() {
                   <Container {...provided.droppableProps} ref={provided.innerRef}>
                     {currentStepBoard.columnOrder.map((columnId, index) => {
                       const column = currentStepBoard.semesterColumn[columnId];
-                      const tasks = column.subjectIds.map((taskId) => state.subjects[taskId]);
+                      const tasks = column.subjectIds.map((taskId) => state.subjects[taskId]).filter(Boolean);
                       return (
                         <SemesterColumn
                           key={column.id}
                           column={column}
-                          subjects={tasks}
+                          subjects={tasks.map((subject) => ({
+                            ...defaultCurriculumnSubject,
+                            SubjectID: subject.SubjectID,
+                            SubjectName: subject.SubjectName,
+                            LectureHours: subject.LectureHours,
+                            PracticeHours: subject.PracticeHours,
+                            TotalCredits: subject.TotalCredits,
+                            EducationProgramID: subject.EducationProgramID,
+                            MajorID: subject.MajorID,
+                            PrerequisiteSubjects: subject.PrerequisiteSubjects,
+                          }))}
                           index={index}
                           onAddSubject={() => openSearchDialog(column.id, currentStepBoard.id)}
                           onRemoveSubject={(colId, subjectId) =>
@@ -518,7 +622,7 @@ export default function CreateCurriculumPage() {
                                       className="flex items-center gap-2 text-sm text-muted-foreground"
                                     >
                                       <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                                      <span>{subject.content}</span>
+                                      <span>{subject.SubjectName}</span>
                                     </li>
                                   )
                                 );

@@ -21,6 +21,7 @@ import SubjectItem from "../subject/SubjectItem";
 type SubjectSearchDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  selectedSubjects: Subject[];
   onSelect?: (subjects: Subject[]) => void;
   subjectType: string;
   departmentId: number;
@@ -73,6 +74,7 @@ export default function SubjectSearchDialog({
   onSelect,
   departmentId,
   subjectType,
+  selectedSubjects: existingSelectedSubjects,
 }: SubjectSearchDialogProps) {
   const [hoveredSubject, setHoveredSubject] = React.useState<Subject | null>(null);
   const [selectedMajorId, setSelectedMajorId] = React.useState<number | null>(null);
@@ -90,6 +92,12 @@ export default function SubjectSearchDialog({
   });
 
   const handleSubjectToggle = (subject: Subject) => {
+    // Check if subject is already in the existing curriculum
+    const isAlreadyAdded = existingSelectedSubjects.some((s) => s.subjectId === subject.subjectId);
+    if (isAlreadyAdded) {
+      return; // Don't allow selection if already added
+    }
+
     setSelectedSubjects((prev) => {
       const isSelected = prev.some((s) => s.subjectId === subject.subjectId);
       if (isSelected) {
@@ -102,6 +110,10 @@ export default function SubjectSearchDialog({
 
   const isSubjectSelected = (subject: Subject) => {
     return selectedSubjects.some((s) => s.subjectId === subject.subjectId);
+  };
+
+  const isSubjectAlreadyAdded = (subject: Subject) => {
+    return existingSelectedSubjects.some((s) => s.subjectId === subject.subjectId);
   };
 
   const handleRemoveSubject = (subject: Subject) => {
@@ -171,32 +183,52 @@ export default function SubjectSearchDialog({
           {subjectType === "core" && (
             <CommandGroup heading="Major Subjects">
               {filteredSubjects.length > 0 ? (
-                filteredSubjects.map((subject) => (
-                  <CommandItem
-                    key={subject.subjectId}
-                    onSelect={() => handleSubjectToggle(subject)}
-                    onMouseEnter={() => setHoveredSubject(subject)}
-                    onMouseLeave={() => setHoveredSubject(null)}
-                    className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <div
-                        className={cn(
-                          "w-4 h-4 border-2 rounded flex items-center justify-center",
-                          isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
-                        )}
-                      >
-                        {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+                filteredSubjects.map((subject) => {
+                  const alreadyAdded = isSubjectAlreadyAdded(subject);
+                  return (
+                    <CommandItem
+                      key={subject.subjectId}
+                      onSelect={() => handleSubjectToggle(subject)}
+                      onMouseEnter={() => setHoveredSubject(subject)}
+                      onMouseLeave={() => setHoveredSubject(null)}
+                      className={cn(
+                        "flex flex-col items-start gap-2 px-4 py-3 transition-colors",
+                        alreadyAdded ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent/10",
+                      )}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <div
+                          className={cn(
+                            "w-4 h-4 border-2 rounded flex items-center justify-center",
+                            alreadyAdded
+                              ? "bg-muted border-muted"
+                              : isSubjectSelected(subject)
+                                ? "bg-primary border-primary"
+                                : "border-muted-foreground",
+                          )}
+                        >
+                          {(isSubjectSelected(subject) || alreadyAdded) && (
+                            <Check
+                              size={12}
+                              className={alreadyAdded ? "text-muted-foreground" : "text-primary-foreground"}
+                            />
+                          )}
+                        </div>
+                        <GraduationCap size={18} className={alreadyAdded ? "text-muted-foreground" : "text-primary"} />
+                        <span className={cn("font-medium", alreadyAdded && "text-muted-foreground")}>
+                          {subject.name}
+                        </span>
+                        <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
                       </div>
-                      <GraduationCap size={18} className="text-primary" />
-                      <span className="font-medium">{subject.name}</span>
-                      <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
-                    </div>
-                    {subject.description && (
-                      <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
-                    )}
-                  </CommandItem>
-                ))
+                      {alreadyAdded && (
+                        <span className="text-xs text-muted-foreground pl-6">This subject has already been added</span>
+                      )}
+                      {!alreadyAdded && subject.description && (
+                        <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
+                      )}
+                    </CommandItem>
+                  );
+                })
               ) : (
                 <div className="px-4 py-8 text-center text-muted-foreground">
                   <div className="mb-2">No subjects found</div>
@@ -207,125 +239,197 @@ export default function SubjectSearchDialog({
           )}
           {(subjectType === "core" || subjectType === "pe") && (
             <CommandGroup heading="Physical Education">
-              {PESubjects.map((subject) => (
-                <CommandItem
-                  key={subject.subjectId}
-                  onSelect={() => handleSubjectToggle(subject)}
-                  onMouseEnter={() => setHoveredSubject(subject)}
-                  onMouseLeave={() => setHoveredSubject(null)}
-                  className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <div
-                      className={cn(
-                        "w-4 h-4 border-2 rounded flex items-center justify-center",
-                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
-                      )}
-                    >
-                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+              {PESubjects.map((subject) => {
+                const alreadyAdded = isSubjectAlreadyAdded(subject);
+                return (
+                  <CommandItem
+                    key={subject.subjectId}
+                    onSelect={() => handleSubjectToggle(subject)}
+                    onMouseEnter={() => setHoveredSubject(subject)}
+                    onMouseLeave={() => setHoveredSubject(null)}
+                    className={cn(
+                      "flex flex-col items-start gap-2 px-4 py-3 transition-colors",
+                      alreadyAdded ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent/10",
+                    )}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <div
+                        className={cn(
+                          "w-4 h-4 border-2 rounded flex items-center justify-center",
+                          alreadyAdded
+                            ? "bg-muted border-muted"
+                            : isSubjectSelected(subject)
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground",
+                        )}
+                      >
+                        {(isSubjectSelected(subject) || alreadyAdded) && (
+                          <Check
+                            size={12}
+                            className={alreadyAdded ? "text-muted-foreground" : "text-primary-foreground"}
+                          />
+                        )}
+                      </div>
+                      <Dumbbell size={16} className={alreadyAdded ? "text-muted-foreground" : "text-blue-500"} />
+                      <span className={cn("font-medium", alreadyAdded && "text-muted-foreground")}>{subject.name}</span>
+                      <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
                     </div>
-                    <Dumbbell size={16} className="text-blue-500" />
-                    <span className="font-medium">{subject.name}</span>
-                    <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
-                  </div>
-                  {subject.description && (
-                    <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
-                  )}
-                </CommandItem>
-              ))}
+                    {alreadyAdded && (
+                      <span className="text-xs text-muted-foreground pl-6">This subject has already been added</span>
+                    )}
+                    {!alreadyAdded && subject.description && (
+                      <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           )}
 
           {(subjectType === "core" || subjectType === "philosophy") && (
             <CommandGroup heading="Philosophy">
-              {philosophySubjects.map((subject) => (
-                <CommandItem
-                  key={subject.subjectId}
-                  onSelect={() => handleSubjectToggle(subject)}
-                  onMouseEnter={() => setHoveredSubject(subject)}
-                  onMouseLeave={() => setHoveredSubject(null)}
-                  className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <div
-                      className={cn(
-                        "w-4 h-4 border-2 rounded flex items-center justify-center",
-                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
-                      )}
-                    >
-                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+              {philosophySubjects.map((subject) => {
+                const alreadyAdded = isSubjectAlreadyAdded(subject);
+                return (
+                  <CommandItem
+                    key={subject.subjectId}
+                    onSelect={() => handleSubjectToggle(subject)}
+                    onMouseEnter={() => setHoveredSubject(subject)}
+                    onMouseLeave={() => setHoveredSubject(null)}
+                    className={cn(
+                      "flex flex-col items-start gap-2 px-4 py-3 transition-colors",
+                      alreadyAdded ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent/10",
+                    )}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <div
+                        className={cn(
+                          "w-4 h-4 border-2 rounded flex items-center justify-center",
+                          alreadyAdded
+                            ? "bg-muted border-muted"
+                            : isSubjectSelected(subject)
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground",
+                        )}
+                      >
+                        {(isSubjectSelected(subject) || alreadyAdded) && (
+                          <Check
+                            size={12}
+                            className={alreadyAdded ? "text-muted-foreground" : "text-primary-foreground"}
+                          />
+                        )}
+                      </div>
+                      <BookOpen size={16} className={alreadyAdded ? "text-muted-foreground" : "text-purple-500"} />
+                      <span className={cn("font-medium", alreadyAdded && "text-muted-foreground")}>{subject.name}</span>
+                      <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
                     </div>
-                    <BookOpen size={16} className="text-purple-500" />
-                    <span className="font-medium">{subject.name}</span>
-                    <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
-                  </div>
-                  {subject.description && (
-                    <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
-                  )}
-                </CommandItem>
-              ))}
+                    {alreadyAdded && (
+                      <span className="text-xs text-muted-foreground pl-6">This subject has already been added</span>
+                    )}
+                    {!alreadyAdded && subject.description && (
+                      <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           )}
 
           {(subjectType === "core" || subjectType === "english") && (
             <CommandGroup heading="English">
-              {englishSubjects.map((subject) => (
-                <CommandItem
-                  key={subject.subjectId}
-                  onSelect={() => handleSubjectToggle(subject)}
-                  onMouseEnter={() => setHoveredSubject(subject)}
-                  onMouseLeave={() => setHoveredSubject(null)}
-                  className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <div
-                      className={cn(
-                        "w-4 h-4 border-2 rounded flex items-center justify-center",
-                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
-                      )}
-                    >
-                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+              {englishSubjects.map((subject) => {
+                const alreadyAdded = isSubjectAlreadyAdded(subject);
+                return (
+                  <CommandItem
+                    key={subject.subjectId}
+                    onSelect={() => handleSubjectToggle(subject)}
+                    onMouseEnter={() => setHoveredSubject(subject)}
+                    onMouseLeave={() => setHoveredSubject(null)}
+                    className={cn(
+                      "flex flex-col items-start gap-2 px-4 py-3 transition-colors",
+                      alreadyAdded ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent/10",
+                    )}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <div
+                        className={cn(
+                          "w-4 h-4 border-2 rounded flex items-center justify-center",
+                          alreadyAdded
+                            ? "bg-muted border-muted"
+                            : isSubjectSelected(subject)
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground",
+                        )}
+                      >
+                        {(isSubjectSelected(subject) || alreadyAdded) && (
+                          <Check
+                            size={12}
+                            className={alreadyAdded ? "text-muted-foreground" : "text-primary-foreground"}
+                          />
+                        )}
+                      </div>
+                      <Languages size={16} className={alreadyAdded ? "text-muted-foreground" : "text-green-500"} />
+                      <span className={cn("font-medium", alreadyAdded && "text-muted-foreground")}>{subject.name}</span>
+                      <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
                     </div>
-                    <Languages size={16} className="text-green-500" />
-                    <span className="font-medium">{subject.name}</span>
-                    <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
-                  </div>
-                  {subject.description && (
-                    <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
-                  )}
-                </CommandItem>
-              ))}
+                    {alreadyAdded && (
+                      <span className="text-xs text-muted-foreground pl-6">This subject has already been added</span>
+                    )}
+                    {!alreadyAdded && subject.description && (
+                      <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           )}
 
           {(subjectType === "core" || subjectType === "skill") && (
             <CommandGroup heading="Skills">
-              {skillSubjects.map((subject) => (
-                <CommandItem
-                  key={subject.subjectId}
-                  onSelect={() => handleSubjectToggle(subject)}
-                  onMouseEnter={() => setHoveredSubject(subject)}
-                  onMouseLeave={() => setHoveredSubject(null)}
-                  className="flex flex-col items-start gap-2 px-4 py-3 cursor-pointer hover:bg-accent/10 transition-colors"
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    <div
-                      className={cn(
-                        "w-4 h-4 border-2 rounded flex items-center justify-center",
-                        isSubjectSelected(subject) ? "bg-primary border-primary" : "border-muted-foreground",
-                      )}
-                    >
-                      {isSubjectSelected(subject) && <Check size={12} className="text-primary-foreground" />}
+              {skillSubjects.map((subject) => {
+                const alreadyAdded = isSubjectAlreadyAdded(subject);
+                return (
+                  <CommandItem
+                    key={subject.subjectId}
+                    onSelect={() => handleSubjectToggle(subject)}
+                    onMouseEnter={() => setHoveredSubject(subject)}
+                    onMouseLeave={() => setHoveredSubject(null)}
+                    className={cn(
+                      "flex flex-col items-start gap-2 px-4 py-3 transition-colors",
+                      alreadyAdded ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-accent/10",
+                    )}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <div
+                        className={cn(
+                          "w-4 h-4 border-2 rounded flex items-center justify-center",
+                          alreadyAdded
+                            ? "bg-muted border-muted"
+                            : isSubjectSelected(subject)
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground",
+                        )}
+                      >
+                        {(isSubjectSelected(subject) || alreadyAdded) && (
+                          <Check
+                            size={12}
+                            className={alreadyAdded ? "text-muted-foreground" : "text-primary-foreground"}
+                          />
+                        )}
+                      </div>
+                      <Wrench size={16} className={alreadyAdded ? "text-muted-foreground" : "text-orange-500"} />
+                      <span className={cn("font-medium", alreadyAdded && "text-muted-foreground")}>{subject.name}</span>
+                      <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
                     </div>
-                    <Wrench size={16} className="text-orange-500" />
-                    <span className="font-medium">{subject.name}</span>
-                    <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
-                  </div>
-                  {subject.description && (
-                    <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
-                  )}
-                </CommandItem>
-              ))}
+                    {alreadyAdded && (
+                      <span className="text-xs text-muted-foreground pl-6">This subject has already been added</span>
+                    )}
+                    {!alreadyAdded && subject.description && (
+                      <span className="text-sm text-muted-foreground line-clamp-2 pl-6">{subject.description}</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           )}
         </div>

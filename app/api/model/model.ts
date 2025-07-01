@@ -5,12 +5,13 @@ export interface Teacher {
 }
 
 export interface Subject {
-  id: number;
-  subjectId: number;
+  id: string;
+  subjectId: string;
   name: string;
   description?: string;
-  majorId: number;
+  majorId: string;
   departmentId: number;
+  credits: number;
 }
 
 export interface Major {

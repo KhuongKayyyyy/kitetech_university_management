@@ -47,7 +47,10 @@ export default function CurriculumItem({ curriculum, onEdit, onDelete }: Curricu
   };
 
   return (
-    <Card className="w-full shadow-sm border hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:scale-[1.02] group cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-gray-50/50">
+    <Card
+      onClick={() => (window.location.href = `/admin/education/curriculum/${curriculum.id}`)}
+      className="w-full shadow-sm border hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:scale-[1.02] group cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-gray-50/50"
+    >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">

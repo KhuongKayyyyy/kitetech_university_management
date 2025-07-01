@@ -91,22 +91,29 @@ export default function AddSubjectPrerequisite({
 
       {selectedPrerequisites.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs text-gray-500">Selected Prerequisites:</div>
+          <div className="text-xs text-gray-500">Prerequisites:</div>
           <div className="flex flex-wrap gap-2">
             {selectedPrerequisites.map((prerequisite) => (
               <div
                 key={prerequisite.subjectId}
-                className="flex items-center gap-1 pr-1 bg-secondary text-secondary-foreground rounded-md px-2 py-1"
+                className="group flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg px-3 py-2 border border-slate-200 transition-all duration-200"
               >
-                <span className="font-medium">{prerequisite.subjectId}</span>
-                <span className="text-xs">({prerequisite.credits} credits)</span>
+                <BookOpen size={14} className="text-blue-500" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{prerequisite.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">{prerequisite.subjectId}</span>
+                    <span className="text-xs text-slate-400">•</span>
+                    <span className="text-xs text-slate-500">{prerequisite.credits} credits</span>
+                  </div>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-4 w-4 p-0 hover:bg-transparent"
+                  className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-2 hover:bg-red-50 hover:text-red-500"
                   onClick={() => handleRemovePrerequisite(prerequisite.subjectId.toString())}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             ))}

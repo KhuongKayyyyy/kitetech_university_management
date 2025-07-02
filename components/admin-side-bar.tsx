@@ -2,7 +2,6 @@
 
 import * as React from "react";
 
-import { DEFAULT_AVATAR } from "@/app/constants/AppImage";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
@@ -16,6 +15,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { DEFAULT_AVATAR } from "@/constants/AppImage";
 import { RootState } from "@/store/store";
 import {
   AudioWaveform,

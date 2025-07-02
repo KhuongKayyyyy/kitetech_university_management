@@ -1,7 +1,7 @@
 "use client";
 
-import { logout } from "@/app/api/auth";
 import { User } from "@/app/api/model/UserModel";
+import { authService } from "@/app/api/services/authService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { APP_ROUTES } from "@/constants/AppRoutes";
 import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -20,9 +21,8 @@ export function NavUser({ user }: { user: User }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
   const handleLogout = () => {
-    logout();
-    router.push("/");
-    console.log("logout");
+    authService.logout();
+    router.push(APP_ROUTES.LOGIN);
   };
   return (
     <SidebarMenu>

@@ -1,11 +1,12 @@
 import { useState } from "react";
 
-import { login } from "@/app/api/auth";
-import { APP_LOGO } from "@/app/constants/AppImage";
+import { authService } from "@/app/api/services/authService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { APP_LOGO } from "@/constants/AppImage";
+import { APP_ROUTES } from "@/constants/AppRoutes";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "sonner";
@@ -16,8 +17,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const [password, setPassword] = useState("datkhuong1123");
   const handleLogin = async () => {
     try {
-      const { userInfo } = await login({ username, password });
-      router.push("/admin/users/student");
+      const { userInfo } = await authService.login({ username, password });
+      router.push(APP_ROUTES.USER);
       toast.success("Welcome back " + userInfo.full_name);
     } catch (error) {
       console.error("Login failed:", error);

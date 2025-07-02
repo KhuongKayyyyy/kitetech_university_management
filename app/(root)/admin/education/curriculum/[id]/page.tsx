@@ -1,6 +1,6 @@
 import React from "react";
 
-import { FakeCurriclumnData } from "@/app/api/FakeCurriclumnData";
+import { FakeCurriclumnData } from "@/app/api/fakedata/FakeCurriclumnData";
 
 export default function page({ params }: { params: { id: string } }) {
   const curriculum = FakeCurriclumnData.find((item) => item.SubjectID === params.id);

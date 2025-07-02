@@ -1,3 +1,5 @@
+
+//this slice is for the counter - testing purposes
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 

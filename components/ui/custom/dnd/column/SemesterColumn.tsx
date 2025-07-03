@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { Subject } from "@/app/api/model/model";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { CirclePlus, Edit2, GripVertical, Save, Trash } from "lucide-react";
 import styled from "styled-components";
@@ -15,6 +16,7 @@ interface SemesterColumnProps {
   onRemoveSubject: (columnId: string, subjectId: string) => void;
   onRemoveColumn: (columnId: string) => void;
   onRenameColumn?: (columnId: string, newTitle: string) => void;
+  onUpdatePrerequisites?: (subjectId: string, prerequisites: Subject[]) => void;
 }
 
 const Container = styled.div`
@@ -268,6 +270,7 @@ export const SemesterColumn: React.FC<SemesterColumnProps> = ({
   onRemoveSubject,
   onRemoveColumn,
   onRenameColumn,
+  onUpdatePrerequisites,
 }) => {
   const columnRef = React.useRef<HTMLDivElement>(null);
   const [height, setHeight] = React.useState<number | undefined>(undefined);
@@ -379,6 +382,7 @@ export const SemesterColumn: React.FC<SemesterColumnProps> = ({
                           subject={subject}
                           index={index}
                           onRemove={() => onRemoveSubject(column.id, subject.SubjectID)}
+                          onUpdatePrerequisites={onUpdatePrerequisites}
                         />
                       </div>
                     ))

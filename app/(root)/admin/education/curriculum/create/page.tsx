@@ -2,42 +2,21 @@
 
 import React, { useState } from "react";
 
-import { CurriculumnSubject, defaultCurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
 import { Subject } from "@/app/api/model/model";
-import { Button } from "@/components/ui/button";
-import { SemesterColumn } from "@/components/ui/custom/dnd/column/SemesterColumn";
-import SubjectSearchDialog from "@/components/ui/custom/education/curriculum/SearchSubjectDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { ArrowUpRight, CheckCircle2, CircleFadingPlus, FileInput, FolderPlus, Search } from "lucide-react";
+import CurriculumBoard from "@/components/ui/custom/education/curriculum/CurriculumBoard";
+import CurriculumSummary from "@/components/ui/custom/education/curriculum/CurriculumSummary";
+import SaveCurriculumDialog from "@/components/ui/custom/education/curriculum/SaveCurriculumDialog";
+import SearchSubjectSection from "@/components/ui/custom/education/curriculum/SearchSubjectSection";
+import StepNavigation from "@/components/ui/custom/education/curriculum/StepNavigation";
+import { SubjectType } from "@/constants/enum/SubjectType";
+import { FileInput, FolderPlus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import styled from "styled-components";
-
-const Container = styled.div`
-  display: flex;w
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  &::-webkit-scrollbar {
-    height: 8px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-  }
-`;
 
 type Board = {
   id: string;
   name: string;
-  type: "core" | "pe" | "skill" | "english" | "philosophy";
+  type: SubjectType;
   columnOrder: string[];
   semesterColumn: { [key: string]: { id: string; title: string; subjectIds: string[] } };
 };
@@ -53,7 +32,7 @@ export default function CreateCurriculumPage() {
   const [targetColumnId, setTargetColumnId] = useState<string | null>(null);
   const [targetBoardId, setTargetBoardId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
+  const [globalSelectedSubjects, setGlobalSelectedSubjects] = useState<Subject[]>([]);
 
   const [state, setState] = useState<{
     boards: Board[];
@@ -72,8 +51,8 @@ export default function CreateCurriculumPage() {
     { id: 5, name: "Philosophy", type: "philosophy" },
   ];
 
-  //  new board
-  const addBoard = (type: "core" | "pe" | "skill" | "english" | "philosophy") => {
+  // Add new board
+  const addBoard = (type: SubjectType) => {
     setState((prev) => ({
       ...prev,
       boards: [
@@ -153,51 +132,59 @@ export default function CreateCurriculumPage() {
     });
   };
 
-  // Get currently selected subjects for a specific column and board
-  const getCurrentlySelectedSubjects = (columnId: string, boardId: string): Subject[] => {
-    const board = state.boards.find((b) => b.id === boardId);
-    if (!board || !board.semesterColumn[columnId]) return [];
+  // Get all globally selected subjects across all boards and columns
+  const getAllGloballySelectedSubjects = (): Subject[] => {
+    const allSelectedSubjects: Subject[] = [];
 
-    const column = board.semesterColumn[columnId];
-    const currentSubjects: Subject[] = [];
-
-    column.subjectIds.forEach((subjectId) => {
-      const subject = state.subjects[subjectId];
-      if (subject) {
-        currentSubjects.push({
-          id: subject.SubjectID,
-          subjectId: subject.SubjectID,
-          name: subject.SubjectName,
-          credits: subject.TotalCredits,
-          majorId: subject.MajorID,
-          departmentId: 1,
+    state.boards.forEach((board) => {
+      Object.values(board.semesterColumn).forEach((column) => {
+        column.subjectIds.forEach((subjectId) => {
+          const subject = state.subjects[subjectId];
+          if (subject) {
+            allSelectedSubjects.push({
+              id: subject.SubjectID,
+              subjectId: subject.SubjectID,
+              name: subject.SubjectName,
+              credits: subject.TotalCredits,
+              majorId: subject.MajorID,
+              departmentId: 1,
+            });
+          }
         });
-      }
+      });
     });
 
-    return currentSubjects;
+    return allSelectedSubjects;
   };
 
   // Open subject search dialog for a specific column and board
   const openSearchDialog = (columnId: string, boardId: string) => {
-    const currentlySelected = getCurrentlySelectedSubjects(columnId, boardId);
-    setSelectedSubjects(currentlySelected);
+    const globallySelected = getAllGloballySelectedSubjects();
+    setGlobalSelectedSubjects(globallySelected);
     setTargetColumnId(columnId);
     setTargetBoardId(boardId);
     setOpenSearch(true);
   };
 
-  const handleSelectSubjects = (subjects: Subject[], columnId: string, boardId: string) => {
-    if (!columnId || !boardId || subjects.length === 0) return;
+  // Handle opening global search (not tied to specific column)
+  const handleOpenGlobalSearch = () => {
+    const globallySelected = getAllGloballySelectedSubjects();
+    setGlobalSelectedSubjects(globallySelected);
+    setTargetColumnId(null);
+    setTargetBoardId(null);
+    setOpenSearch(true);
+  };
 
-    const board = state.boards.find((b) => b.id === boardId);
+  const handleSelectSubjects = (subjects: Subject[]) => {
+    if (!targetColumnId || !targetBoardId || subjects.length === 0) return;
+
+    const board = state.boards.find((b) => b.id === targetBoardId);
     if (!board) return;
 
     const newSubjects: { [key: string]: CurriculumnSubject } = {};
     const newSubjectIds: string[] = [];
 
     subjects.forEach((subject) => {
-      // const newSubjectId = `subject-${subject.subjectId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const newSubjectId = subject.subjectId;
       const newSubject: CurriculumnSubject = {
         SubjectID: newSubjectId,
@@ -205,8 +192,9 @@ export default function CreateCurriculumPage() {
         SubjectName_EN: subject.name,
         TotalCredits: subject.credits,
         MajorID: subject.majorId,
-        Semester: board.columnOrder.indexOf(columnId) + 1,
-        ProgramSemester: board.columnOrder.indexOf(columnId) + 1,
+        SubjectType: board.type,
+        Semester: board.columnOrder.indexOf(targetColumnId) + 1,
+        ProgramSemester: board.columnOrder.indexOf(targetColumnId) + 1,
         IsRequired: true,
         CourseTypeID: 1,
         TrainingMajorCode: subject.majorId,
@@ -260,13 +248,13 @@ export default function CreateCurriculumPage() {
 
     setState((prev) => {
       const boards = prev.boards.map((board) => {
-        if (board.id !== boardId) return board;
-        const column = board.semesterColumn[columnId];
+        if (board.id !== targetBoardId) return board;
+        const column = board.semesterColumn[targetColumnId];
         return {
           ...board,
           semesterColumn: {
             ...board.semesterColumn,
-            [columnId]: {
+            [targetColumnId]: {
               ...column,
               subjectIds: [...column.subjectIds, ...newSubjectIds],
             },
@@ -418,6 +406,30 @@ export default function CreateCurriculumPage() {
     });
   };
 
+  // Add prerequisite update function
+  const handleUpdatePrerequisites = (subjectId: string, prerequisites: Subject[]) => {
+    setState((prev) => ({
+      ...prev,
+      subjects: {
+        ...prev.subjects,
+        [subjectId]: {
+          ...prev.subjects[subjectId],
+          PrerequisiteSubjects: prerequisites,
+        },
+      },
+    }));
+  };
+
+  const handleSave = () => {
+    // TODO: Implement save logic
+    console.log("Saving curriculum...", state);
+  };
+
+  const handleCancel = () => {
+    // TODO: Implement cancel logic
+    console.log("Cancelled save");
+  };
+
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
       <div className="mb-8">
@@ -434,216 +446,50 @@ export default function CreateCurriculumPage() {
         </div>
       </div>
 
-      {/* Step navigation */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">
-            Step {currentStep}: {steps[currentStep - 1].name}
-          </h2>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={prevStep} disabled={currentStep === 1}>
-              Previous
-            </Button>
-            <Button variant="outline" onClick={nextStep} disabled={currentStep === steps.length}>
-              Next
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex gap-2 mb-6">
-          {steps.map((step) => (
-            <div
-              key={step.id}
-              className={`flex items-center px-4 py-2 rounded ${currentStep === step.id ? "bg-primary text-white" : "bg-muted"}`}
-              onClick={() => setCurrentStep(step.id)}
-            >
-              {currentStep > step.id && <CheckCircle2 size={16} className="mr-2" />}
-              <span>{step.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center mb-6">
-        <button
-          className="inline-flex h-10 w-fit rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-          onClick={() => {
-            setSelectedSubjects([]);
-            setTargetColumnId(null);
-            setTargetBoardId(null);
-            setOpenSearch(true);
-          }}
-        >
-          <span className="flex items-center gap-2">
-            <Search size={16} strokeWidth={2} />
-            <span>Search {steps[currentStep - 1].name}</span>
-          </span>
-          <kbd className="ml-4 inline-flex h-5 items-center rounded border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
-            ⌘K
-          </kbd>
-        </button>
-      </div>
-
-      <SubjectSearchDialog
-        selectedSubjects={selectedSubjects}
-        open={openSearch}
-        onOpenChange={setOpenSearch}
-        departmentId={Number(departmentId)}
-        subjectType={steps[currentStep - 1].type as "core" | "pe" | "skill" | "english" | "philosophy"}
-        onSelect={(subjects) => {
-          if (targetColumnId && targetBoardId) handleSelectSubjects(subjects, targetColumnId, targetBoardId);
-        }}
+      <StepNavigation
+        steps={steps}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        nextStep={nextStep}
+        prevStep={prevStep}
       />
 
-      {/* Current step content */}
-      <div>
-        {!currentStepBoard ? (
-          <div className="text-center py-16 bg-muted/30 rounded-lg border-2 border-dashed">
-            <h3 className="text-xl font-medium mb-4">Add {steps[currentStep - 1].name}</h3>
-            <p className="text-muted-foreground mb-6">
-              Begin organizing your {steps[currentStep - 1].name.toLowerCase()} curriculum
-            </p>
-            <Button onClick={() => addBoard(steps[currentStep - 1].type as any)} size="lg" className="gap-2">
-              <FolderPlus size={18} />
-              Add {steps[currentStep - 1].name}
-            </Button>
-          </div>
-        ) : (
-          <div key={currentStepBoard.id} className="mb-8 p-4 bg-white rounded shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-lg">{currentStepBoard.name}</h2>
-            </div>
-            <DragDropContext onDragEnd={(result) => onDragEnd(result, currentStepBoard.id)}>
-              <Droppable droppableId={`columns-${currentStepBoard.id}`} direction="horizontal" type="column">
-                {(provided) => (
-                  <Container {...provided.droppableProps} ref={provided.innerRef}>
-                    {currentStepBoard.columnOrder.map((columnId, index) => {
-                      const column = currentStepBoard.semesterColumn[columnId];
-                      const tasks = column.subjectIds.map((taskId) => state.subjects[taskId]).filter(Boolean);
-                      return (
-                        <SemesterColumn
-                          key={column.id}
-                          column={column}
-                          subjects={tasks.map((subject) => ({
-                            ...defaultCurriculumnSubject,
-                            SubjectID: subject.SubjectID,
-                            SubjectName: subject.SubjectName,
-                            LectureHours: subject.LectureHours,
-                            PracticeHours: subject.PracticeHours,
-                            TotalCredits: subject.TotalCredits,
-                            EducationProgramID: subject.EducationProgramID,
-                            MajorID: subject.MajorID,
-                            PrerequisiteSubjects: subject.PrerequisiteSubjects,
-                          }))}
-                          index={index}
-                          onAddSubject={() => openSearchDialog(column.id, currentStepBoard.id)}
-                          onRemoveSubject={(colId, subjectId) =>
-                            removeSubjectFromSemesterColumn(colId, subjectId, currentStepBoard.id)
-                          }
-                          onRemoveColumn={(colId) => removeSemesterColumn(colId, currentStepBoard.id)}
-                          onRenameColumn={(colId, newTitle) => renameColumn(colId, newTitle, currentStepBoard.id)}
-                        />
-                      );
-                    })}
-                    {provided.placeholder}
-                  </Container>
-                )}
-              </Droppable>
-            </DragDropContext>
-            <Button onClick={() => addSemester(currentStepBoard.id)} className="mt-4 gap-2" variant="outline">
-              <CircleFadingPlus size={16} />
-              Add Semester
-            </Button>
-          </div>
-        )}
-      </div>
+      <SearchSubjectSection
+        steps={steps}
+        currentStep={currentStep}
+        openSearch={openSearch}
+        setOpenSearch={setOpenSearch}
+        departmentId={Number(departmentId)}
+        globalSelectedSubjects={globalSelectedSubjects}
+        onSelect={handleSelectSubjects}
+        onOpenGlobalSearch={handleOpenGlobalSearch}
+      />
 
-      {/* Summary view (optional) */}
-      {currentStep === steps.length && (
-        <div className="mt-8 p-4 bg-muted/20 rounded-lg border">
-          <h3 className="text-xl font-semibold mb-4">Curriculum Summary</h3>
-          {steps.map((step) => (
-            <div key={step.id} className="mb-4">
-              <h4 className="font-medium mb-2">{step.name}</h4>
-              <div className="text-sm text-muted-foreground">
-                {state.boards.find((board) => board.type === step.type) ? (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-green-500" />
-                    <span>Added</span>
-                  </div>
-                ) : (
-                  <span>Not added yet</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <CurriculumBoard
+        currentStepBoard={currentStepBoard}
+        currentStep={steps[currentStep - 1]}
+        subjects={state.subjects}
+        onDragEnd={onDragEnd}
+        onAddBoard={addBoard}
+        onAddSemester={addSemester}
+        onOpenSearchDialog={openSearchDialog}
+        onRemoveSubject={removeSubjectFromSemesterColumn}
+        onRemoveColumn={removeSemesterColumn}
+        onRenameColumn={renameColumn}
+        onUpdatePrerequisites={handleUpdatePrerequisites}
+      />
+
+      {currentStep === steps.length && <CurriculumSummary steps={steps} boards={state.boards} />}
 
       <div className="mt-8 flex justify-end">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-2" size="lg" disabled={currentStep < steps.length}>
-              Save Curriculum
-              <ArrowUpRight size={16} />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Curriculum Preview</DialogTitle>
-              <DialogDescription>Review your curriculum before saving</DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto">
-              {steps.map((step) => {
-                const board = state.boards.find((b) => b.type === step.type);
-                return (
-                  <div key={step.id} className="mb-6">
-                    <h3 className="font-semibold mb-2">{step.name}</h3>
-                    {board && (
-                      <div className="space-y-2">
-                        {Object.entries(board.semesterColumn).map(([id, column]) => (
-                          <div
-                            key={id}
-                            className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-medium text-lg">{column.title}</h4>
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                                {column.subjectIds.length} subjects
-                              </span>
-                            </div>
-                            <ul className="space-y-2">
-                              {column.subjectIds.map((subjectId) => {
-                                const subject = state.subjects[subjectId];
-                                return (
-                                  subject && (
-                                    <li
-                                      key={subjectId}
-                                      className="flex items-center gap-2 text-sm text-muted-foreground"
-                                    >
-                                      <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                                      <span>{subject.SubjectName}</span>
-                                    </li>
-                                  )
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => {}}>
-                Cancel
-              </Button>
-              <Button onClick={() => {}}>Confirm & Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <SaveCurriculumDialog
+          steps={steps}
+          boards={state.boards}
+          subjects={state.subjects}
+          currentStep={currentStep}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
       </div>
     </div>
   );

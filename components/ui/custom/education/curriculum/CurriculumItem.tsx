@@ -12,7 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { APP_ROUTES } from "@/constants/AppRoutes";
 import { Award, BookOpen, Building2, Calendar, Copy, Edit, GraduationCap, MoreHorizontal, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface CurriculumItemProps {
   curriculum: CurriculumModel & { status?: string };
@@ -46,9 +48,11 @@ export default function CurriculumItem({ curriculum, onEdit, onDelete }: Curricu
     }
   };
 
+  const router = useRouter();
+
   return (
     <Card
-      onClick={() => (window.location.href = `/admin/education/curriculum/${curriculum.id}`)}
+      onClick={() => router.push(`${APP_ROUTES.ADMIN}/education/curriculum/${curriculum.id}?name=${curriculum.name}`)}
       className="w-full shadow-sm border hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:scale-[1.02] group cursor-pointer hover:bg-gradient-to-br hover:from-white hover:to-gray-50/50"
     >
       <CardHeader className="pb-4">

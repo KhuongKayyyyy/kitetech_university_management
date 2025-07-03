@@ -6,7 +6,7 @@ import { Subject } from "@/app/api/model/model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Draggable } from "@hello-pangea/dnd";
-import { BookOpen, Clock, GripVertical, Trash, X } from "lucide-react";
+import { BookOpen, Clock, GripVertical, Trash } from "lucide-react";
 
 import AddSubjectPrerequisite from "../../education/subject/AddSubjectPrerequisite";
 
@@ -15,9 +15,16 @@ interface SubjectProps {
   index: number;
   isGhost?: boolean;
   onRemove?: () => void;
+  onUpdatePrerequisites?: (subjectId: string, prerequisites: Subject[]) => void;
 }
 
-const SubjectCurriItem: React.FC<SubjectProps> = ({ subject: curriSubject, index, isGhost, onRemove }) => {
+const SubjectCurriItem: React.FC<SubjectProps> = ({
+  subject: curriSubject,
+  index,
+  isGhost,
+  onRemove,
+  onUpdatePrerequisites,
+}) => {
   const handleRemoveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onRemove?.();
@@ -27,12 +34,17 @@ const SubjectCurriItem: React.FC<SubjectProps> = ({ subject: curriSubject, index
     curriSubject.PrerequisiteSubjects || [],
   );
 
-  const handleAddPrerequisite = (newSubject: Subject) => {
-    setPrerequisitesState((prev) => [...prev, newSubject]);
+  // Handle adding multiple prerequisites at once (can be one or more)
+  const handleAddPrerequisites = (newSubjects: Subject[]) => {
+    const updatedPrerequisites = [...prerequisitesState, ...newSubjects];
+    setPrerequisitesState(updatedPrerequisites);
+    onUpdatePrerequisites?.(curriSubject.SubjectID, updatedPrerequisites);
   };
 
   const handleRemovePrerequisite = (prerequisiteId: string) => {
-    setPrerequisitesState((prev) => prev.filter((p) => p.id !== prerequisiteId));
+    const updatedPrerequisites = prerequisitesState.filter((p) => p.id !== prerequisiteId);
+    setPrerequisitesState(updatedPrerequisites);
+    onUpdatePrerequisites?.(curriSubject.SubjectID, updatedPrerequisites);
   };
 
   return (
@@ -111,7 +123,7 @@ const SubjectCurriItem: React.FC<SubjectProps> = ({ subject: curriSubject, index
                     currentSubject={curriSubject}
                     subjects={subjects}
                     selectedPrerequisites={prerequisitesState}
-                    onAddPrerequisite={handleAddPrerequisite}
+                    onAddPrerequisites={handleAddPrerequisites}
                     onRemovePrerequisite={handleRemovePrerequisite}
                   />
                 </div>

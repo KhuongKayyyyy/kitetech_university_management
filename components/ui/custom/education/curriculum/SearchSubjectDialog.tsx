@@ -77,7 +77,7 @@ export default function SubjectSearchDialog({
   selectedSubjects: existingSelectedSubjects,
 }: SubjectSearchDialogProps) {
   const [hoveredSubject, setHoveredSubject] = React.useState<Subject | null>(null);
-  const [selectedMajorId, setSelectedMajorId] = React.useState<number | null>(null);
+  const [selectedMajorId, setSelectedMajorId] = React.useState<String | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedSubjects, setSelectedSubjects] = React.useState<Subject[]>([]);
 
@@ -152,10 +152,10 @@ export default function SubjectSearchDialog({
             {majors.map((major) => (
               <button
                 key={major.id}
-                onClick={() => setSelectedMajorId(major.id)}
+                onClick={() => setSelectedMajorId(major.id.toString())}
                 className={cn(
                   "text-sm px-4 py-2 rounded-full transition-colors",
-                  selectedMajorId === major.id
+                  selectedMajorId === major.id.toString()
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "bg-muted hover:bg-accent/80 text-muted-foreground",
                 )}

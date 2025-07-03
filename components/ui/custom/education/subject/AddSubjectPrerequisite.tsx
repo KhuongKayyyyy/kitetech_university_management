@@ -13,7 +13,7 @@ interface AddSubjectPrerequisiteProps {
   currentSubject: CurriculumnSubject;
   subjects?: Subject[];
   selectedPrerequisites?: Subject[];
-  onAddPrerequisite?: (subject: Subject) => void;
+  onAddPrerequisites?: (subjects: Subject[]) => void;
   onRemovePrerequisite?: (subjectId: string) => void;
 }
 
@@ -21,7 +21,7 @@ export default function AddSubjectPrerequisite({
   currentSubject,
   subjects = [],
   selectedPrerequisites = [],
-  onAddPrerequisite,
+  onAddPrerequisites,
   onRemovePrerequisite,
 }: AddSubjectPrerequisiteProps) {
   const [open, setOpen] = React.useState(false);
@@ -68,9 +68,7 @@ export default function AddSubjectPrerequisite({
   };
 
   const handleAddSubjects = () => {
-    selectedSubjects.forEach((subject) => {
-      onAddPrerequisite?.(subject);
-    });
+    onAddPrerequisites?.(selectedSubjects);
     setSelectedSubjects([]);
     setOpen(false);
   };

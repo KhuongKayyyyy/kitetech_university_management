@@ -1,3 +1,5 @@
+import { SubjectType } from "@/constants/enum/SubjectType";
+
 export interface CurriculumnSubject {
   LectureHours: number;
   PracticeHours: number;
@@ -8,6 +10,7 @@ export interface CurriculumnSubject {
   AcademicYear: number;
   ProgramSemester: number;
   IsRequired: boolean;
+  SubjectType: SubjectType;
   AcademicYearID: number;
   SubjectName: string;
   SubjectName_EN: string;
@@ -64,6 +67,7 @@ export const defaultCurriculumnSubject: CurriculumnSubject = {
   AcademicYear: new Date().getFullYear(),
   ProgramSemester: 1,
   IsRequired: false,
+  SubjectType: SubjectType.CORE,
   AcademicYearID: new Date().getFullYear(),
   SubjectName: "",
   SubjectName_EN: "",

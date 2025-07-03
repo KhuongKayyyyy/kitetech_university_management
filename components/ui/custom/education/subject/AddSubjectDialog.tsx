@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { departmentData, formulaSubjects, majors } from "@/app/api/fakedata";
+import { departmentData, formulaSubjects, majorData } from "@/app/api/fakedata";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,7 +38,7 @@ export function AddSubjectDialog({
     name: "",
     description: "",
     departmentId: departmentData[0]?.id || 0,
-    majorId: majors[departmentData[0]?.id]?.[0]?.id || 0,
+    majorId: majorData[departmentData[0]?.id]?.[0]?.id || 0,
     formulaId: undefined as number | undefined,
   });
 
@@ -52,7 +52,7 @@ export function AddSubjectDialog({
 
   const handleDepartmentChange = (value: string) => {
     const departmentId = Number(value);
-    const newMajorList = majors[departmentId] || [];
+    const newMajorList = majorData[departmentId] || [];
     setSubject((prev) => ({
       ...prev,
       departmentId,
@@ -83,14 +83,14 @@ export function AddSubjectDialog({
       name: "",
       description: "",
       departmentId: departmentData[0]?.id || 0,
-      majorId: majors[departmentData[0]?.id]?.[0]?.id || 0,
+      majorId: majorData[departmentData[0]?.id]?.[0]?.id || 0,
       formulaId: undefined,
     });
     setOpen(false);
   };
 
   const selectedDepartment = departmentData.find((d) => d.id === subject.departmentId);
-  const availableMajors = majors[subject.departmentId] || [];
+  const availableMajors = majorData[subject.departmentId] || [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

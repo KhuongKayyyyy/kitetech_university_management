@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { departmentData, majors } from "@/app/api/fakedata";
+import { departmentData, majorData } from "@/app/api/fakedata";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -130,7 +130,7 @@ export default function AddStudentDialog({ open, onClose }: AddStudentDialogProp
               onChange={(e) => setMajorId(Number(e.target.value))}
               className="col-span-3 rounded border p-2"
             >
-              {(majors[departmentId] || []).map((m) => (
+              {(majorData[departmentId] || []).map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>

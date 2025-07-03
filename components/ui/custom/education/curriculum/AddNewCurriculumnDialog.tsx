@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 
-import { departmentData, majors } from "@/app/api/fakedata";
+import { departmentData, majorData } from "@/app/api/fakedata";
 import { CurriculumModel } from "@/app/api/model/CurriculumModel";
 import { useCharacterLimit } from "@/components/hooks/use-character-limit";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ function AddNewCurriculumDialog({ open, setOpen, onSubmit }: AddNewCurriculumDia
                   onChange={(e) => setMajorId(Number(e.target.value))}
                   className="col-span-3 rounded border p-2"
                 >
-                  {(majors[departmentId] || []).map((m) => (
+                  {(majorData[departmentId] || []).map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
                     </option>

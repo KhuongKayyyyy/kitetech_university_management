@@ -1,4 +1,4 @@
-import { classes, departmentData, majors } from "@/app/api/fakedata";
+import { classes, departmentData, majorData } from "@/app/api/fakedata";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 

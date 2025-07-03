@@ -1126,7 +1126,7 @@ export const genders = [
   { id: 2, name: "Female" },
 ];
 
-export const majors: Record<number, { id: number; name: string }[]> = {
+export const majorData: Record<number, { id: number; name: string }[]> = {
   1: [
     { id: 1, name: "Accounting" },
     { id: 2, name: "Marketing" },

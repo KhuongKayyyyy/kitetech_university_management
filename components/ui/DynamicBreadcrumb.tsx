@@ -1,56 +1,51 @@
-'use client'
+"use client";
 
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
 import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export function DynamicBreadcrumb() {
-    const pathname = usePathname()
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-    // Example: "/dashboard/settings/profile"
-    const pathSegments = pathname
-        .split('/')
-        .filter(Boolean) // remove empty strings
+  const academicYearName = searchParams.get("name"); // Get from ?name=2023-2024
 
-    const breadcrumbs = pathSegments.map((segment, index) => {
-        const href = '/' + pathSegments.slice(0, index + 1).join('/')
-        const label = segment
-            .replace(/-/g, ' ')
-            .replace(/\b\w/g, (l) => l.toUpperCase()) // Capitalize
+  const pathSegments = pathname.split("/").filter(Boolean);
 
-        const isLast = index === pathSegments.length - 1
+  const breadcrumbs = pathSegments.map((segment, index) => {
+    const href = "/" + pathSegments.slice(0, index + 1).join("/");
+    const isLast = index === pathSegments.length - 1;
 
-        return (
-            <BreadcrumbItem key={href}>
-                {isLast ? (
-                    <BreadcrumbPage>{label}</BreadcrumbPage>
-                ) : (
-                    <BreadcrumbLink asChild>
-                        <Link href={href}>{label}</Link>
-                    </BreadcrumbLink>
-                )}
-                {!isLast && <BreadcrumbSeparator />}
-            </BreadcrumbItem>
-        )
-    })
+    // If it's the last segment and matches a numeric ID, replace with academic year name if available
+    const label =
+      isLast && academicYearName
+        ? academicYearName
+        : segment.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
     return (
-        <Breadcrumb>
-            <BreadcrumbList>
-                {/* Optionally add static home/dashboard */}
-                {/* <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
-                </BreadcrumbItem> */}
-                {/* {pathSegments.length > 0 && <BreadcrumbSeparator className="hidden md:block" />} */}
-                {breadcrumbs}
-            </BreadcrumbList>
-        </Breadcrumb>
-    )
+      <BreadcrumbItem key={href}>
+        {isLast ? (
+          <BreadcrumbPage>{label}</BreadcrumbPage>
+        ) : (
+          <BreadcrumbLink asChild>
+            <Link href={href}>{label}</Link>
+          </BreadcrumbLink>
+        )}
+        {!isLast && <BreadcrumbSeparator />}
+      </BreadcrumbItem>
+    );
+  });
+
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>{breadcrumbs}</BreadcrumbList>
+    </Breadcrumb>
+  );
 }

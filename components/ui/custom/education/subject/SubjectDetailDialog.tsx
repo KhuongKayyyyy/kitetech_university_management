@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { departmentData, majors } from "@/app/api/fakedata";
+import { departmentData, majorData } from "@/app/api/fakedata";
 import { Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +43,7 @@ export function SubjectDetailDialog({
 
   const handleDepartmentChange = (value: string) => {
     const departmentId = Number(value);
-    const newMajorList = majors[departmentId] || [];
+    const newMajorList = majorData[departmentId] || [];
     setEditedSubject((prev) => ({
       ...prev,
       departmentId,
@@ -67,7 +67,7 @@ export function SubjectDetailDialog({
   };
 
   const selectedDepartment = departmentData.find((d) => d.id === editedSubject.departmentId);
-  const availableMajors = majors[editedSubject.departmentId] || [];
+  const availableMajors = majorData[editedSubject.departmentId] || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -7,10 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // for fake data
-
-export function getMajorNameById(majorId: number): string | undefined {
+export function getMajorNameById(majorId: string): string | undefined {
   for (const dept of departmentData) {
-    const major = dept.majors.find((m) => m.id === majorId);
+    const major = dept.majors.find((m) => m.id === parseInt(majorId));
     if (major) return major.name;
   }
   return undefined;

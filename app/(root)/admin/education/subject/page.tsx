@@ -48,7 +48,7 @@ const SubjectPage = () => {
   // Filter subjects based on search and filters
   const filteredSubjects = useMemo(() => {
     return subjects.filter((subject) => {
-      const majorInfo = majorMap.get(subject.majorId);
+      const majorInfo = majorMap.get(Number(subject.majorId));
       if (!majorInfo) return false;
 
       const matchesSearch =
@@ -67,10 +67,10 @@ const SubjectPage = () => {
   const groupedSubjects = useMemo(() => {
     const grouped: { [majorId: number]: Subject[] } = {};
     filteredSubjects.forEach((subject) => {
-      if (!grouped[subject.majorId]) {
-        grouped[subject.majorId] = [];
+      if (!grouped[Number(subject.majorId)]) {
+        grouped[Number(subject.majorId)] = [];
       }
-      grouped[subject.majorId].push(subject);
+      grouped[Number(subject.majorId)].push(subject);
     });
     return grouped;
   }, [filteredSubjects]);

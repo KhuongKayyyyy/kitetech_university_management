@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SubjectType } from "@/constants/enum/SubjectType";
-import { ArrowUpRight, BookOpen } from "lucide-react";
+import { ArrowUpRight, BookOpen, GraduationCap } from "lucide-react";
 
 interface Board {
   id: string;
@@ -54,65 +54,84 @@ export default function SaveCurriculumDialog({
           <ArrowUpRight size={16} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-7xl">
+      <DialogContent className="!max-w-[95vw] w-full p-6">
         <DialogHeader>
-          <DialogTitle>Curriculum Preview</DialogTitle>
+          <DialogTitle className="text-2xl">Curriculum Preview</DialogTitle>
           <DialogDescription>Review your curriculum before saving</DialogDescription>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[70vh] overflow-y-auto space-y-8">
           {steps.map((step) => {
             const board = boards.find((b) => b.type === step.type);
             return (
-              <div key={step.id} className="mb-6">
-                <h3 className="font-semibold mb-2">{step.name}</h3>
+              <div key={step.id} className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
+                  <GraduationCap className="text-primary" size={24} />
+                  <h3 className="text-xl font-bold text-primary">{step.name}</h3>
+                </div>
                 {board && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {Object.entries(board.semesterColumn).map(([id, column]) => (
                       <div
                         key={id}
-                        className="p-4 bg-muted/30 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors"
+                        className="group p-5 bg-gradient-to-br from-background to-muted/20 rounded-xl border border-border/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1"
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-lg">{column.title}</h4>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
+                            {column.title}
+                          </h4>
+                          <div className="px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 hover:bg-primary/20 transition-colors">
                             {column.subjectIds.length} subjects
-                          </span>
+                          </div>
                         </div>
-                        <ul className="space-y-3">
+                        <div className="space-y-3">
                           {column.subjectIds.map((subjectId) => {
                             const subject = subjects[subjectId];
                             return (
                               subject && (
-                                <li key={subjectId} className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                                    <span className="font-medium text-foreground text-sm">{subject.SubjectName}</span>
-                                    <Badge variant="default" className="text-xs ml-auto">
-                                      {subject.SubjectType}
-                                    </Badge>
+                                <div
+                                  key={subjectId}
+                                  className="group/subject p-4 bg-card rounded-lg border border-border/30 hover:border-primary/40 hover:shadow-md hover:shadow-primary/10 transition-all duration-200 hover:bg-primary/[0.02] cursor-pointer"
+                                >
+                                  <div className="flex items-start gap-3 mb-3">
+                                    <div className="w-2 h-2 rounded-full bg-primary/70 mt-2 flex-shrink-0 group-hover/subject:bg-primary transition-colors" />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-start justify-between gap-2 mb-2">
+                                        <span className="font-semibold text-foreground text-sm leading-relaxed group-hover/subject:text-primary transition-colors">
+                                          {subject.SubjectName}
+                                        </span>
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs shrink-0 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
+                                        >
+                                          {subject.SubjectType}
+                                        </Badge>
+                                      </div>
+                                    </div>
                                   </div>
                                   {subject.PrerequisiteSubjects && subject.PrerequisiteSubjects.length > 0 && (
-                                    <div className="ml-3.5">
-                                      <div className="text-xs text-muted-foreground mb-1">Prerequisites:</div>
-                                      <div className="flex flex-wrap gap-1">
+                                    <div className="ml-5 space-y-2">
+                                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                        Prerequisites
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
                                         {subject.PrerequisiteSubjects.map((prereq, index) => (
                                           <Badge
                                             key={index}
                                             variant="outline"
-                                            className="text-xs flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                                            className="text-xs flex items-center gap-1.5 px-2.5 py-1 bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 border-blue-200/60 hover:border-blue-300 transition-all duration-200 hover:shadow-sm"
                                           >
                                             <BookOpen size={10} className="text-blue-500" />
-                                            {prereq.name || prereq.SubjectName}
+                                            <span className="font-medium">{prereq.name || prereq.SubjectName}</span>
                                           </Badge>
                                         ))}
                                       </div>
                                     </div>
                                   )}
-                                </li>
+                                </div>
                               )
                             );
                           })}
-                        </ul>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -121,11 +140,13 @@ export default function SaveCurriculumDialog({
             );
           })}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+        <DialogFooter className="gap-3 pt-6 border-t border-border/50">
+          <Button variant="outline" onClick={onCancel} className="px-6">
             Cancel
           </Button>
-          <Button onClick={onSave}>Confirm & Save</Button>
+          <Button onClick={onSave} className="px-6 bg-primary hover:bg-primary/90">
+            Confirm & Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -42,7 +42,7 @@ const SubjectCurriItem: React.FC<SubjectProps> = ({
   };
 
   const handleRemovePrerequisite = (prerequisiteId: string) => {
-    const updatedPrerequisites = prerequisitesState.filter((p) => p.id !== prerequisiteId);
+    const updatedPrerequisites = prerequisitesState.filter((p) => p.subjectId !== prerequisiteId);
     setPrerequisitesState(updatedPrerequisites);
     onUpdatePrerequisites?.(curriSubject.SubjectID, updatedPrerequisites);
   };

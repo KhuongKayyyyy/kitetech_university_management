@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +32,7 @@ interface Step {
 interface SaveCurriculumDialogProps {
   steps: Step[];
   boards: Board[];
-  subjects: { [key: string]: CurriculumnSubject };
+  subjects: { [key: string]: CurriculumnSubjectModel };
   currentStep: number;
   onSave?: () => void;
   onCancel?: () => void;

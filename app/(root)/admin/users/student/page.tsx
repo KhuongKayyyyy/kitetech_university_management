@@ -5,8 +5,8 @@ import React, { useMemo, useState } from "react";
 import { students } from "@/app/api/fakedata";
 import { Button } from "@/components/ui/button";
 import AddStudentDialog from "@/components/ui/custom/user/student/AddStudentDialog";
-import StudentDatabase from "@/components/ui/custom/user/student/StudentDatabase";
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
+import StudentTable from "@/components/ui/custom/user/student/StudentTable";
 import { ChevronLeft, ChevronRight, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
 
 export default function StudentPage() {
@@ -184,7 +184,7 @@ export default function StudentPage() {
         </>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <StudentDatabase students={filteredStudents} />
+          <StudentTable students={filteredStudents} />
         </div>
       )}
       <AddStudentDialog open={openAddStudentDialog} onClose={() => setOpenAddStudentDialog(false)} />

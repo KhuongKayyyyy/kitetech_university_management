@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Subject } from "@/app/api/model/model";
 import CurriculumBoard from "@/components/ui/custom/education/curriculum/CurriculumBoard";
 import CurriculumSummary from "@/components/ui/custom/education/curriculum/CurriculumSummary";
@@ -36,7 +36,7 @@ export default function CreateCurriculumPage() {
 
   const [state, setState] = useState<{
     boards: Board[];
-    subjects: { [key: string]: CurriculumnSubject };
+    subjects: { [key: string]: CurriculumnSubjectModel };
   }>({
     boards: [],
     subjects: {},
@@ -181,12 +181,12 @@ export default function CreateCurriculumPage() {
     const board = state.boards.find((b) => b.id === targetBoardId);
     if (!board) return;
 
-    const newSubjects: { [key: string]: CurriculumnSubject } = {};
+    const newSubjects: { [key: string]: CurriculumnSubjectModel } = {};
     const newSubjectIds: string[] = [];
 
     subjects.forEach((subject) => {
       const newSubjectId = subject.subjectId;
-      const newSubject: CurriculumnSubject = {
+      const newSubject: CurriculumnSubjectModel = {
         SubjectID: newSubjectId,
         SubjectName: subject.name,
         SubjectName_EN: subject.name,

@@ -21,7 +21,7 @@ export const FakeCurriclumnData = [
     SubjectDetailInfo: "",
     SubjectTooltip: "",
     PrerequisiteType: 0,
-    HasPrerequisite: false,
+    HasPrerequisite: true,
     TotalPrerequisiteTypes: 0,
     CourseTypeID: 17576,
     TrainingMajorCode: "GENERAL",
@@ -53,7 +53,16 @@ export const FakeCurriclumnData = [
     SelfStudyHoursCount: 90,
     IsCountedForGPA: true,
     IsCountedForCredits: true,
-    PrerequisiteSubjects: [],
+    PrerequisiteSubjects: [
+      {
+        SubjectID: "501002",
+        SubjectName: "Physics I",
+      },
+      {
+        SubjectID: "501003",
+        SubjectName: "Introduction to Programming",
+      },
+    ],
   },
   {
     LectureHours: 3,

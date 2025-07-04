@@ -1,6 +1,6 @@
 import { SubjectType } from "@/constants/enum/SubjectType";
 
-export interface CurriculumnSubject {
+export interface CurriculumnSubjectModel {
   LectureHours: number;
   PracticeHours: number;
   EducationProgramID: string;
@@ -57,7 +57,7 @@ export interface CurriculumnSubject {
   PrerequisiteSubjects: any[];
 }
 
-export const defaultCurriculumnSubject: CurriculumnSubject = {
+export const defaultCurriculumnSubject: CurriculumnSubjectModel = {
   LectureHours: 0,
   PracticeHours: 0,
   EducationProgramID: "",

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { Class } from "@/app/api/model/ClassModel";
@@ -11,7 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { APP_ROUTES } from "@/constants/AppRoutes";
 import { BookOpen, Calendar, Edit, GraduationCap, MoreHorizontal, Trash2, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ClassItemProps {
   classData: Class;
@@ -33,8 +37,12 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewStudents 
     onViewStudents?.(classData);
   };
 
+  const router = useRouter();
   return (
-    <Card className="group relative overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50">
+    <Card
+      onClick={() => router.push(`${APP_ROUTES.CLASS}/${classData.id}?name=Class${classData.classCode}`)}
+      className="group relative overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50"
+    >
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <CardContent className="p-6 relative">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Subject } from "@/app/api/model/model";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { CirclePlus, Edit2, GripVertical, Save, Trash } from "lucide-react";
@@ -10,7 +10,7 @@ import SubjectCurriItem from "../task/SubjectCurriItem";
 
 interface SemesterColumnProps {
   column: { id: string; title: string; subjectIds: string[] };
-  subjects: CurriculumnSubject[];
+  subjects: CurriculumnSubjectModel[];
   index: number;
   onAddSubject: (columnId: string) => void;
   onRemoveSubject: (columnId: string, subjectId: string) => void;

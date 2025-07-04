@@ -145,7 +145,7 @@ const columns: ColumnDef<Student>[] = [
     accessorKey: "majorId",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{getMajorNameById(row.original.majorId)}</div>
+        <div className="font-medium text-foreground">{getMajorNameById(row.original.majorId.toString())}</div>
         <div className="text-sm text-muted-foreground">
           {getDepartmentNameById(row.original.departmentId)} • {getClassNameById(row.original.classId)}
         </div>
@@ -193,7 +193,7 @@ interface StudentDatabaseProps {
   students?: Student[];
 }
 
-export default function StudentDatabase({ students }: StudentDatabaseProps) {
+export default function StudentTable({ students }: StudentDatabaseProps) {
   const id = useId();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -610,4 +610,4 @@ function RowActions({ row }: { row: Row<Student> }) {
   );
 }
 
-export { StudentDatabase as Component };
+export { StudentTable as Component };

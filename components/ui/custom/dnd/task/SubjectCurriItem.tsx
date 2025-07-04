@@ -1,7 +1,7 @@
 import React from "react";
 
 import { subjects } from "@/app/api/fakedata";
-import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Subject } from "@/app/api/model/model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { BookOpen, Clock, GripVertical, Trash } from "lucide-react";
 import AddSubjectPrerequisite from "../../education/subject/AddSubjectPrerequisite";
 
 interface SubjectProps {
-  subject: CurriculumnSubject;
+  subject: CurriculumnSubjectModel;
   index: number;
   isGhost?: boolean;
   onRemove?: () => void;

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CurriculumnSubject, defaultCurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubjectModel, defaultCurriculumnSubject } from "@/app/api/model/CurriculumnSubjectModel";
 import { Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { SemesterColumn } from "@/components/ui/custom/dnd/column/SemesterColumn";
@@ -39,7 +39,7 @@ interface Step {
 interface CurriculumBoardProps {
   currentStepBoard: Board | undefined;
   currentStep: Step;
-  subjects: { [key: string]: CurriculumnSubject };
+  subjects: { [key: string]: CurriculumnSubjectModel };
   onDragEnd: (result: any, boardId: string) => void;
   onAddBoard: (type: SubjectType) => void;
   onAddSemester: (boardId: string) => void;

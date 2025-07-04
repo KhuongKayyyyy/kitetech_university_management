@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { CurriculumnSubject } from "@/app/api/model/CurriculumnSubject";
+import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { BookOpen, Check, Plus, Trash, X } from "lucide-react";
 
 interface AddSubjectPrerequisiteProps {
-  currentSubject: CurriculumnSubject;
+  currentSubject: CurriculumnSubjectModel;
   subjects?: Subject[];
   selectedPrerequisites?: Subject[];
   onAddPrerequisites?: (subjects: Subject[]) => void;

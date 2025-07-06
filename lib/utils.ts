@@ -1,4 +1,4 @@
-import { classes, departmentData, majorData } from "@/app/api/fakedata";
+import {  departmentData, majorData } from "@/app/api/fakedata";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -22,10 +22,6 @@ export function getDepartmentNameById(
   return department?.name;
 }
 
-export function getClassNameById(classId: number): string | undefined {
-  const cls = classes.find((c) => c.id === classId);
-  return cls?.name;
-}
 
 export function getDepartmentById(departmentId: number) {
   return departmentData.find((dept) => dept.id === departmentId);

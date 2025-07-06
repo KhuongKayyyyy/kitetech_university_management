@@ -5,7 +5,7 @@ import {
   ScanEyeIcon,
   TextSearchIcon,
 } from "lucide-react";
-import { Class, Department, Student, Teacher, Subject } from "./model/model";
+import { Department, Student, Teacher, Subject } from "./model/model";
 import { Formula } from "./model/FormulaModel";
 
 export const teachers: Teacher[] = [
@@ -312,26 +312,6 @@ export const teachers: Teacher[] = [
   },
 ];
 
-export const classes: Class[] = [
-  {
-    id: 1,
-    name: "BUS2024-A",
-    majorId: 1,
-    students: [], // Will populate below
-  },
-  {
-    id: 2,
-    name: "TECH2024-CS",
-    majorId: 4,
-    students: [],
-  },
-  {
-    id: 3,
-    name: "SCI2024-CH",
-    majorId: 2,
-    students: [],
-  },
-];
 
 export const students: Student[] = [
   {
@@ -1117,9 +1097,6 @@ export const students: Student[] = [
   },
 ];
 
-classes.forEach((cls) => {
-  cls.students = students.filter((s) => s.classId === cls.id);
-});
 
 export const genders = [
   { id: 1, name: "Male" },

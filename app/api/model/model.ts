@@ -28,13 +28,6 @@ export interface Department {
   icon: string;
 }
 
-export interface Class {
-  id: number;
-  name: string;
-  majorId: number;
-  students: Student[];
-}
-
 export interface Teacher {
   id: number;
   name: string;

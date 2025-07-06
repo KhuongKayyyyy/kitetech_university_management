@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 
-import { classes, departmentData, teachers } from "@/app/api/fakedata";
+import { departmentData, teachers } from "@/app/api/fakedata";
 import { Teacher } from "@/app/api/model/model";
 import {
   AlertDialog,
@@ -39,7 +39,7 @@ import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/p
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, getClassNameById, getDepartmentNameById, getMajorNameById } from "@/lib/utils";
+import { cn, getDepartmentNameById, getMajorNameById } from "@/lib/utils";
 import {
   ColumnDef,
   ColumnFiltersState,

@@ -21,10 +21,10 @@ interface ClassItemProps {
   classData: Class;
   onEdit?: (classData: Class) => void;
   onDelete?: (classData: Class) => void;
-  onViewStudents?: (classData: Class) => void;
+  onViewDetails?: (classData: Class) => void;
 }
 
-export default function ClassItem({ classData, onEdit, onDelete, onViewStudents }: ClassItemProps) {
+export default function ClassItem({ classData, onEdit, onDelete, onViewDetails }: ClassItemProps) {
   const handleEdit = () => {
     onEdit?.(classData);
   };
@@ -33,8 +33,8 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewStudents 
     onDelete?.(classData);
   };
 
-  const handleViewStudents = () => {
-    onViewStudents?.(classData);
+  const handleViewDetails = () => {
+    onViewDetails?.(classData);
   };
 
   const router = useRouter();
@@ -89,9 +89,9 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewStudents 
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Class
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleViewStudents} className="cursor-pointer">
+              <DropdownMenuItem onClick={handleViewDetails} className="cursor-pointer">
                 <Users className="w-4 h-4 mr-2" />
-                View Students
+                View Details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -129,11 +129,11 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewStudents 
           <Button
             variant="outline"
             size="sm"
-            onClick={handleViewStudents}
+            onClick={handleViewDetails}
             className="w-full opacity-0 group-hover:opacity-100 transition-all duration-300 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
           >
             <Users className="w-4 h-4 mr-2" />
-            View Students
+            View Details
           </Button>
         </div>
       </CardContent>

@@ -120,7 +120,7 @@ export function DepartmentDialog({
           <div className="border-t pt-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Department Majors</h3>
-              <MajorInDepartTable department={editedDepartment} />
+              <MajorInDepartTable department={editedDepartment} setDepartment={setEditedDepartment} />
             </div>
           </div>
         </div>

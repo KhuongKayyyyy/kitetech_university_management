@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 import { Department, Major } from "@/app/api/model/model";
 import {
@@ -13,6 +13,7 @@ import {
 
 import { Badge } from "../../../badge";
 import { Card, CardContent } from "../../../card";
+import { MajorDetailDialog } from "./ MajorDetailDialog";
 
 // Enhanced color palette with more sophisticated gradients
 const iconColors = [
@@ -48,8 +49,13 @@ const MajorItem = ({ major, department }: { major?: Major; department?: Departme
   // Resolve the icon from the department's icon key
   const Icon = department ? iconMap[department.icon as keyof typeof iconMap] : GraduationCap;
 
+  const [open, setOpen] = useState(false);
+
   return (
-    <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50">
+    <Card
+      onClick={() => setOpen(true)}
+      className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50"
+    >
       <CardContent className="p-0">
         <div className="flex items-center gap-4 p-6">
           {/* Icon Container */}
@@ -90,6 +96,7 @@ const MajorItem = ({ major, department }: { major?: Major; department?: Departme
           </div>
         </div>
       </CardContent>
+      <MajorDetailDialog major={major!} open={open} onOpenChange={setOpen} />
     </Card>
   );
 };

@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 
 import { departmentData } from "@/app/api/fakedata";
+import { Department } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import DepartmentItem from "@/components/ui/custom/education/department/DepartmentItem";
 import { DepartmentTable } from "@/components/ui/custom/education/department/DepartmentTable";
+import { NewDepartmentDialog } from "@/components/ui/custom/education/department/NewDepartmentDialog";
 import { Building, Grid, List, Plus, Search } from "lucide-react";
 
 const DepartmentPage = () => {
@@ -13,12 +15,19 @@ const DepartmentPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("2024");
 
+  const [openAddDepartment, setOpenAddDepartment] = useState(false);
+
   // Filter departments based on search term
   const filteredDepartments = departmentData.filter(
     (department) =>
       department.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (department.description?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
+
+  const handleAddDepartment = (newDepartment: Department) => {
+    setOpenAddDepartment(false);
+    console.log(newDepartment);
+  };
 
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
@@ -49,7 +58,10 @@ const DepartmentPage = () => {
           </div>
 
           {/* Add Department Button */}
-          <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+          <Button
+            onClick={() => setOpenAddDepartment(true)}
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          >
             <Plus className="w-4 h-4" />
             Add Department
           </Button>
@@ -117,6 +129,8 @@ const DepartmentPage = () => {
           <DepartmentTable departments={filteredDepartments} />
         </div>
       )}
+
+      <NewDepartmentDialog open={openAddDepartment} setOpen={setOpenAddDepartment} onAdd={handleAddDepartment} />
     </div>
   );
 };

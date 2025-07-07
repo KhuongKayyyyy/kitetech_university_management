@@ -19,6 +19,7 @@ export interface Major {
   name: string;
   description?: string;
   departmentId: number;
+  subjects?: Subject[];
 }
 export interface Department {
   id: number;

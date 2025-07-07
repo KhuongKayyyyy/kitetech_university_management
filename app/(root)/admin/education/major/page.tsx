@@ -3,9 +3,11 @@
 import React, { useMemo, useState } from "react";
 
 import { departmentData } from "@/app/api/fakedata";
+import { Major } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import MajorItem from "@/components/ui/custom/education/major/MajorItem";
 import { MajorTable } from "@/components/ui/custom/education/major/MajorTable";
+import { NewMajorDialog } from "@/components/ui/custom/education/major/NewMajorDialog";
 import { Building, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
 
 const MajorPage = () => {
@@ -13,6 +15,11 @@ const MajorPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedYear, setSelectedYear] = useState("2024");
+  const [openAddMajor, setOpenAddMajor] = useState(false);
+
+  const handleAddMajor = (newMajor: Major) => {
+    console.log(newMajor);
+  };
 
   // Get all majors with department info
   const allMajorsWithDept = useMemo(() => {
@@ -87,7 +94,10 @@ const MajorPage = () => {
           </div>
 
           {/* Add Major Button */}
-          <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+          <Button
+            onClick={() => setOpenAddMajor(true)}
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          >
             <Plus className="w-4 h-4" />
             Add Major
           </Button>
@@ -187,6 +197,8 @@ const MajorPage = () => {
           ))}
         </div>
       )}
+
+      <NewMajorDialog open={openAddMajor} setOpen={setOpenAddMajor} onAdd={handleAddMajor} />
     </div>
   );
 };

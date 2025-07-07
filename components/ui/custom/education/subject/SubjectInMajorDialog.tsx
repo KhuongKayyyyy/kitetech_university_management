@@ -2,8 +2,8 @@
 
 import * as React from "react";
 
-import { departmentData } from "@/app/api/fakedata";
-import { Department, Major } from "@/app/api/model/model";
+import { subjects } from "@/app/api/fakedata";
+import { Major, Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -31,9 +31,9 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash } from "lucide-react";
 
-import AddMajorToDepartPopover from "./AddMajorToDepartDialog";
+import AddSubjectToMajorDialog from "./AddSubjectToMajorDialog";
 
-export const columns: ColumnDef<Major>[] = [
+export const columns: ColumnDef<Subject>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -68,7 +68,7 @@ export const columns: ColumnDef<Major>[] = [
     accessorKey: "name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Major <ArrowUpDown className="ml-2 h-4 w-4" />
+        Subject <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
@@ -86,7 +86,7 @@ export const columns: ColumnDef<Major>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const major = row.original;
+      const subject = row.original;
 
       return (
         <DropdownMenu>
@@ -98,8 +98,8 @@ export const columns: ColumnDef<Major>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(major.name)}>
-              Copy Major Name
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(subject.name)}>
+              Copy Subject Name
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>View details</DropdownMenuItem>
@@ -110,20 +110,14 @@ export const columns: ColumnDef<Major>[] = [
   },
 ];
 
-export function MajorInDepartTable({
-  department,
-  setDepartment,
-}: {
-  department: Department;
-  setDepartment?: (d: Department) => void;
-}) {
+export function SubjectInMajorTable({ major, setMajor }: { major: Major; setMajor?: (m: Major) => void }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data: department.majors,
+    data: major.subjects || [],
     columns,
     state: {
       sorting,
@@ -142,18 +136,18 @@ export function MajorInDepartTable({
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const handleAddMajor = (majors: Major[]) => {
-    if (setDepartment) {
-      const updatedMajors = [...department.majors, ...majors];
-      setDepartment({ ...department, majors: updatedMajors });
+  const handleAddSubject = (subjectsToAdd: Subject[]) => {
+    if (setMajor) {
+      const updatedSubjects = [...(major.subjects || []), ...subjectsToAdd];
+      setMajor({ ...major, subjects: updatedSubjects });
     }
   };
 
   const handleDeleteSelected = () => {
-    if (setDepartment) {
+    if (setMajor) {
       const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
-      const remainingMajors = department.majors.filter((m) => !selectedIds.includes(m.id));
-      setDepartment({ ...department, majors: remainingMajors });
+      const remainingSubjects = (major.subjects || []).filter((s) => !selectedIds.includes(s.id));
+      setMajor({ ...major, subjects: remainingSubjects });
     }
   };
 
@@ -163,7 +157,7 @@ export function MajorInDepartTable({
     <div className="w-full">
       <div className="flex items-center py-4 gap-4">
         <Input
-          placeholder="Filter majors..."
+          placeholder="Filter subjects..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="max-w-sm"
@@ -191,10 +185,10 @@ export function MajorInDepartTable({
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <AddMajorToDepartPopover
-            department={department}
-            availableMajors={departmentData.filter((dept) => dept.id !== department.id).flatMap((dept) => dept.majors)}
-            onAddMajors={handleAddMajor}
+          <AddSubjectToMajorDialog
+            major={major}
+            availableSubjects={subjects.filter((subject) => !(major.subjects || []).some((s) => s.id === subject.id))}
+            onAddSubjects={handleAddSubject}
           />
           {isAnyRowSelected && (
             <Button variant="destructive" size="sm" className="text-white" onClick={handleDeleteSelected}>
@@ -229,7 +223,7 @@ export function MajorInDepartTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No majors found.
+                  No subjects found.
                 </TableCell>
               </TableRow>
             )}

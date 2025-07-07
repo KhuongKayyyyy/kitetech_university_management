@@ -11,7 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +18,13 @@ import { Plus } from "lucide-react";
 
 import { MajorInDepartTable } from "../major/MajorInDepartTable";
 
-export function NewDepartmentDialog({ onAdd }: { onAdd?: (newDepartment: Department) => void }) {
-  const [open, setOpen] = useState(false);
+interface NewDepartmentDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onAdd?: (newDepartment: Department) => void;
+}
+
+export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialogProps) {
   const [newDepartment, setNewDepartment] = useState<Department>({
     id: 0,
     name: "",
@@ -51,12 +55,6 @@ export function NewDepartmentDialog({ onAdd }: { onAdd?: (newDepartment: Departm
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="shadow-md">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Department
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-4xl w-full">
         <DialogHeader>
           <DialogTitle>Add New Department</DialogTitle>

@@ -1,10 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
 import { Department, Major, Subject } from "@/app/api/model/model";
 import { Badge } from "@/components/ui/badge";
 import { Book, Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
 
 import { Card } from "../../../card";
+import { SubjectDetailDialog } from "./SubjectDetailDialog";
 
 // Icon colors array
 const iconColors = [
@@ -38,9 +39,13 @@ const SubjectItem = ({ subject, department }: { subject?: Subject; department?: 
 
   // Resolve the icon from the department's icon key
   const Icon = department ? iconMap[department.icon as keyof typeof iconMap] || Book : Book;
+  const [open, setOpen] = useState(false);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden">
+    <Card
+      onClick={() => setOpen(true)}
+      className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden"
+    >
       <div className="flex items-center gap-4 p-6 h-[140px] md:h-[160px]">
         <div
           className={`flex items-center justify-center w-16 h-16 rounded-xl shrink-0 border-2 ${bg} ${border} group-hover:scale-110 transition-transform duration-300`}
@@ -65,6 +70,7 @@ const SubjectItem = ({ subject, department }: { subject?: Subject; department?: 
           </p>
         </div>
       </div>
+      <SubjectDetailDialog subject={subject!} open={open} onOpenChange={setOpen} />
     </Card>
   );
 };

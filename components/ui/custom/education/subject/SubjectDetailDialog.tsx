@@ -12,7 +12,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,12 +21,10 @@ import { BookOpen, Building, Edit, GraduationCap } from "lucide-react";
 
 export function SubjectDetailDialog({
   subject,
-  isIcon,
   open,
   onOpenChange,
 }: {
   subject: Subject;
-  isIcon?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
@@ -47,14 +44,14 @@ export function SubjectDetailDialog({
     setEditedSubject((prev) => ({
       ...prev,
       departmentId,
-      majorId: newMajorList[0]?.id || 0,
+      majorId: (newMajorList[0]?.id || 0).toString(),
     }));
   };
 
   const handleMajorChange = (value: string) => {
     setEditedSubject((prev) => ({
       ...prev,
-      majorId: Number(value),
+      majorId: value,
     }));
   };
 
@@ -71,18 +68,6 @@ export function SubjectDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {isIcon ? (
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            className="absolute top-2 right-2 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-            aria-label="Edit"
-          >
-            <Edit size={15} />
-          </Button>
-        </DialogTrigger>
-      ) : null}
-
       <DialogContent className="sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-3">
           <DialogTitle className="flex items-center gap-2 text-xl">
@@ -179,7 +164,7 @@ export function SubjectDetailDialog({
                 </p>
                 <p>
                   <span className="font-medium">Major:</span>{" "}
-                  {availableMajors.find((m) => m.id === editedSubject.majorId)?.name || "Not selected"}
+                  {availableMajors.find((m) => m.id === Number(editedSubject.majorId))?.name || "Not selected"}
                 </p>
               </div>
             </div>

@@ -66,10 +66,6 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         icon: Book,
         items: [
           {
-            title: "Dashboard",
-            url: "/admin/education/dashboard",
-          },
-          {
             title: "Department",
             url: "/admin/education/department",
           },

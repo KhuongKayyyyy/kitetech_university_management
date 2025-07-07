@@ -22,9 +22,7 @@ export default function AcademicYearItem({ academicYear }: AcademicYearItemProps
   return (
     <div
       onClick={() =>
-        router.push(
-          `${APP_ROUTES.ADMIN}/education/dashboard/${academicYear.id}?name=${"Academic Year " + academicYear.year}`,
-        )
+        router.push(`${APP_ROUTES.ADMIN}/education/${academicYear.id}?name=${"Academic Year " + academicYear.year}`)
       }
     >
       <TooltipProvider>

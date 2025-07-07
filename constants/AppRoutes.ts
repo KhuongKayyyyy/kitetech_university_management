@@ -5,9 +5,5 @@ export const APP_ROUTES = {
   HOME: "/admin",
   CLASS: "/admin/education/class",
   SUBJECT: "/admin/education/subject",
-  STUDENT: "/admin/education/student",
-  TEACHER: "/admin/education/teacher",
-  PARENT: "/admin/education/parent",
-  STAFF: "/admin/education/staff",
-  SETTINGS: "/admin/education/settings",
+  REGISTRATION_PERIOD: "/admin/education/subject",
 };

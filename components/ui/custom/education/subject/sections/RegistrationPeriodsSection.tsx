@@ -2,14 +2,21 @@
 
 import React, { useState } from "react";
 
-import { mockRegistrationPeriods } from "@/app/api/model/RegistrationPeriodModel";
+import { mockRegistrationPeriods, RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
 import { Button } from "@/components/ui/button";
 import RegisPeriodItem from "@/components/ui/custom/education/registration_period/RegisPeriodItem";
 import { RegistrationPeriodTable } from "@/components/ui/custom/education/registration_period/RegistrationPeriodTable";
 import { Clock, Grid, List, Plus } from "lucide-react";
 
+import AddRegistrationPeriodDialog from "../../registration_period/AddRegistrationPeriodDialog";
+
 export default function RegistrationPeriodsSection() {
   const [registrationViewMode, setRegistrationViewMode] = useState<"cards" | "table">("cards");
+  const [open, setOpen] = useState(false);
+
+  const handleAddRegistrationPeriod = (period: RegistrationPeriod) => {
+    console.log("Add period:", period);
+  };
 
   return (
     <>
@@ -42,7 +49,7 @@ export default function RegistrationPeriodsSection() {
               <List className="w-4 h-4" />
             </Button>
           </div>
-          <Button className="flex items-center gap-2">
+          <Button onClick={() => setOpen(true)} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Add Registration Period
           </Button>
@@ -64,6 +71,12 @@ export default function RegistrationPeriodsSection() {
       ) : (
         <RegistrationPeriodTable periods={mockRegistrationPeriods} />
       )}
+
+      <AddRegistrationPeriodDialog
+        open={open}
+        setOpen={setOpen}
+        onAddRegistrationPeriod={handleAddRegistrationPeriod}
+      />
     </>
   );
 }

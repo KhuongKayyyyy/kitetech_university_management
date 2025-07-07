@@ -130,6 +130,10 @@ export default function StudentSection({ classId }: StudentSectionProps) {
                 <List className="w-4 h-4" />
               </Button>
             </div>
+            <Button variant="outline" size="sm">
+              <Plus className="w-4 h-4" />
+              Add Student
+            </Button>
           </div>
         </div>
       </div>

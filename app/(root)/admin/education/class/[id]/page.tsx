@@ -60,7 +60,7 @@ export default function page() {
             </h1>
             <p className="text-gray-600 mt-1">Comprehensive class management dashboard</p>
           </div>
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <Button variant="outline" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
               Schedule
@@ -69,7 +69,7 @@ export default function page() {
               <Plus className="w-4 h-4" />
               Add Content
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
 

@@ -65,8 +65,6 @@ const page = () => {
 
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
-      <ClassBriefInfo classItem={classes[0]} />
-
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
         <div>

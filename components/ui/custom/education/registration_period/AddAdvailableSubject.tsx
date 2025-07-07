@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import { subjects } from "@/app/api/fakedata";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, BookOpen, Plus } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, ArrowRight, BookOpen, Plus, Search } from "lucide-react";
 
 interface AddAvailableSubjectProps {
   open: boolean;
@@ -24,7 +27,8 @@ export default function AddAdvailableSubject({
   onSubmit,
 }: AddAvailableSubjectProps) {
   const [step, setStep] = useState(1);
-  const [selectedSubject, setSelectedSubject] = useState<any>(null);
+  const [selectedSubjects, setSelectedSubjects] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     max_registrations: "",
     day_of_week: "",
@@ -33,13 +37,31 @@ export default function AddAdvailableSubject({
     weeks: "",
   });
 
-  const handleSubjectSelect = (subjectId: string) => {
-    // const subject = subjects.find((s) => s.id === parseInt(subjectId));
-    // setSelectedSubject(subject);
+  // Filter subjects based on search term (name or code)
+  const filteredSubjects = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return subjects;
+    }
+
+    const term = searchTerm.toLowerCase();
+    return subjects.filter(
+      (subject) => subject.name.toLowerCase().includes(term) || subject.subjectId.toLowerCase().includes(term),
+    );
+  }, [searchTerm]);
+
+  const handleSubjectToggle = (subject: any) => {
+    setSelectedSubjects((prev) => {
+      const isSelected = prev.some((s) => s.id === subject.id);
+      if (isSelected) {
+        return prev.filter((s) => s.id !== subject.id);
+      } else {
+        return [...prev, subject];
+      }
+    });
   };
 
   const handleNextStep = () => {
-    if (selectedSubject) {
+    if (selectedSubjects.length > 0) {
       setStep(2);
     }
   };
@@ -57,20 +79,22 @@ export default function AddAdvailableSubject({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedSubject) {
-      const availableSubject = {
-        registration_period_id: registrationPeriodId,
-        curriculum_item_id: selectedSubject.curriculum_item_id || 1,
-        subject_id: selectedSubject.id,
-        subject_name: selectedSubject.name,
-        max_registrations: parseInt(formData.max_registrations),
-        current_registrations: 0,
-        day_of_week: formData.day_of_week,
-        start_period: parseInt(formData.start_period),
-        end_period: parseInt(formData.end_period),
-        weeks: formData.weeks,
-      };
-      onSubmit(availableSubject);
+    if (selectedSubjects.length > 0) {
+      selectedSubjects.forEach((subject) => {
+        const availableSubject = {
+          registration_period_id: registrationPeriodId,
+          curriculum_item_id: subject.curriculum_item_id || 1,
+          subject_id: subject.id,
+          subject_name: subject.name,
+          max_registrations: parseInt(formData.max_registrations),
+          current_registrations: 0,
+          day_of_week: formData.day_of_week,
+          start_period: parseInt(formData.start_period),
+          end_period: parseInt(formData.end_period),
+          weeks: formData.weeks,
+        };
+        onSubmit(availableSubject);
+      });
       resetForm();
       setOpen(false);
     }
@@ -78,7 +102,8 @@ export default function AddAdvailableSubject({
 
   const resetForm = () => {
     setStep(1);
-    setSelectedSubject(null);
+    setSelectedSubjects([]);
+    setSearchTerm("");
     setFormData({
       max_registrations: "",
       day_of_week: "",
@@ -103,7 +128,7 @@ export default function AddAdvailableSubject({
           </DialogTitle>
           <DialogDescription>
             {step === 1
-              ? "Select a subject to make available for registration"
+              ? "Search and select subjects to make available for registration"
               : "Configure the subject availability details"}
           </DialogDescription>
         </DialogHeader>
@@ -111,55 +136,72 @@ export default function AddAdvailableSubject({
         {step === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Select onValueChange={handleSubjectSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" />
-                        <div>
-                          <div className="font-medium">{subject.name}</div>
-                          <div className="text-xs text-gray-500">{subject.credits} credits</div>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="search">Search Subjects</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder="Search by name or code..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
 
-            {selectedSubject && (
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">Selected Subject</h4>
-                <div className="space-y-1 text-sm">
-                  <p>
-                    <span className="font-medium">Name:</span> {selectedSubject.name}
+            <ScrollArea className="h-[300px] w-full">
+              <div className="space-y-2">
+                {filteredSubjects.length > 0 ? (
+                  filteredSubjects.map((subject) => (
+                    <div
+                      key={subject.id}
+                      className="flex items-start space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                      onClick={() => handleSubjectToggle(subject)}
+                    >
+                      <Checkbox
+                        checked={selectedSubjects.some((s) => s.id === subject.id)}
+                        onCheckedChange={() => handleSubjectToggle(subject)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          <div>
+                            <p className="text-sm font-medium leading-none">{subject.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {subject.subjectId} - {subject.credits} credits
+                            </p>
+                            {subject.description && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{subject.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {searchTerm ? "No subjects found matching your search." : "No available subjects to add."}
                   </p>
-                  <p>
-                    <span className="font-medium">Code:</span> {selectedSubject.code}
-                  </p>
-                  <p>
-                    <span className="font-medium">Credits:</span> {selectedSubject.credits}
-                  </p>
-                  {selectedSubject.description && (
-                    <p>
-                      <span className="font-medium">Description:</span> {selectedSubject.description}
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
+            </ScrollArea>
+
+            {selectedSubjects.length > 0 && (
+              <>
+                <Separator />
+                <div className="text-xs text-muted-foreground">
+                  {selectedSubjects.length} subject{selectedSubjects.length !== 1 ? "s" : ""} selected
+                </div>
+              </>
             )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button type="button" onClick={handleNextStep} disabled={!selectedSubject}>
-                Next Step
+              <Button type="button" onClick={handleNextStep} disabled={selectedSubjects.length === 0}>
+                Next Step ({selectedSubjects.length})
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -169,10 +211,14 @@ export default function AddAdvailableSubject({
         {step === 2 && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg border">
-              <h4 className="font-medium text-gray-900 mb-1">Subject: {selectedSubject?.name}</h4>
-              <p className="text-sm text-gray-600">
-                {selectedSubject?.code} - {selectedSubject?.credits} credits
-              </p>
+              <h4 className="font-medium text-gray-900 mb-2">Selected Subjects ({selectedSubjects.length})</h4>
+              <div className="space-y-1 text-sm max-h-20 overflow-y-auto">
+                {selectedSubjects.map((subject, index) => (
+                  <p key={subject.id} className="text-gray-600">
+                    {index + 1}. {subject.name} ({subject.subjectId})
+                  </p>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -257,7 +303,7 @@ export default function AddAdvailableSubject({
                 </Button>
                 <Button type="submit">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Subject
+                  Add Subjects ({selectedSubjects.length})
                 </Button>
               </div>
             </div>

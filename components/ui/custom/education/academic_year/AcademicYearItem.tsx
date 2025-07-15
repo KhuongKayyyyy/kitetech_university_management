@@ -16,7 +16,7 @@ interface AcademicYearItemProps {
 
 export default function AcademicYearItem({ academicYear }: AcademicYearItemProps) {
   const router = useRouter();
-  const isActive = academicYear.status === "active";
+  const isActive = academicYear.status === "Active";
   const semesters = MOCK_SEMESTERS.filter((semester) => semester.academic_year_id === academicYear.id);
 
   return (

@@ -1,6 +1,6 @@
 export interface AcademicYearModel {
   id: number;
-  year: string;
+  year: number;
   start_date: string;
   end_date: string;
   status: string;
@@ -11,7 +11,7 @@ export interface AcademicYearModel {
 export const MOCK_ACADEMIC_YEARS: AcademicYearModel[] = [
   {
     id: 5,
-    year: "2023-2024",
+    year: 2024,
     start_date: "2023-09-01",
     end_date: "2024-06-30",
     status: "active",
@@ -20,7 +20,7 @@ export const MOCK_ACADEMIC_YEARS: AcademicYearModel[] = [
   },
   {
     id: 4,
-    year: "2022-2023",
+    year: 2023,
     start_date: "2022-09-01",
     end_date: "2023-06-30",
     status: "completed",
@@ -29,7 +29,7 @@ export const MOCK_ACADEMIC_YEARS: AcademicYearModel[] = [
   },
   {
     id: 3,
-    year: "2021-2022",
+    year: 2022,
     start_date: "2021-09-01",
     end_date: "2022-06-30",
     status: "completed",
@@ -38,7 +38,7 @@ export const MOCK_ACADEMIC_YEARS: AcademicYearModel[] = [
   },
   {
     id: 2,
-    year: "2020-2021",
+    year: 2021,
     start_date: "2020-09-01",
     end_date: "2021-06-30",
     status: "completed",
@@ -47,7 +47,7 @@ export const MOCK_ACADEMIC_YEARS: AcademicYearModel[] = [
   },
   {
     id: 1,
-    year: "2019-2020",
+    year: 2020,
     start_date: "2019-09-01",
     end_date: "2020-06-30",
     status: "completed",

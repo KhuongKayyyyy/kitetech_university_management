@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { curriculumData, departmentData, majorData } from "@/app/api/fakedata";
-import { MOCK_ACADEMIC_YEARS } from "@/app/api/model/AcademicYearModel";
+import { AcademicYearModel, MOCK_ACADEMIC_YEARS } from "@/app/api/model/AcademicYearModel";
 import { CurriculumModel } from "@/app/api/model/CurriculumModel";
 import { Department, Major } from "@/app/api/model/model";
+import { academicYearService } from "@/app/api/services/academicYearService";
 import { Button } from "@/components/ui/button";
 import { CurriculumTable } from "@/components/ui/custom/education/curriculum/CurriculumTable";
 import { DepartmentTable } from "@/components/ui/custom/education/department/DepartmentTable";
@@ -51,7 +52,17 @@ export default function Page() {
   });
 
   const academicYearId = params.id as string;
-  const academicYear = MOCK_ACADEMIC_YEARS.find((year) => year.id === parseInt(academicYearId));
+  const [academicYear, setAcademicYear] = useState<AcademicYearModel | null>(null);
+
+  useEffect(() => {
+    const fetchAcademicYear = async () => {
+      const data = await academicYearService.getAcademicYear(parseInt(academicYearId));
+      setAcademicYear(data);
+    };
+    fetchAcademicYear();
+  }, [academicYearId]);
+
+  // const academicYear = MOCK_ACADEMIC_YEARS.find((year) => year.id === parseInt(academicYearId));
 
   if (!academicYear) {
     return (

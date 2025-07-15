@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Department } from "@/app/api/model/model";
+import { DepartmentModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,22 +14,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { MajorInDepartTable } from "../major/MajorInDepartTable";
 
 interface NewDepartmentDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onAdd?: (newDepartment: Department) => void;
+  onAdd?: (newDepartment: DepartmentModel) => void;
 }
 
 export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialogProps) {
-  const [newDepartment, setNewDepartment] = useState<Department>({
+  const [newDepartment, setNewDepartment] = useState<DepartmentModel>({
     id: 0,
     name: "",
-    description: "",
-    icon: "",
+    contact_info: "",
+    dean: "",
     majors: [],
   });
 
@@ -47,8 +47,7 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
     setNewDepartment({
       id: 0,
       name: "",
-      description: "",
-      icon: "",
+      contact_info: "",
       majors: [],
     });
   };
@@ -58,7 +57,7 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
       <DialogContent className="sm:max-w-4xl w-full">
         <DialogHeader>
           <DialogTitle>Add New Department</DialogTitle>
-          <DialogDescription>Enter the department’s details and add any majors before saving.</DialogDescription>
+          <DialogDescription>Enter the department's details and add any majors before saving.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -69,14 +68,38 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
-              Description
+              Contact Info
             </Label>
             <Input
-              id="description"
-              value={newDepartment.description}
+              id="contact_info"
+              value={newDepartment.contact_info}
               onChange={handleInputChange}
               className="col-span-3"
             />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="dean" className="text-right">
+              Dean
+            </Label>
+            <Select
+              value={newDepartment.dean}
+              onValueChange={(value) => setNewDepartment((prev) => ({ ...prev, dean: value }))}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select a dean" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="john-smith">Dr. John Smith</SelectItem>
+                <SelectItem value="mary-johnson">Dr. Mary Johnson</SelectItem>
+                <SelectItem value="robert-wilson">Dr. Robert Wilson</SelectItem>
+                <SelectItem value="susan-brown">Dr. Susan Brown</SelectItem>
+                <SelectItem value="michael-davis">Dr. Michael Davis</SelectItem>
+                <SelectItem value="jennifer-garcia">Dr. Jennifer Garcia</SelectItem>
+                <SelectItem value="david-miller">Dr. David Miller</SelectItem>
+                <SelectItem value="lisa-anderson">Dr. Lisa Anderson</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Same major table component used in detail dialog */}

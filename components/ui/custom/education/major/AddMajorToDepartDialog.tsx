@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { Department, Major } from "@/app/api/model/model";
+import { DepartmentModel, Major } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,7 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Search } from "lucide-react";
 
 interface AddMajorToDepartPopoverProps {
-  department: Department;
+  department: DepartmentModel;
   availableMajors: Major[];
   onAddMajors: (majors: Major[]) => void;
 }

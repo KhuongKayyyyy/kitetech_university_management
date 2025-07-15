@@ -20,5 +20,5 @@ export const academicYearRepository = {
 
 
   getAcademicYear: (id: number) =>
-    axiosClient.get(API_CONFIG.GET_ACADEMIC_YEAR.replace(":id", id.toString())),
+    axiosClient.get(API_CONFIG.GET_ACADEMIC_YEAR(id.toString())),
 };

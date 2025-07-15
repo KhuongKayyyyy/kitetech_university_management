@@ -6,8 +6,15 @@ export const API_CONFIG = {
 
   // Academic Year
   GET_ACADEMIC_YEARS: "/api/academic-years",
-  GET_ACADEMIC_YEAR: "/api/academic-years/:id",
+  GET_ACADEMIC_YEAR: (id: string) => `/api/academic-years/${id}`,
   ADD_ACADEMIC_YEAR: "/api/academic-years",
-  UPDATE_ACADEMIC_YEAR: "/api/academic-years/:id",
-  DELETE_ACADEMIC_YEAR: "/api/academic-years/:id",
+  UPDATE_ACADEMIC_YEAR: (id: string) => `/api/academic-years/${id}`,
+  DELETE_ACADEMIC_YEAR: (id: string) => `/api/academic-years/${id}`,
+
+  // Department
+  GET_DEPARTMENTS: "/api/faculties",
+  GET_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
+  ADD_DEPARTMENT: "/api/faculties",
+  UPDATE_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
+  DELETE_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
 };

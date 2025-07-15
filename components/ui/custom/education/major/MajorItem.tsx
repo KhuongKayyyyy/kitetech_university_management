@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import { Department, Major } from "@/app/api/model/model";
+import { DepartmentModel, Major } from "@/app/api/model/model";
 import {
   Book,
   Calculator,
@@ -38,7 +38,7 @@ const iconMap = {
   GraduationCap,
 };
 
-const MajorItem = ({ major, department }: { major?: Major; department?: Department }) => {
+const MajorItem = ({ major, department }: { major?: Major; department?: DepartmentModel }) => {
   // Use a stable property like department ID to ensure consistent color assignment
   const colorScheme = useMemo(() => {
     // Generate a deterministic color index based on the department's ID

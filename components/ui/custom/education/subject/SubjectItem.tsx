@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import { Department, Major, Subject } from "@/app/api/model/model";
+import { DepartmentModel, Major, Subject } from "@/app/api/model/model";
 import { Badge } from "@/components/ui/badge";
 import { Book, Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
 
@@ -29,7 +29,7 @@ const iconMap = {
   Book, // default fallback
 };
 
-const SubjectItem = ({ subject, department }: { subject?: Subject; department?: Department }) => {
+const SubjectItem = ({ subject, department }: { subject?: Subject; department?: DepartmentModel }) => {
   // Use a stable property like department ID to ensure consistent color assignment
   const { bg, text, border } = useMemo(() => {
     // Generate a deterministic color index based on the department's ID

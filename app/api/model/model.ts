@@ -21,12 +21,12 @@ export interface Major {
   departmentId: number;
   subjects?: Subject[];
 }
-export interface Department {
+export interface DepartmentModel {
   id: number;
   name: string;
-  description?: string;
-  majors: Major[];
-  icon: string;
+  contact_info?: string;
+  dean?: string;
+  majors?: Major[];
 }
 
 export interface Teacher {

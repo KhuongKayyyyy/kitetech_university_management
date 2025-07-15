@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { curriculumData, departmentData, majorData } from "@/app/api/fakedata";
 import { AcademicYearModel, MOCK_ACADEMIC_YEARS } from "@/app/api/model/AcademicYearModel";
 import { CurriculumModel } from "@/app/api/model/CurriculumModel";
-import { Department, Major } from "@/app/api/model/model";
+import { DepartmentModel, Major } from "@/app/api/model/model";
 import { academicYearService } from "@/app/api/services/academicYearService";
 import { Button } from "@/components/ui/button";
 import { CurriculumTable } from "@/components/ui/custom/education/curriculum/CurriculumTable";
@@ -28,10 +28,10 @@ import {
 import { useParams, useSearchParams } from "next/navigation";
 
 export default function Page() {
-  const [departments, setDepartments] = useState<Department[]>(departmentData);
+  const [departments, setDepartments] = useState<DepartmentModel[]>(departmentData);
   const allMajorsWithDept = useMemo(() => {
     return departmentData.flatMap((dept) =>
-      dept.majors.map((major) => ({
+      dept.majors?.map((major) => ({
         ...major,
         departmentName: dept.name,
         departmentId: dept.id,
@@ -56,8 +56,8 @@ export default function Page() {
 
   useEffect(() => {
     const fetchAcademicYear = async () => {
-      const data = await academicYearService.getAcademicYear(parseInt(academicYearId));
-      setAcademicYear(data);
+      const response = await academicYearService.getAcademicYear(parseInt("24"));
+      setAcademicYear(response.data);
     };
     fetchAcademicYear();
   }, [academicYearId]);

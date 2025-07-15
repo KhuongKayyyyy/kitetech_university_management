@@ -2,7 +2,8 @@
 
 import * as React from "react";
 
-import { Department } from "@/app/api/model/model";
+import { DepartmentModel } from "@/app/api/model/model";
+import { departmentService } from "@/app/api/services/departmentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -31,12 +32,14 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, Filter, MoreHorizontal, Search, TrashIcon } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../hover-card";
+import ConfirmDeleteDepartments from "./ConfirmDeleteDepartments";
 import { DepartmentDialog } from "./DepartmentDialog";
 import { NewDepartmentDialog } from "./NewDepartmentDialog";
 
-export const departmentColumns: ColumnDef<Department>[] = [
+export const departmentColumns: ColumnDef<DepartmentModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -91,19 +94,35 @@ export const departmentColumns: ColumnDef<Department>[] = [
     cell: ({ row }) => <div className="font-medium text-foreground capitalize">{row.getValue("name")}</div>,
   },
   {
-    accessorKey: "description",
+    accessorKey: "contact_info",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="h-auto p-2 font-semibold text-left justify-start hover:bg-accent/50"
       >
-        Description
+        Contact Info
         <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="text-muted-foreground text-sm max-w-md truncate">{row.getValue("description")}</div>
+      <div className="text-muted-foreground text-sm max-w-md truncate">{row.getValue("contact_info")}</div>
+    ),
+  },
+  {
+    accessorKey: "dean",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="h-auto p-2 font-semibold text-left justify-start hover:bg-accent/50"
+      >
+        Dean
+        <ArrowUpDown className="ml-2 h-4 w-4 text-muted-foreground" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-muted-foreground text-sm max-w-md truncate">{row.getValue("dean") || "Not assigned"}</div>
     ),
   },
   {
@@ -117,14 +136,14 @@ export const departmentColumns: ColumnDef<Department>[] = [
             <HoverCardTrigger asChild>
               <Button variant="ghost" className="h-auto p-1 hover:bg-accent/50">
                 <Badge variant="secondary" className="font-medium">
-                  {majors.length} major{majors.length !== 1 ? "s" : ""}
+                  {majors?.length || 0} major{majors?.length !== 1 ? "s" : ""}
                 </Badge>
               </Button>
             </HoverCardTrigger>
             <HoverCardContent className="w-96 p-4">
               <div className="space-y-3">
                 <h4 className="font-semibold text-sm text-foreground border-b pb-2">Associated Majors</h4>
-                {majors.length > 0 ? (
+                {majors && majors.length > 0 ? (
                   majors.map((major) => (
                     <div key={major.id} className="space-y-1 p-2 rounded-md bg-accent/20">
                       <div className="font-medium text-sm text-primary">{major.name}</div>
@@ -180,14 +199,17 @@ export const departmentColumns: ColumnDef<Department>[] = [
   },
 ];
 
-export function DepartmentTable({ departments }: { departments: Department[] }) {
+export function DepartmentTable({ departments: initialDepartments }: { departments: DepartmentModel[] }) {
+  const [departments, setDepartments] = React.useState<DepartmentModel[]>(initialDepartments);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [openConfirmDelete, setOpenConfirmDelete] = React.useState(false);
+  const [selectedDepartments, setSelectedDepartments] = React.useState<DepartmentModel[]>([]);
 
   const [openDialog, setOpenDialog] = React.useState(false);
-  const [selectedDepartment, setSelectedDepartment] = React.useState<Department | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = React.useState<DepartmentModel | null>(null);
 
   const table = useReactTable({
     data: departments,
@@ -211,8 +233,15 @@ export function DepartmentTable({ departments }: { departments: Department[] }) 
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
 
+  const handleDeleteSuccess = (deleted: DepartmentModel[]) => {
+    const deletedIds = new Set(deleted.map((d) => d.id));
+    setDepartments(departments.filter((d) => !deletedIds.has(d.id)));
+    setRowSelection({});
+  };
+
   return (
     <Card className="w-full shadow-lg border-0 bg-card p-5">
+      <Toaster></Toaster>
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -237,16 +266,29 @@ export function DepartmentTable({ departments }: { departments: Department[] }) 
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
-                      {column.id === "majorsCount" ? "Majors" : column.id}
+                      {column.id === "majorsCount"
+                        ? "Majors"
+                        : column.id === "contact_info"
+                          ? "Contact Info"
+                          : column.id}
                     </DropdownMenuCheckboxItem>
                   ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <NewDepartmentDialog />
+            <NewDepartmentDialog open={openDialog} setOpen={setOpenDialog} />
 
             {isAnyRowSelected && (
-              <Button variant="destructive" size="sm" className="shadow-sm animate-in slide-in-from-right-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="shadow-sm animate-in slide-in-from-right-2 text-white"
+                onClick={() => {
+                  const selectedDepartments = table.getSelectedRowModel().rows.map((row) => row.original);
+                  setSelectedDepartments(selectedDepartments);
+                  setOpenConfirmDelete(true);
+                }}
+              >
                 <TrashIcon className="mr-2 h-4 w-4" />
                 Delete ({Object.keys(rowSelection).length})
               </Button>
@@ -254,6 +296,13 @@ export function DepartmentTable({ departments }: { departments: Department[] }) 
           </div>
         </div>
       </CardHeader>
+
+      <ConfirmDeleteDepartments
+        open={openConfirmDelete}
+        onOpenChange={setOpenConfirmDelete}
+        departments={selectedDepartments}
+        onDeleteSuccess={handleDeleteSuccess}
+      />
 
       <CardContent className="p-0">
         <div className="rounded-lg border-2 border-border/50 overflow-hidden">

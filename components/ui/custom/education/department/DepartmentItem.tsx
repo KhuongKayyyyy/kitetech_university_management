@@ -1,7 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 
-import { Department } from "@/app/api/model/model";
+import { DepartmentModel } from "@/app/api/model/model";
+import { departmentService } from "@/app/api/services/departmentService";
 import { Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 import { Card } from "../../../card";
 import { DepartmentDialog } from "./DepartmentDialog";
@@ -17,23 +19,39 @@ const iconColors = [
   { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200" },
 ];
 
-// 🔥 Icon map declared inline in the same file
-const iconMap = {
-  Calculator,
-  DraftingCompass,
-  LampWallDown,
-  ScanEyeIcon,
-  TextSearchIcon,
-};
+const iconMap = [Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon];
 
-const DepartmentItem = ({ department }: { department: Department }) => {
+interface DepartmentItemProps {
+  department: DepartmentModel;
+  onDelete: (id: number) => void;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+const DepartmentItem = ({ department: initialDepartment, onDelete, isSelected, onSelect }: DepartmentItemProps) => {
+  const [department, setDepartment] = useState<DepartmentModel>(initialDepartment);
+  const [open, setOpen] = useState(false);
+
   const { bg, text, border } = useMemo(() => {
     const random = Math.floor(Math.random() * iconColors.length);
     return iconColors[random];
   }, []);
 
-  // 🔁 Resolve the icon from the string
-  const Icon = iconMap[department.icon as keyof typeof iconMap];
+  const Icon = useMemo(() => {
+    const randomIndex = Math.floor(Math.random() * iconMap.length);
+    return iconMap[randomIndex];
+  }, []);
+
+  const handleSave = async (updated: DepartmentModel) => {
+    try {
+      const saved = await departmentService.updateDepartment(updated);
+      toast.success("Department " + saved.name + " updated successfully");
+      setDepartment(saved);
+      setOpen(false);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <Card className="group relative flex items-center flex-row px-6 py-5 sm:px-8 md:px-10 max-w-full overflow-hidden hover:shadow-lg transition-all duration-200 border-0 ring-1 ring-border hover:ring-2 hover:ring-primary/20 cursor-pointer">
@@ -47,11 +65,18 @@ const DepartmentItem = ({ department }: { department: Department }) => {
           {department.name}
         </h1>
         <p className="text-sm sm:text-sm md:text-base text-muted-foreground break-words font-medium">
-          {department.majors.length} {department.majors.length === 1 ? "major" : "majors"}
+          {department.majors?.length} {department.majors?.length === 1 ? "major" : "majors"}
         </p>
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-4">
-        <DepartmentDialog department={department} isIcon={true} />
+        <DepartmentDialog
+          department={department}
+          isIcon
+          open={open}
+          onOpenChange={setOpen}
+          handleSave={handleSave}
+          handleDelete={() => onDelete(department.id)}
+        />
       </div>
     </Card>
   );

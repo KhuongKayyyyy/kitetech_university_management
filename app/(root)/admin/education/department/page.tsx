@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { departmentData } from "@/app/api/fakedata";
-import { Department } from "@/app/api/model/model";
+import { DepartmentModel } from "@/app/api/model/model";
+import { departmentService } from "@/app/api/services/departmentService";
 import { Button } from "@/components/ui/button";
 import DepartmentItem from "@/components/ui/custom/education/department/DepartmentItem";
 import { DepartmentTable } from "@/components/ui/custom/education/department/DepartmentTable";
 import { NewDepartmentDialog } from "@/components/ui/custom/education/department/NewDepartmentDialog";
-import { Building, Grid, List, Plus, Search } from "lucide-react";
+import { Building, Grid, List, Plus, Search, Trash2 } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 const DepartmentPage = () => {
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards");
@@ -16,21 +17,69 @@ const DepartmentPage = () => {
   const [selectedYear, setSelectedYear] = useState("2024");
 
   const [openAddDepartment, setOpenAddDepartment] = useState(false);
+  const [departments, setDepartments] = useState<DepartmentModel[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
 
-  // Filter departments based on search term
-  const filteredDepartments = departmentData.filter(
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const data = await departmentService.getDepartments();
+      setDepartments(data);
+    };
+    fetchDepartments();
+  }, []);
+
+  const filteredDepartments = departments.filter(
     (department) =>
       department.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (department.description?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
+      (department.contact_info?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
 
-  const handleAddDepartment = (newDepartment: Department) => {
+  const handleAddDepartment = async (newDepartment: DepartmentModel) => {
     setOpenAddDepartment(false);
-    console.log(newDepartment);
+    const data = await departmentService.addDepartment(newDepartment);
+    toast.success("Department " + newDepartment.name + " created successfully");
+    setDepartments([...departments, data]);
+  };
+
+  const handleDeleteDepartment = async (deletedId: string) => {
+    try {
+      await departmentService.deleteDepartment(parseInt(deletedId));
+      setDepartments((prev) => prev.filter((dept) => dept.id !== parseInt(deletedId)));
+      setSelectedDepartments((prev) => prev.filter((id) => id !== parseInt(deletedId)));
+      toast.success("Department deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete department");
+    }
+  };
+
+  const handleSelectDepartment = (departmentId: number) => {
+    setSelectedDepartments((prev) => {
+      if (prev.includes(departmentId)) {
+        return prev.filter((id) => id !== departmentId);
+      } else {
+        return [...prev, departmentId];
+      }
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      await Promise.all(selectedDepartments.map((id) => departmentService.deleteDepartment(id)));
+      setDepartments((prev) => prev.filter((dept) => !selectedDepartments.includes(dept.id)));
+      setSelectedDepartments([]);
+      toast.success(`${selectedDepartments.length} departments deleted successfully`);
+    } catch (error) {
+      toast.error("Failed to delete selected departments");
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedDepartments([]);
   };
 
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
+      <Toaster></Toaster>
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
         <div>
@@ -86,7 +135,7 @@ const DepartmentPage = () => {
           {/* View Toggle and Stats */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-              {filteredDepartments.length} of {departmentData.length} departments
+              {filteredDepartments.length} of {departments.length} departments
             </span>
 
             <div className="flex items-center border border-gray-300 rounded-lg p-1">
@@ -111,6 +160,31 @@ const DepartmentPage = () => {
         </div>
       </div>
 
+      {/* Selection Actions - Only show in cards view when items are selected */}
+      {viewMode === "cards" && selectedDepartments.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">
+              {selectedDepartments.length} department{selectedDepartments.length > 1 ? "s" : ""} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleClearSelection} className="flex items-center gap-2">
+                Clear Selection
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteSelected}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Content Section */}
       {filteredDepartments.length === 0 ? (
         <div className="text-center py-12">
@@ -121,7 +195,13 @@ const DepartmentPage = () => {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDepartments.map((department) => (
-            <DepartmentItem key={department.id} department={department} />
+            <DepartmentItem
+              key={department.id}
+              department={department}
+              onDelete={(id) => handleDeleteDepartment(id.toString())}
+              isSelected={selectedDepartments.includes(department.id)}
+              onSelect={() => handleSelectDepartment(department.id)}
+            />
           ))}
         </div>
       ) : (

@@ -5,7 +5,7 @@ import {
   ScanEyeIcon,
   TextSearchIcon,
 } from "lucide-react";
-import { Department, Student, Teacher, Subject } from "./model/model";
+import { DepartmentModel, Student, Teacher, Subject } from "./model/model";
 import { Formula } from "./model/FormulaModel";
 
 export const teachers: Teacher[] = [
@@ -1136,11 +1136,11 @@ export const majorData: Record<number, { id: number; name: string }[]> = {
   ],
 };
 
-export const departmentData: Department[] = [
+export const departmentData: DepartmentModel[] = [
   {
     id: 1,
     name: "Business",
-    description: "Department of Business and Management studies.",
+    contact_info: "Department of Business and Management studies.",
     majors: [
       {
         id: 101,
@@ -1173,7 +1173,7 @@ export const departmentData: Department[] = [
   {
     id: 2,
     name: "Arts",
-    description: "Department of Fine Arts and Humanities.",
+    contact_info: "Department of Fine Arts and Humanities.",
     majors: [
       {
         id: 201,
@@ -1206,7 +1206,7 @@ export const departmentData: Department[] = [
   {
     id: 3,
     name: "Science",
-    description: "Department of Natural Sciences.",
+    contact_info: "Department of Natural Sciences.",
     majors: [
       {
         id: 301,
@@ -1239,7 +1239,7 @@ export const departmentData: Department[] = [
   {
     id: 4,
     name: "Law",
-    description: "Department of Legal Studies.",
+    contact_info: "Department of Legal Studies.",
     majors: [
       {
         id: 401,
@@ -1272,7 +1272,7 @@ export const departmentData: Department[] = [
   {
     id: 5,
     name: "Technology",
-    description: "Department of Technology and Innovation.",
+    contact_info: "Department of Technology and Innovation.",
     majors: [
       {
         id: 501,
@@ -1307,7 +1307,7 @@ export const departmentData: Department[] = [
   {
     id: 6,
     name: "Medicine",
-    description: "Department of Medical and Health Sciences.",
+    contact_info: "Department of Medical and Health Sciences.",
     majors: [
       {
         id: 601,
@@ -1342,7 +1342,7 @@ export const departmentData: Department[] = [
   {
     id: 7,
     name: "Engineering",
-    description: "Department of Engineering and Applied Sciences.",
+    contact_info: "Department of Engineering and Applied Sciences.",
     majors: [
       {
         id: 701,
@@ -1375,7 +1375,7 @@ export const departmentData: Department[] = [
   {
     id: 8,
     name: "Education",
-    description: "Department of Education and Teacher Training.",
+    contact_info: "Department of Education and Teacher Training.",
     majors: [
       {
         id: 801,
@@ -1407,7 +1407,7 @@ export const departmentData: Department[] = [
   {
     id: 9,
     name: "Social Sciences",
-    description: "Department of Social and Behavioral Sciences.",
+    contact_info: "Department of Social and Behavioral Sciences.",
     majors: [
       {
         id: 901,
@@ -1440,7 +1440,7 @@ export const departmentData: Department[] = [
   {
     id: 10,
     name: "Environmental Studies",
-    description: "Department of Environmental and Earth Sciences.",
+    contact_info: "Department of Environmental and Earth Sciences.",
     majors: [
       {
         id: 1001,
@@ -1474,7 +1474,7 @@ export const departmentData: Department[] = [
   {
     id: 11,
     name: "Architecture",
-    description: "Department of Architecture and Urban Planning.",
+    contact_info: "Department of Architecture and Urban Planning.",
     majors: [
       {
         id: 1101,
@@ -1506,7 +1506,7 @@ export const departmentData: Department[] = [
   {
     id: 12,
     name: "Media Studies",
-    description: "Department of Media and Communication.",
+    contact_info: "Department of Media and Communication.",
     majors: [
       {
         id: 1201,

@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { departmentData } from "@/app/api/fakedata";
-import { Department, Major } from "@/app/api/model/model";
+import { DepartmentModel, Major } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -114,8 +114,8 @@ export function MajorInDepartTable({
   department,
   setDepartment,
 }: {
-  department: Department;
-  setDepartment?: (d: Department) => void;
+  department: DepartmentModel;
+  setDepartment?: (d: DepartmentModel) => void;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -123,7 +123,7 @@ export function MajorInDepartTable({
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data: department.majors,
+    data: department.majors ?? [],
     columns,
     state: {
       sorting,
@@ -144,7 +144,7 @@ export function MajorInDepartTable({
 
   const handleAddMajor = (majors: Major[]) => {
     if (setDepartment) {
-      const updatedMajors = [...department.majors, ...majors];
+      const updatedMajors = [...(department.majors ?? []), ...majors];
       setDepartment({ ...department, majors: updatedMajors });
     }
   };
@@ -152,7 +152,7 @@ export function MajorInDepartTable({
   const handleDeleteSelected = () => {
     if (setDepartment) {
       const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
-      const remainingMajors = department.majors.filter((m) => !selectedIds.includes(m.id));
+      const remainingMajors = (department.majors ?? []).filter((m) => !selectedIds.includes(m.id));
       setDepartment({ ...department, majors: remainingMajors });
     }
   };
@@ -193,7 +193,9 @@ export function MajorInDepartTable({
           </DropdownMenu>
           <AddMajorToDepartPopover
             department={department}
-            availableMajors={departmentData.filter((dept) => dept.id !== department.id).flatMap((dept) => dept.majors)}
+            availableMajors={departmentData
+              .filter((dept) => dept.id !== department.id)
+              .flatMap((dept) => dept.majors ?? [])}
             onAddMajors={handleAddMajor}
           />
           {isAnyRowSelected && (

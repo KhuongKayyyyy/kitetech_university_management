@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { Department } from "@/app/api/model/model";
+import { DepartmentModel } from "@/app/api/model/model";
+import { departmentService } from "@/app/api/services/departmentService";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,8 +16,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, Save, X } from "lucide-react";
+import { Edit, Save, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { MajorInDepartTable } from "../major/MajorInDepartTable";
 
@@ -25,13 +28,21 @@ export function DepartmentDialog({
   isIcon,
   open,
   onOpenChange,
+  handleSave,
+  handleDelete,
 }: {
-  department: Department;
+  department: DepartmentModel;
   isIcon?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  handleSave?: (department: DepartmentModel) => void;
+  handleDelete?: () => void;
 }) {
-  const [editedDepartment, setEditedDepartment] = useState(department);
+  // Ensure majors is initialized to avoid undefined access
+  const [editedDepartment, setEditedDepartment] = useState<DepartmentModel>({
+    ...department,
+    majors: department.majors ?? [],
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -41,13 +52,11 @@ export function DepartmentDialog({
     }));
   };
 
-  const handleSave = () => {
-    // Handle save logic here
-    onOpenChange?.(false);
-  };
-
   const handleCancel = () => {
-    setEditedDepartment(department);
+    setEditedDepartment({
+      ...department,
+      majors: department.majors ?? [],
+    });
     onOpenChange?.(false);
   };
 
@@ -90,47 +99,77 @@ export function DepartmentDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description" className="text-sm font-medium text-foreground">
-                Description
+              <Label htmlFor="contact_info" className="text-sm font-medium text-foreground">
+                Contact Information
               </Label>
               <Textarea
-                id="description"
-                value={editedDepartment.description}
+                id="contact_info"
+                value={editedDepartment.contact_info}
                 onChange={handleInputChange}
-                placeholder="Enter department description..."
+                placeholder="Enter contact information..."
                 className="min-h-[100px] resize-none"
                 rows={4}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="icon" className="text-sm font-medium text-foreground">
-                Icon
+              <Label htmlFor="dean" className="text-sm font-medium text-foreground">
+                Dean
               </Label>
-              <Input
-                id="icon"
-                value={editedDepartment.icon}
-                onChange={handleInputChange}
-                placeholder="Enter icon name or URL..."
-                className="h-11"
-              />
+              <Select
+                value={editedDepartment.dean}
+                onValueChange={(value) => setEditedDepartment((prev) => ({ ...prev, dean: value }))}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select a dean" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="john-smith">Dr. John Smith</SelectItem>
+                  <SelectItem value="mary-johnson">Dr. Mary Johnson</SelectItem>
+                  <SelectItem value="robert-wilson">Dr. Robert Wilson</SelectItem>
+                  <SelectItem value="susan-brown">Dr. Susan Brown</SelectItem>
+                  <SelectItem value="michael-davis">Dr. Michael Davis</SelectItem>
+                  <SelectItem value="jennifer-garcia">Dr. Jennifer Garcia</SelectItem>
+                  <SelectItem value="david-miller">Dr. David Miller</SelectItem>
+                  <SelectItem value="lisa-anderson">Dr. Lisa Anderson</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="border-t pt-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Department Majors</h3>
-              <MajorInDepartTable department={editedDepartment} setDepartment={setEditedDepartment} />
+
+              <MajorInDepartTable
+                department={{
+                  ...editedDepartment,
+                  majors: editedDepartment.majors ?? [],
+                }}
+                setDepartment={setEditedDepartment}
+              />
             </div>
           </div>
         </div>
 
         <DialogFooter className="flex gap-3 pt-6 border-t">
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              console.log("Delete department:", editedDepartment.id);
+              handleDelete?.();
+            }}
+            className="flex items-center gap-2 text-white"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </Button>
           <Button type="button" variant="outline" onClick={handleCancel} className="flex items-center gap-2">
             <X className="h-4 w-4" />
             Cancel
           </Button>
-          <Button type="submit" onClick={handleSave} className="flex items-center gap-2">
+          <Button type="submit" onClick={() => handleSave?.(editedDepartment)} className="flex items-center gap-2">
             <Save className="h-4 w-4" />
             Save changes
           </Button>

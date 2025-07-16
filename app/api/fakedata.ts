@@ -6,7 +6,7 @@ import {
   TextSearchIcon,
 } from "lucide-react";
 import { FacultyModel, Student, Teacher, Subject } from "./model/model";
-import { Formula } from "./model/FormulaModel";
+import { GradingFormulaModel } from "./model/GradingFormulaModel";
 
 export const teachers: Teacher[] = [
   {
@@ -2095,7 +2095,7 @@ export const skillSubjects: Subject[] = [
 ];
 
 
-export const formulaSubjects: Formula[] = [
+export const formulaSubjects: GradingFormulaModel[] = [
   {
     id: 1,
     name: "Standard Weighted Average",

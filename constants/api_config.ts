@@ -24,4 +24,18 @@ export const API_CONFIG = {
   ADD_MAJOR: "/api/majors",
   UPDATE_MAJOR: (id: string) => `/api/majors/${id}`,
   DELETE_MAJOR: (id: string) => `/api/majors/${id}`,
+
+  // Grading Formula
+  GET_GRADING_FORMULAS: "/api/grading-formulas",
+  GET_GRADING_FORMULA: (id: string) => `/api/grading-formulas/${id}`,
+  ADD_GRADING_FORMULA: "/api/grading-formulas",
+  UPDATE_GRADING_FORMULA: (id: string) => `/api/grading-formulas/${id}`,
+  DELETE_GRADING_FORMULA: (id: string) => `/api/grading-formulas/${id}`,
+
+  // Grading Type
+  GET_GRADING_TYPES: "/api/grade-types",
+  GET_GRADING_TYPE: (id: string) => `/api/grade-types/${id}`,
+  ADD_GRADING_TYPE: "/api/grade-types",
+  UPDATE_GRADING_TYPE: (id: string) => `/api/grade-types/${id}`,
+  DELETE_GRADING_TYPE: (id: string) => `/api/grade-types/${id}`,
 };

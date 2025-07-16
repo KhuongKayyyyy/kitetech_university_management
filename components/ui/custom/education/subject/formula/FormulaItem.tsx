@@ -1,15 +1,34 @@
 import React, { useState } from "react";
 
-import { Formula } from "@/app/api/model/FormulaModel";
+import { GradingFormulaModel } from "@/app/api/model/GradingFormulaModel";
 
 import EditFormulaDialog from "./EditFormulaDialog";
 
 interface FormulaItemProps {
-  formula: Formula;
+  formula: GradingFormulaModel;
+  onUpdateFormula?: (updatedFormula: GradingFormulaModel) => Promise<void>;
+  onDeleteFormula?: (formulaId: number) => Promise<void>;
 }
 
-export default function FormulaItem({ formula }: FormulaItemProps) {
+export default function FormulaItem({ formula, onUpdateFormula, onDeleteFormula }: FormulaItemProps) {
   const [open, setOpen] = useState(false);
+
+  // Create a mapping of gradeTypes to their weights for easier access
+  const gradeTypeWeights = formula.gradeTypes.reduce(
+    (acc, gradeType) => {
+      acc[gradeType.gradeType] = gradeType.weight;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  // Define grade type labels
+  const gradeTypeLabels = {
+    QT1: "Quiz 1",
+    QT2: "Quiz 2",
+    GK: "Midterm",
+    CK: "Final",
+  };
 
   return (
     <>
@@ -31,26 +50,58 @@ export default function FormulaItem({ formula }: FormulaItemProps) {
         </p>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-300 transform group-hover:scale-105">
-            <div className="text-2xl font-bold text-blue-700">{formula.participation}%</div>
-            <div className="text-sm text-blue-600 font-medium mt-1">Participation</div>
-          </div>
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center group-hover:from-green-100 group-hover:to-green-200 transition-all duration-300 transform group-hover:scale-105">
-            <div className="text-2xl font-bold text-green-700">{formula.midtermTest}%</div>
-            <div className="text-sm text-green-600 font-medium mt-1">Midterm Test</div>
-          </div>
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 text-center group-hover:from-purple-100 group-hover:to-purple-200 transition-all duration-300 transform group-hover:scale-105">
-            <div className="text-2xl font-bold text-purple-700">{formula.midtermReport}%</div>
-            <div className="text-sm text-purple-600 font-medium mt-1">Midterm Report</div>
-          </div>
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 text-center group-hover:from-orange-100 group-hover:to-orange-200 transition-all duration-300 transform group-hover:scale-105">
-            <div className="text-2xl font-bold text-orange-700">{formula.final}%</div>
-            <div className="text-sm text-orange-600 font-medium mt-1">Final Exam</div>
-          </div>
+          {formula.gradeTypes.map((gradeType, index) => {
+            const colors = [
+              {
+                bg: "from-blue-50 to-blue-100",
+                hoverBg: "group-hover:from-blue-100 group-hover:to-blue-200",
+                text: "text-blue-700",
+                subText: "text-blue-600",
+              },
+              {
+                bg: "from-green-50 to-green-100",
+                hoverBg: "group-hover:from-green-100 group-hover:to-green-200",
+                text: "text-green-700",
+                subText: "text-green-600",
+              },
+              {
+                bg: "from-purple-50 to-purple-100",
+                hoverBg: "group-hover:from-purple-100 group-hover:to-purple-200",
+                text: "text-purple-700",
+                subText: "text-purple-600",
+              },
+              {
+                bg: "from-orange-50 to-orange-100",
+                hoverBg: "group-hover:from-orange-100 group-hover:to-orange-200",
+                text: "text-orange-700",
+                subText: "text-orange-600",
+              },
+            ];
+
+            const color = colors[index % colors.length];
+
+            return (
+              <div
+                key={gradeType.id}
+                className={`bg-gradient-to-br ${color.bg} rounded-lg p-4 text-center ${color.hoverBg} transition-all duration-300 transform group-hover:scale-105`}
+              >
+                <div className={`text-2xl font-bold ${color.text}`}>{gradeType.weight}%</div>
+                <div className={`text-sm ${color.subText} font-medium mt-1`}>
+                  {gradeTypeLabels[gradeType.gradeType] || gradeType.gradeType}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <EditFormulaDialog open={open} setOpen={setOpen} formula={formula} onEditFormula={() => {}} />
+      <EditFormulaDialog
+        open={open}
+        setOpen={setOpen}
+        formula={formula}
+        onEditFormula={onUpdateFormula}
+        onDeleteFormula={onDeleteFormula}
+      />
     </>
   );
 }

@@ -17,4 +17,11 @@ export const API_CONFIG = {
   ADD_DEPARTMENT: "/api/faculties",
   UPDATE_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
   DELETE_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
+
+  // Major
+  GET_MAJORS: "/api/majors",
+  GET_MAJOR: (id: string) => `/api/majors/${id}`,
+  ADD_MAJOR: "/api/majors",
+  UPDATE_MAJOR: (id: string) => `/api/majors/${id}`,
+  DELETE_MAJOR: (id: string) => `/api/majors/${id}`,
 };

@@ -2,31 +2,25 @@
 
 import React, { useEffect, useState } from "react";
 
-import { DepartmentModel } from "@/app/api/model/model";
+import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
 import { Button } from "@/components/ui/button";
 import DepartmentItem from "@/components/ui/custom/education/department/DepartmentItem";
 import { DepartmentTable } from "@/components/ui/custom/education/department/DepartmentTable";
 import { NewDepartmentDialog } from "@/components/ui/custom/education/department/NewDepartmentDialog";
+import { useDepartments } from "@/hooks/useDeparment";
 import { Building, Grid, List, Plus, Search, Trash2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 const DepartmentPage = () => {
+  const { departments, setDepartments, loading } = useDepartments();
+
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("2024");
 
   const [openAddDepartment, setOpenAddDepartment] = useState(false);
-  const [departments, setDepartments] = useState<DepartmentModel[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      const data = await departmentService.getDepartments();
-      setDepartments(data);
-    };
-    fetchDepartments();
-  }, []);
 
   const filteredDepartments = departments.filter(
     (department) =>
@@ -34,7 +28,7 @@ const DepartmentPage = () => {
       (department.contact_info?.toLowerCase() || "").includes(searchTerm.toLowerCase()),
   );
 
-  const handleAddDepartment = async (newDepartment: DepartmentModel) => {
+  const handleAddDepartment = async (newDepartment: FacultyModel) => {
     setOpenAddDepartment(false);
     const data = await departmentService.addDepartment(newDepartment);
     toast.success("Department " + newDepartment.name + " created successfully");

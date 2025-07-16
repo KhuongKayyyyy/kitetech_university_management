@@ -1,6 +1,6 @@
 import React from "react";
 
-import { DepartmentModel } from "@/app/api/model/model";
+import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,8 @@ import { toast } from "sonner";
 interface ConfirmDeleteDepartmentsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  departments: DepartmentModel[];
-  onDeleteSuccess: (deleted: DepartmentModel[]) => void;
+  departments: FacultyModel[];
+  onDeleteSuccess: (deleted: FacultyModel[]) => void;
 }
 
 export default function ConfirmDeleteDepartments({

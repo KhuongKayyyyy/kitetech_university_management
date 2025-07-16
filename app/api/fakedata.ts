@@ -5,7 +5,7 @@ import {
   ScanEyeIcon,
   TextSearchIcon,
 } from "lucide-react";
-import { DepartmentModel, Student, Teacher, Subject } from "./model/model";
+import { FacultyModel, Student, Teacher, Subject } from "./model/model";
 import { Formula } from "./model/FormulaModel";
 
 export const teachers: Teacher[] = [
@@ -1136,7 +1136,7 @@ export const majorData: Record<number, { id: number; name: string }[]> = {
   ],
 };
 
-export const departmentData: DepartmentModel[] = [
+export const departmentData: FacultyModel[] = [
   {
     id: 1,
     name: "Business",

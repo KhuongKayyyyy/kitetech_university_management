@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Major } from "@/app/api/model/model";
+import { MajorModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -14,9 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getDepartmentNameById } from "@/lib/utils";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -32,9 +30,10 @@ import {
 import { ArrowUpDown, ChevronDown, Eye, Filter, MoreHorizontal, Pencil, Search, TrashIcon } from "lucide-react";
 
 import { MajorDetailDialog } from "./ MajorDetailDialog";
+import ConfirmDeleteMajorDialog from "./ConfirmDeleteMajorDialog";
 import { NewMajorDialog } from "./NewMajorDialog";
 
-export const majorColumns: ColumnDef<Major>[] = [
+export const majorColumns: ColumnDef<MajorModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -61,13 +60,30 @@ export const majorColumns: ColumnDef<Major>[] = [
     id: "order",
     header: "No.",
     cell: ({ row, table }) => {
-      const pageIndex = table.getState().pagination.pageIndex;
-      const pageSize = table.getState().pagination.pageSize;
-      return <div className="w-12 text-center font-medium text-gray-600">{pageIndex * pageSize + row.index + 1}</div>;
+      const { pageIndex, pageSize } = table.getState().pagination;
+      const rowNumber = pageIndex * pageSize + row.index + 1;
+
+      return <div className="w-12 text-center font-medium text-gray-600">{rowNumber}</div>;
     },
     enableSorting: false,
     enableHiding: false,
     size: 60,
+  },
+  {
+    accessorKey: "code",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="h-8 px-2 font-semibold text-gray-700 hover:bg-gray-100"
+      >
+        Code
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="font-mono text-sm font-medium text-gray-900 uppercase">{row.getValue("code") || "N/A"}</div>
+    ),
   },
   {
     accessorKey: "name",
@@ -100,7 +116,7 @@ export const majorColumns: ColumnDef<Major>[] = [
     ),
   },
   {
-    accessorKey: "department.id",
+    accessorKey: "faculty.name",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -113,7 +129,7 @@ export const majorColumns: ColumnDef<Major>[] = [
     ),
     cell: ({ row }) => (
       <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-        {getDepartmentNameById(row.original.departmentId)}
+        {row.original.faculty?.name || "Unknown Faculty"}
       </div>
     ),
   },
@@ -162,11 +178,19 @@ export const majorColumns: ColumnDef<Major>[] = [
   },
 ];
 
-export function MajorTable({ majors }: { majors: Major[] }) {
+interface MajorTableProps {
+  majors: MajorModel[];
+  onMajorsDeleted?: (deletedMajors: MajorModel[]) => void;
+}
+
+export function MajorTable({ majors, onMajorsDeleted }: MajorTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const [openAddMajor, setOpenAddMajor] = React.useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
 
   const table = useReactTable({
     data: majors,
@@ -189,6 +213,26 @@ export function MajorTable({ majors }: { majors: Major[] }) {
   });
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
+
+  // Get selected majors
+  const selectedMajors = React.useMemo(() => {
+    return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+  }, [table, rowSelection]);
+
+  const handleDelete = async () => {
+    try {
+      if (onMajorsDeleted) {
+        onMajorsDeleted(selectedMajors);
+      }
+      setRowSelection({});
+    } catch (error) {
+      console.error("Failed to delete majors:", error);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setOpenDeleteDialog(true);
+  };
 
   return (
     <div className="w-full space-y-4 p-5">
@@ -218,22 +262,35 @@ export function MajorTable({ majors }: { majors: Major[] }) {
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
-                    {column.id === "department.id" ? "Department" : column.id}
+                    {column.id === "faculty.name" ? "Department" : column.id}
                   </DropdownMenuCheckboxItem>
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
           {/* Add Major Button */}
-          <NewMajorDialog />
+          <NewMajorDialog open={openAddMajor} setOpen={setOpenAddMajor} />
 
           {/* Delete Selected Button */}
           {isAnyRowSelected && (
-            <Button variant="destructive" size="sm" className="shadow-sm hover:bg-red-600 transition-colors">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="shadow-sm hover:bg-red-600 transition-colors text-white"
+              onClick={handleDeleteClick}
+            >
               <TrashIcon className="w-4 h-4 mr-2" />
               Delete ({Object.keys(rowSelection).length})
             </Button>
           )}
+
+          <ConfirmDeleteMajorDialog
+            open={openDeleteDialog}
+            onOpenChange={setOpenDeleteDialog}
+            majors={selectedMajors}
+            onConfirm={handleDelete}
+            onCancel={() => setOpenDeleteDialog(false)}
+          />
         </div>
       </div>
 

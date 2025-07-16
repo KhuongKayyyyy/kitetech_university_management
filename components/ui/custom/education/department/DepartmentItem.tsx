@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import { DepartmentModel } from "@/app/api/model/model";
+import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
 import { Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
 import { toast, Toaster } from "sonner";
@@ -22,14 +22,14 @@ const iconColors = [
 const iconMap = [Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon];
 
 interface DepartmentItemProps {
-  department: DepartmentModel;
+  department: FacultyModel;
   onDelete: (id: number) => void;
   isSelected: boolean;
   onSelect: () => void;
 }
 
 const DepartmentItem = ({ department: initialDepartment, onDelete, isSelected, onSelect }: DepartmentItemProps) => {
-  const [department, setDepartment] = useState<DepartmentModel>(initialDepartment);
+  const [department, setDepartment] = useState<FacultyModel>(initialDepartment);
   const [open, setOpen] = useState(false);
 
   const { bg, text, border } = useMemo(() => {
@@ -42,7 +42,7 @@ const DepartmentItem = ({ department: initialDepartment, onDelete, isSelected, o
     return iconMap[randomIndex];
   }, []);
 
-  const handleSave = async (updated: DepartmentModel) => {
+  const handleSave = async (updated: FacultyModel) => {
     try {
       const saved = await departmentService.updateDepartment(updated);
       toast.success("Department " + saved.name + " updated successfully");

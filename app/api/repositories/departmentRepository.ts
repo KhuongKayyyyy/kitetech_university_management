@@ -1,14 +1,14 @@
 
 import { API_CONFIG } from "@/constants/api_config";
 import axiosClient from "../client/axiosClient";
-import { DepartmentModel } from "../model/model";
+import { FacultyModel } from "../model/model";
 
 
 export const departmentRepository = {
   getDepartments: () =>
     axiosClient.get(API_CONFIG.GET_DEPARTMENTS),
 
-  addDepartment: (department: DepartmentModel) => {
+  addDepartment: (department: FacultyModel) => {
     const body = {
       "name": department.name,
       "dean": department.dean,
@@ -17,7 +17,7 @@ export const departmentRepository = {
     return axiosClient.post(API_CONFIG.ADD_DEPARTMENT, body);
   },
 
-  updateDepartment: (department: DepartmentModel) => {
+  updateDepartment: (department: FacultyModel) => {
     const body = {
       "name": department.name,
       "dean": department.dean,

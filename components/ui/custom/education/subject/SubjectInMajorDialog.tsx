@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { subjects } from "@/app/api/fakedata";
-import { Major, Subject } from "@/app/api/model/model";
+import { MajorModel, Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -110,7 +110,7 @@ export const columns: ColumnDef<Subject>[] = [
   },
 ];
 
-export function SubjectInMajorTable({ major, setMajor }: { major: Major; setMajor?: (m: Major) => void }) {
+export function SubjectInMajorTable({ major, setMajor }: { major: MajorModel; setMajor?: (m: MajorModel) => void }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});

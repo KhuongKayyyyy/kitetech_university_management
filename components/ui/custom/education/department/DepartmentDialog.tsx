@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { DepartmentModel } from "@/app/api/model/model";
+import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,15 +31,15 @@ export function DepartmentDialog({
   handleSave,
   handleDelete,
 }: {
-  department: DepartmentModel;
+  department: FacultyModel;
   isIcon?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  handleSave?: (department: DepartmentModel) => void;
+  handleSave?: (department: FacultyModel) => void;
   handleDelete?: () => void;
 }) {
   // Ensure majors is initialized to avoid undefined access
-  const [editedDepartment, setEditedDepartment] = useState<DepartmentModel>({
+  const [editedDepartment, setEditedDepartment] = useState<FacultyModel>({
     ...department,
     majors: department.majors ?? [],
   });

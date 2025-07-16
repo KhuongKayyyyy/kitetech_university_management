@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { DepartmentModel } from "@/app/api/model/model";
+import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ import ConfirmDeleteDepartments from "./ConfirmDeleteDepartments";
 import { DepartmentDialog } from "./DepartmentDialog";
 import { NewDepartmentDialog } from "./NewDepartmentDialog";
 
-export const departmentColumns: ColumnDef<DepartmentModel>[] = [
+export const departmentColumns: ColumnDef<FacultyModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -199,17 +199,17 @@ export const departmentColumns: ColumnDef<DepartmentModel>[] = [
   },
 ];
 
-export function DepartmentTable({ departments: initialDepartments }: { departments: DepartmentModel[] }) {
-  const [departments, setDepartments] = React.useState<DepartmentModel[]>(initialDepartments);
+export function DepartmentTable({ departments: initialDepartments }: { departments: FacultyModel[] }) {
+  const [departments, setDepartments] = React.useState<FacultyModel[]>(initialDepartments);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [openConfirmDelete, setOpenConfirmDelete] = React.useState(false);
-  const [selectedDepartments, setSelectedDepartments] = React.useState<DepartmentModel[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = React.useState<FacultyModel[]>([]);
 
   const [openDialog, setOpenDialog] = React.useState(false);
-  const [selectedDepartment, setSelectedDepartment] = React.useState<DepartmentModel | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = React.useState<FacultyModel | null>(null);
 
   const table = useReactTable({
     data: departments,
@@ -233,7 +233,7 @@ export function DepartmentTable({ departments: initialDepartments }: { departmen
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
 
-  const handleDeleteSuccess = (deleted: DepartmentModel[]) => {
+  const handleDeleteSuccess = (deleted: FacultyModel[]) => {
     const deletedIds = new Set(deleted.map((d) => d.id));
     setDepartments(departments.filter((d) => !deletedIds.has(d.id)));
     setRowSelection({});

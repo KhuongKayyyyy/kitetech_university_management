@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { DepartmentModel, Major } from "@/app/api/model/model";
+import { FacultyModel, MajorModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,9 +20,9 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Search } from "lucide-react";
 
 interface AddMajorToDepartPopoverProps {
-  department: DepartmentModel;
-  availableMajors: Major[];
-  onAddMajors: (majors: Major[]) => void;
+  department: FacultyModel;
+  availableMajors: MajorModel[];
+  onAddMajors: (majors: MajorModel[]) => void;
 }
 
 export default function AddMajorToDepartPopover({
@@ -32,7 +32,7 @@ export default function AddMajorToDepartPopover({
 }: AddMajorToDepartPopoverProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMajors, setSelectedMajors] = useState<Major[]>([]);
+  const [selectedMajors, setSelectedMajors] = useState<MajorModel[]>([]);
 
   // Filter majors based on search term and exclude already added majors
   const filteredMajors = availableMajors.filter((major) => {
@@ -41,7 +41,7 @@ export default function AddMajorToDepartPopover({
     return matchesSearch && notAlreadyInDepartment;
   });
 
-  const handleMajorToggle = (major: Major) => {
+  const handleMajorToggle = (major: MajorModel) => {
     setSelectedMajors((prev) => {
       const isSelected = prev.some((m) => m.id === major.id);
       if (isSelected) {

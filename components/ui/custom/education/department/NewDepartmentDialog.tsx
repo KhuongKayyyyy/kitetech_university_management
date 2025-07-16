@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { DepartmentModel } from "@/app/api/model/model";
+import { FacultyModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,11 +21,11 @@ import { MajorInDepartTable } from "../major/MajorInDepartTable";
 interface NewDepartmentDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onAdd?: (newDepartment: DepartmentModel) => void;
+  onAdd?: (newDepartment: FacultyModel) => void;
 }
 
 export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialogProps) {
-  const [newDepartment, setNewDepartment] = useState<DepartmentModel>({
+  const [newDepartment, setNewDepartment] = useState<FacultyModel>({
     id: 0,
     name: "",
     contact_info: "",

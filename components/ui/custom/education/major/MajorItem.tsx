@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 
-import { DepartmentModel, Major } from "@/app/api/model/model";
+import { FacultyModel, MajorModel } from "@/app/api/model/model";
+import { majorService } from "@/app/api/services/majorService";
 import {
   Book,
   Calculator,
@@ -10,6 +11,7 @@ import {
   ScanEyeIcon,
   TextSearchIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "../../../badge";
 import { Card, CardContent } from "../../../card";
@@ -28,17 +30,17 @@ const iconColors = [
 ];
 
 // Icon map for major departments
-const iconMap = {
-  Calculator,
-  DraftingCompass,
-  LampWallDown,
-  ScanEyeIcon,
-  TextSearchIcon,
-  Book,
-  GraduationCap,
-};
+const iconMap = [Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon, Book, GraduationCap];
 
-const MajorItem = ({ major, department }: { major?: Major; department?: DepartmentModel }) => {
+const MajorItem = ({
+  major,
+  department,
+  onMajorUpdated,
+}: {
+  major?: MajorModel;
+  department?: FacultyModel;
+  onMajorUpdated?: (updatedMajor: MajorModel) => void;
+}) => {
   // Use a stable property like department ID to ensure consistent color assignment
   const colorScheme = useMemo(() => {
     // Generate a deterministic color index based on the department's ID
@@ -46,58 +48,82 @@ const MajorItem = ({ major, department }: { major?: Major; department?: Departme
     return iconColors[colorIndex];
   }, [department?.id]);
 
-  // Resolve the icon from the department's icon key
-  const Icon = department ? iconMap[department.icon as keyof typeof iconMap] : GraduationCap;
+  // Randomly select an icon from the available icons
+  const Icon = useMemo(() => {
+    const iconIndex = department ? department.id % iconMap.length : Math.floor(Math.random() * iconMap.length);
+    return iconMap[iconIndex];
+  }, [department?.id]);
 
   const [open, setOpen] = useState(false);
 
+  const handleUpdateMajor = async (updatedMajor: MajorModel) => {
+    try {
+      await majorService.updateMajor(updatedMajor);
+      toast.success("Major " + updatedMajor.name + " updated successfully");
+
+      // Update the local state in the parent component
+      onMajorUpdated?.(updatedMajor);
+
+      // Close the dialog
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update major");
+    }
+  };
+
   return (
-    <Card
-      onClick={() => setOpen(true)}
-      className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50"
-    >
-      <CardContent className="p-0">
-        <div className="flex items-center gap-4 p-6">
-          {/* Icon Container */}
-          <div
-            className={`relative flex items-center justify-center w-16 h-16 rounded-2xl border-2 ${colorScheme.bg} ${colorScheme.border} shadow-sm group-hover:shadow-md transition-shadow duration-300`}
-          >
-            <Icon className={`w-7 h-7 ${colorScheme.icon}`} strokeWidth={2.5} />
-            <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0 space-y-2">
-            {/* Major Name */}
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold text-gray-900 leading-tight truncate group-hover:text-gray-700 transition-colors duration-200">
-                {major?.name || "Untitled Major"}
-              </h3>
-              {department && (
-                <Badge variant="secondary" className="shrink-0 text-xs font-medium bg-gray-100 text-gray-600 border-0">
-                  {department.name}
-                </Badge>
-              )}
+    <>
+      <Card
+        onClick={() => setOpen(true)}
+        className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50"
+      >
+        <CardContent className="p-0">
+          <div className="flex items-center gap-4 p-6">
+            {/* Icon Container */}
+            <div
+              className={`relative flex items-center justify-center w-16 h-16 rounded-2xl border-2 ${colorScheme.bg} ${colorScheme.border} shadow-sm group-hover:shadow-md transition-shadow duration-300`}
+            >
+              <Icon className={`w-7 h-7 ${colorScheme.icon}`} strokeWidth={2.5} />
+              <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
 
-            {/* Description */}
-            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 group-hover:text-gray-500 transition-colors duration-200">
-              {major?.description || "No description available for this major."}
-            </p>
-          </div>
+            {/* Content */}
+            <div className="flex-1 min-w-0 space-y-2">
+              {/* Major Name */}
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-gray-900 leading-tight truncate group-hover:text-gray-700 transition-colors duration-200">
+                  {major?.name || "Untitled Major"}
+                </h3>
+                {department && (
+                  <Badge
+                    variant="secondary"
+                    className="shrink-0 text-xs font-medium bg-gray-100 text-gray-600 border-0"
+                  >
+                    {department.name}
+                  </Badge>
+                )}
+              </div>
 
-          {/* Hover Arrow Indicator */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-              <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              {/* Description */}
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 group-hover:text-gray-500 transition-colors duration-200">
+                {major?.description || "No description available for this major."}
+              </p>
+            </div>
+
+            {/* Hover Arrow Indicator */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-      <MajorDetailDialog major={major!} open={open} onOpenChange={setOpen} />
-    </Card>
+        </CardContent>
+        <MajorDetailDialog major={major!} open={open} onOpenChange={setOpen} handleUpdateMajor={handleUpdateMajor} />
+      </Card>
+    </>
   );
 };
 

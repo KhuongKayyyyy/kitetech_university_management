@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { departmentData } from "@/app/api/fakedata";
-import { DepartmentModel, Major } from "@/app/api/model/model";
+import { FacultyModel, MajorModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -33,7 +33,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash } from "lucide-react";
 
 import AddMajorToDepartPopover from "./AddMajorToDepartDialog";
 
-export const columns: ColumnDef<Major>[] = [
+export const columns: ColumnDef<MajorModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -114,8 +114,8 @@ export function MajorInDepartTable({
   department,
   setDepartment,
 }: {
-  department: DepartmentModel;
-  setDepartment?: (d: DepartmentModel) => void;
+  department: FacultyModel;
+  setDepartment?: (d: FacultyModel) => void;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -142,7 +142,7 @@ export function MajorInDepartTable({
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const handleAddMajor = (majors: Major[]) => {
+  const handleAddMajor = (majors: MajorModel[]) => {
     if (setDepartment) {
       const updatedMajors = [...(department.majors ?? []), ...majors];
       setDepartment({ ...department, majors: updatedMajors });

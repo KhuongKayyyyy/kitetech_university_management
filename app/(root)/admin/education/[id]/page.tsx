@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { curriculumData, departmentData, majorData } from "@/app/api/fakedata";
 import { AcademicYearModel, MOCK_ACADEMIC_YEARS } from "@/app/api/model/AcademicYearModel";
 import { CurriculumModel } from "@/app/api/model/CurriculumModel";
-import { DepartmentModel, Major } from "@/app/api/model/model";
+import { FacultyModel, MajorModel } from "@/app/api/model/model";
 import { academicYearService } from "@/app/api/services/academicYearService";
 import { Button } from "@/components/ui/button";
 import { CurriculumTable } from "@/components/ui/custom/education/curriculum/CurriculumTable";
@@ -28,17 +28,19 @@ import {
 import { useParams, useSearchParams } from "next/navigation";
 
 export default function Page() {
-  const [departments, setDepartments] = useState<DepartmentModel[]>(departmentData);
+  const [departments, setDepartments] = useState<FacultyModel[]>(departmentData);
   const allMajorsWithDept = useMemo(() => {
     return departmentData.flatMap((dept) =>
       dept.majors?.map((major) => ({
         ...major,
-        departmentName: dept.name,
-        departmentId: dept.id,
+        facultyName: dept.name,
+        facultyId: dept.id,
       })),
     );
   }, []);
-  const [majors, setMajors] = useState<Major[]>(allMajorsWithDept);
+  const [majors, setMajors] = useState<MajorModel[]>(
+    allMajorsWithDept.filter((major) => major !== undefined) as MajorModel[],
+  );
   const [curriculums, setCurriculums] = useState<CurriculumModel[]>(curriculumData);
 
   const params = useParams();

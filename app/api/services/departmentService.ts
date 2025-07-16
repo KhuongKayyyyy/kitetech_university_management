@@ -1,4 +1,4 @@
-import { DepartmentModel } from "../model/model";
+import { FacultyModel } from "../model/model";
 import { departmentRepository } from "../repositories/departmentRepository";
 import { toast } from "sonner";
 
@@ -13,7 +13,7 @@ export const departmentService = {
     }
   },
 
-  addDepartment: async (department: DepartmentModel) => {
+  addDepartment: async (department: FacultyModel) => {
     try {
       const response = await departmentRepository.addDepartment(department);
       return response.data;
@@ -23,7 +23,7 @@ export const departmentService = {
     }
   },
 
-  updateDepartment: async (department: DepartmentModel) => {
+  updateDepartment: async (department: FacultyModel) => {
     try {
       const response = await departmentRepository.updateDepartment(department);
       return response.data;

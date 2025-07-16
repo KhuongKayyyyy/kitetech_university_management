@@ -14,19 +14,19 @@ export interface Subject {
   credits: number;
 }
 
-export interface Major {
+export interface MajorModel {
   id: number;
   name: string;
+  code?: string;
   description?: string;
-  departmentId: number;
-  subjects?: Subject[];
+  faculty?: FacultyModel;
 }
-export interface DepartmentModel {
+export interface FacultyModel {
   id: number;
   name: string;
   contact_info?: string;
   dean?: string;
-  majors?: Major[];
+  majors?: MajorModel[];
 }
 
 export interface Teacher {

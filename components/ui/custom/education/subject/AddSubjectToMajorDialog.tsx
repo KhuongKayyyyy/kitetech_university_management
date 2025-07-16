@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { Major, Subject } from "@/app/api/model/model";
+import { MajorModel, Subject } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,7 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, Search } from "lucide-react";
 
 interface AddSubjectToMajorDialogProps {
-  major: Major;
+  major: MajorModel;
   availableSubjects: Subject[];
   onAddSubjects: (subjects: Subject[]) => void;
 }

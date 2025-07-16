@@ -2,58 +2,96 @@
 
 import React, { useMemo, useState } from "react";
 
-import { departmentData } from "@/app/api/fakedata";
-import { Major } from "@/app/api/model/model";
+import { MajorModel } from "@/app/api/model/model";
+import { majorService } from "@/app/api/services/majorService";
 import { Button } from "@/components/ui/button";
 import MajorItem from "@/components/ui/custom/education/major/MajorItem";
 import { MajorTable } from "@/components/ui/custom/education/major/MajorTable";
 import { NewMajorDialog } from "@/components/ui/custom/education/major/NewMajorDialog";
+import { useDepartments } from "@/hooks/useDeparment";
+import { useMajors } from "@/hooks/useMajor";
 import { Building, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 
 const MajorPage = () => {
+  const { majors, setMajors, loading } = useMajors();
+  const { departments: departmentData, setDepartments, loading: departmentLoading } = useDepartments();
+
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedYear, setSelectedYear] = useState("2024");
   const [openAddMajor, setOpenAddMajor] = useState(false);
 
-  const handleAddMajor = (newMajor: Major) => {
-    console.log(newMajor);
+  const handleAddMajor = async (newMajor: MajorModel) => {
+    try {
+      const created = await majorService.addMajor(newMajor);
+
+      const attachedFaculty = departmentData.find((dept) => dept.id === newMajor.faculty?.id);
+      const completeMajor = { ...created, faculty: attachedFaculty };
+      toast.success("Major " + newMajor.name + " added successfully!");
+      setMajors([...majors, completeMajor]);
+    } catch (error) {
+      console.error("Failed to add major:", error);
+      toast.error("Failed to add major. Please try again.");
+    }
   };
 
-  // Get all majors with department info
-  const allMajorsWithDept = useMemo(() => {
-    return departmentData.flatMap((dept) =>
-      dept.majors.map((major) => ({
-        ...major,
-        departmentName: dept.name,
-        departmentId: dept.id,
-      })),
+  const handleMajorUpdated = (updatedMajor: MajorModel) => {
+    setMajors((prevMajors) =>
+      prevMajors.map((major) =>
+        major.id === updatedMajor.id ? { ...updatedMajor, faculty: updatedMajor.faculty } : major,
+      ),
     );
-  }, []);
+  };
+
+  const handleMajorsDeleted = async (deletedMajors: MajorModel[]) => {
+    try {
+      for (const major of deletedMajors) {
+        await majorService.deleteMajor(major.id.toString());
+      }
+      setMajors((prevMajors) =>
+        prevMajors.filter((major) => !deletedMajors.some((deleted) => deleted.id === major.id)),
+      );
+      toast.success(deletedMajors.length + " majors deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete majors:", error);
+      toast.error("Failed to delete majors. Please try again.");
+    }
+  };
+
+  const allMajorsWithFaculty = useMemo(() => {
+    return majors.map((major) => ({
+      ...major,
+      facultyName: major.faculty?.name || "Unknown Faculty",
+    }));
+  }, [majors]);
 
   // Get unique departments for filter
-  const departments = useMemo(() => Array.from(new Set(departmentData.map((dept) => dept.name))), []);
+  const departmentNames = useMemo(() => {
+    const uniqueDepts = Array.from(new Set(allMajorsWithFaculty.map((major) => major.facultyName)));
+    return uniqueDepts.filter((dept) => dept !== "Unknown Faculty");
+  }, [allMajorsWithFaculty]);
 
   // Filter majors based on search and department
   const filteredMajors = useMemo(() => {
-    return allMajorsWithDept.filter((major) => {
+    return allMajorsWithFaculty.filter((major) => {
       const matchesSearch =
         major.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (major.description?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        major.departmentName.toLowerCase().includes(searchTerm.toLowerCase());
+        major.facultyName.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesDepartment = selectedDepartment === "all" || major.departmentName === selectedDepartment;
+      const matchesDepartment = selectedDepartment === "all" || major.facultyName === selectedDepartment;
 
       return matchesSearch && matchesDepartment;
     });
-  }, [allMajorsWithDept, searchTerm, selectedDepartment]);
+  }, [allMajorsWithFaculty, searchTerm, selectedDepartment]);
 
   // Group majors by department for cards view
   const groupedMajors = useMemo(() => {
     const grouped = filteredMajors.reduce(
       (acc, major) => {
-        const deptName = major.departmentName;
+        const deptName = major.facultyName;
         if (!acc[deptName]) {
           acc[deptName] = [];
         }
@@ -64,6 +102,17 @@ const MajorPage = () => {
     );
     return grouped;
   }, [filteredMajors]);
+
+  if (loading || departmentLoading) {
+    return (
+      <div className="px-6 bg-primary-foreground py-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading majors...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
@@ -127,7 +176,7 @@ const MajorPage = () => {
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white"
             >
               <option value="all">All Departments</option>
-              {departments.map((dept) => (
+              {departmentNames.map((dept) => (
                 <option key={dept} value={dept}>
                   {dept}
                 </option>
@@ -138,7 +187,7 @@ const MajorPage = () => {
           {/* View Toggle and Stats */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-              {filteredMajors.length} of {allMajorsWithDept.length} majors
+              {filteredMajors.length} of {allMajorsWithFaculty.length} majors
             </span>
 
             <div className="flex items-center border border-gray-300 rounded-lg p-1">
@@ -172,7 +221,7 @@ const MajorPage = () => {
         </div>
       ) : viewMode === "table" ? (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <MajorTable majors={filteredMajors} />
+          <MajorTable majors={filteredMajors} onMajorsDeleted={handleMajorsDeleted} />
         </div>
       ) : (
         <div className="space-y-8">
@@ -189,8 +238,15 @@ const MajorPage = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {majors.map((major) => {
-                  const department = departmentData.find((d) => d.id === major.departmentId);
-                  return <MajorItem key={major.id} major={major} department={department!} />;
+                  const department = departmentData.find((d) => d.id === major.faculty?.id);
+                  return (
+                    <MajorItem
+                      key={major.id}
+                      major={major}
+                      department={department!}
+                      onMajorUpdated={handleMajorUpdated}
+                    />
+                  );
                 })}
               </div>
             </div>

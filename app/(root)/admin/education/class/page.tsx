@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 
 import { Class, mockClasses } from "@/app/api/model/ClassModel";
 import { Button } from "@/components/ui/button";
-import AddClassDialog from "@/components/ui/custom/education/class/AddSubjectDialog";
+import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialog";
 import ClassBriefInfo from "@/components/ui/custom/education/class/ClassBriefInfo";
 import ClassItem from "@/components/ui/custom/education/class/ClassItem";
 import { ClassTable } from "@/components/ui/custom/education/class/ClassTable";

@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useDepartments } from "@/hooks/useDeparment";
+import { useGradingFormulas } from "@/hooks/useGradingFormula";
 
 interface AddClassDialogProps {
   open: boolean;
@@ -23,6 +25,9 @@ interface AddClassDialogProps {
 }
 
 export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDialogProps) {
+  const { departments } = useDepartments();
+  const { gradingFormulas } = useGradingFormulas();
+
   const [formData, setFormData] = useState({
     majorId: "",
     academicYearId: "",

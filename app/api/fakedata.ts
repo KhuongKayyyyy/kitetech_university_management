@@ -5,7 +5,7 @@ import {
   ScanEyeIcon,
   TextSearchIcon,
 } from "lucide-react";
-import { FacultyModel, Student, Teacher, Subject } from "./model/model";
+import { FacultyModel, Student, Teacher, SubjectModel } from "./model/model";
 import { GradingFormulaModel } from "./model/GradingFormulaModel";
 
 export const teachers: Teacher[] = [
@@ -1537,14 +1537,14 @@ export const departmentData: FacultyModel[] = [
   },
 ];
 
-export const subjects: Subject[] = [
+export const subjects: SubjectModel[] = [
   {
     id: "1",
     subjectId: "101",
     name: "Financial Accounting",
     description: "Introduction to financial reporting and analysis.",
     majorId: "101",
-    departmentId: 1,
+    faculty_id: 1,
     credits: 3,
   },
   {
@@ -1553,7 +1553,7 @@ export const subjects: Subject[] = [
     name: "Marketing Strategies",
     description: "Study of consumer behavior and branding techniques.",
     majorId: "102",
-    departmentId: 1,
+    faculty_id: 1,
     credits: 3,
   },
   {
@@ -1562,7 +1562,7 @@ export const subjects: Subject[] = [
     name: "Corporate Finance",
     description: "Focus on investment and financial management.",
     majorId: "103",
-    departmentId: 1,
+    faculty_id: 1,
     credits: 4,
   },
   {
@@ -1571,7 +1571,7 @@ export const subjects: Subject[] = [
     name: "Organizational Leadership",
     description: "Principles of management and leadership in organizations.",
     majorId: "104",
-    departmentId: 1,
+    faculty_id: 1,
     credits: 3,
   },
   {
@@ -1580,7 +1580,7 @@ export const subjects: Subject[] = [
     name: "Music Theory",
     description: "Study of musical structures and composition.",
     majorId: "201",
-    departmentId: 2,
+    faculty_id: 2,
     credits: 3,
   },
   {
@@ -1589,7 +1589,7 @@ export const subjects: Subject[] = [
     name: "Art History",
     description: "Exploration of visual arts across cultures and time.",
     majorId: "202",
-    departmentId: 2,
+    faculty_id: 2,
     credits: 3,
   },
   {
@@ -1598,7 +1598,7 @@ export const subjects: Subject[] = [
     name: "Theater Performance",
     description: "Practical and theoretical aspects of performing arts.",
     majorId: "203",
-    departmentId: 2,
+    faculty_id: 2,
     credits: 4,
   },
   {
@@ -1607,7 +1607,7 @@ export const subjects: Subject[] = [
     name: "World Literature",
     description: "Analysis of literary works from various cultures.",
     majorId: "204",
-    departmentId: 2,
+    faculty_id: 2,
     credits: 3,
   },
   {
@@ -1616,7 +1616,7 @@ export const subjects: Subject[] = [
     name: "Cell Biology",
     description: "Study of cellular structures and functions.",
     majorId: "301",
-    departmentId: 3,
+    faculty_id: 3,
     credits: 4,
   },
   {
@@ -1626,7 +1626,7 @@ export const subjects: Subject[] = [
     description:
       "Understanding the structure and reactions of organic compounds.",
     majorId: "302",
-    departmentId: 3,
+    faculty_id: 3,
     credits: 4,
   },
   {
@@ -1635,7 +1635,7 @@ export const subjects: Subject[] = [
     name: "Classical Mechanics",
     description: "Exploration of motion and forces in physical systems.",
     majorId: "303",
-    departmentId: 3,
+    faculty_id: 3,
     credits: 4,
   },
   {
@@ -1644,7 +1644,7 @@ export const subjects: Subject[] = [
     name: "Linear Algebra",
     description: "Study of vector spaces and linear transformations.",
     majorId: "304",
-    departmentId: 3,
+    faculty_id: 3,
     credits: 3,
   },
   {
@@ -1653,7 +1653,7 @@ export const subjects: Subject[] = [
     name: "Criminal Justice",
     description: "Overview of criminal law and justice systems.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1662,7 +1662,7 @@ export const subjects: Subject[] = [
     name: "Corporate Governance",
     description: "Study of laws governing corporate practices.",
     majorId: "402",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1671,7 +1671,7 @@ export const subjects: Subject[] = [
     name: "International Treaties",
     description: "Legal frameworks for international agreements.",
     majorId: "403",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1681,7 +1681,7 @@ export const subjects: Subject[] = [
     description:
       "Analysis of constitutional principles and their applications.",
     majorId: "404",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 4,
   },
   {
@@ -1690,7 +1690,7 @@ export const subjects: Subject[] = [
     name: "Database Systems",
     description: "Design and management of database systems.",
     majorId: "501",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
   {
@@ -1699,7 +1699,7 @@ export const subjects: Subject[] = [
     name: "Machine Learning",
     description: "Introduction to algorithms and models in AI.",
     majorId: "502",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 4,
   },
   {
@@ -1708,7 +1708,7 @@ export const subjects: Subject[] = [
     name: "Network Security",
     description: "Techniques for securing digital networks.",
     majorId: "503",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
   {
@@ -1717,19 +1717,19 @@ export const subjects: Subject[] = [
     name: "Data Structures",
     description: "Core principles of data organization and manipulation.",
     majorId: "504",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
 ];
 
-export const PESubjects  :Subject[] = [
+export const PESubjects  :SubjectModel[] = [
   {
     id: "101",
     subjectId: "1001",
     name: "Basketball Fundamentals",
     description: "Basic skills and rules of basketball.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1738,7 +1738,7 @@ export const PESubjects  :Subject[] = [
     name: "Swimming",
     description: "Swimming techniques and water safety.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1747,7 +1747,7 @@ export const PESubjects  :Subject[] = [
     name: "Volleyball",
     description: "Fundamentals of volleyball gameplay.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1756,7 +1756,7 @@ export const PESubjects  :Subject[] = [
     name: "Track and Field",
     description: "Running, jumping and throwing techniques.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1765,7 +1765,7 @@ export const PESubjects  :Subject[] = [
     name: "Fitness Training",
     description: "Strength and conditioning exercises.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1774,7 +1774,7 @@ export const PESubjects  :Subject[] = [
     name: "Badminton",
     description: "Singles and doubles badminton skills.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1783,7 +1783,7 @@ export const PESubjects  :Subject[] = [
     name: "Table Tennis",
     description: "Basic and advanced table tennis techniques.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1792,7 +1792,7 @@ export const PESubjects  :Subject[] = [
     name: "Soccer",
     description: "Soccer skills and team strategies.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1801,7 +1801,7 @@ export const PESubjects  :Subject[] = [
     name: "Tennis",
     description: "Tennis fundamentals and court play.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1810,7 +1810,7 @@ export const PESubjects  :Subject[] = [
     name: "Aerobics",
     description: "Cardio exercises and rhythmic movements.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1819,7 +1819,7 @@ export const PESubjects  :Subject[] = [
     name: "Martial Arts",
     description: "Basic self-defense and martial arts principles.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1828,7 +1828,7 @@ export const PESubjects  :Subject[] = [
     name: "Dance Sports",
     description: "Various dance styles and choreography.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1837,7 +1837,7 @@ export const PESubjects  :Subject[] = [
     name: "Golf",
     description: "Golf swing mechanics and course etiquette.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1846,7 +1846,7 @@ export const PESubjects  :Subject[] = [
     name: "Rock Climbing",
     description: "Indoor climbing techniques and safety.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -1855,19 +1855,19 @@ export const PESubjects  :Subject[] = [
     name: "Yoga",
     description: "Basic yoga poses and breathing techniques.",
     majorId: "601",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   }
 ];
 
-export const philosophySubjects: Subject[] = [
+export const philosophySubjects: SubjectModel[] = [
   {
     id: "201",
     subjectId: "2001",
     name: "Introduction to Philosophy",
     description: "Fundamental concepts and major philosophical traditions.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1876,7 +1876,7 @@ export const philosophySubjects: Subject[] = [
     name: "Ethics and Moral Philosophy",
     description: "Ethical theories, moral reasoning and contemporary issues.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1885,7 +1885,7 @@ export const philosophySubjects: Subject[] = [
     name: "Logic and Critical Thinking",
     description: "Principles of valid reasoning and argumentation.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1894,7 +1894,7 @@ export const philosophySubjects: Subject[] = [
     name: "Ancient Philosophy",
     description: "Pre-Socratic, Platonic and Aristotelian philosophy.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1903,7 +1903,7 @@ export const philosophySubjects: Subject[] = [
     name: "Modern Philosophy",
     description: "Major philosophical developments from 17th to 19th century.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1912,7 +1912,7 @@ export const philosophySubjects: Subject[] = [
     name: "Existentialism",
     description: "Study of existence, freedom and meaning in human life.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1921,7 +1921,7 @@ export const philosophySubjects: Subject[] = [
     name: "Philosophy of Mind",
     description: "Nature of consciousness, mind-body problem and cognition.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1930,7 +1930,7 @@ export const philosophySubjects: Subject[] = [
     name: "Political Philosophy",
     description: "Theories of justice, power, and social organization.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1939,7 +1939,7 @@ export const philosophySubjects: Subject[] = [
     name: "Eastern Philosophy",
     description: "Buddhist, Hindu, and Chinese philosophical traditions.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   },
   {
@@ -1948,19 +1948,19 @@ export const philosophySubjects: Subject[] = [
     name: "Philosophy of Science",
     description: "Scientific method, causation and theory development.",
     majorId: "401",
-    departmentId: 4,
+    faculty_id: 4,
     credits: 3,
   }
 ];
 
-export const englishSubjects: Subject[] = [
+export const englishSubjects: SubjectModel[] = [
   {
     id: "301",
     subjectId: "3001",
     name: "Basic English",
     description: "Fundamental English grammar, vocabulary and communication skills.",
     majorId: "503",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
   {
@@ -1969,7 +1969,7 @@ export const englishSubjects: Subject[] = [
     name: "Intermediate English",
     description: "Advanced grammar structures, academic writing and reading comprehension.",
     majorId: "503",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
   {
@@ -1978,7 +1978,7 @@ export const englishSubjects: Subject[] = [
     name: "Upper Intermediate English",
     description: "Complex language structures, academic essays and critical analysis.",
     majorId: "503",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
   {
@@ -1987,7 +1987,7 @@ export const englishSubjects: Subject[] = [
     name: "Advanced English",
     description: "Professional writing, advanced reading and speaking skills.",
     majorId: "503",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   },
   {
@@ -1996,19 +1996,19 @@ export const englishSubjects: Subject[] = [
     name: "Proficiency English",
     description: "Native-level fluency, academic research and professional communication.",
     majorId: "503",
-    departmentId: 5,
+    faculty_id: 5,
     credits: 3,
   }
 ];
 
-export const skillSubjects: Subject[] = [
+export const skillSubjects: SubjectModel[] = [
   {
     id: "401",
     subjectId: "4001",
     name: "Critical Thinking",
     description: "Develop analytical and logical reasoning skills for problem-solving.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -2017,7 +2017,7 @@ export const skillSubjects: Subject[] = [
     name: "Public Speaking",
     description: "Master presentation skills and confident communication techniques.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -2026,7 +2026,7 @@ export const skillSubjects: Subject[] = [
     name: "Digital Literacy",
     description: "Essential computer skills and digital tools proficiency.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -2035,7 +2035,7 @@ export const skillSubjects: Subject[] = [
     name: "Project Management",
     description: "Planning, execution and monitoring of projects using modern methodologies.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 3,
   },
   {
@@ -2044,7 +2044,7 @@ export const skillSubjects: Subject[] = [
     name: "Leadership Skills",
     description: "Team management, decision making and organizational leadership.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 3,
   },
   {
@@ -2053,7 +2053,7 @@ export const skillSubjects: Subject[] = [
     name: "Time Management",
     description: "Productivity techniques and efficient scheduling strategies.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -2062,7 +2062,7 @@ export const skillSubjects: Subject[] = [
     name: "Research Methods",
     description: "Academic research skills and methodology fundamentals.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 3,
   },
   {
@@ -2071,7 +2071,7 @@ export const skillSubjects: Subject[] = [
     name: "Creative Problem Solving",
     description: "Innovation techniques and design thinking approaches.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   },
   {
@@ -2080,7 +2080,7 @@ export const skillSubjects: Subject[] = [
     name: "Professional Writing",
     description: "Business communication and technical documentation skills.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 3,
   },
   {
@@ -2089,7 +2089,7 @@ export const skillSubjects: Subject[] = [
     name: "Interpersonal Skills",
     description: "Effective communication and relationship building in professional settings.",
     majorId: "602",
-    departmentId: 6,
+    faculty_id: 6,
     credits: 2,
   }
 ];

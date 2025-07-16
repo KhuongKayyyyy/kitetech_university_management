@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { CirclePlus, Edit2, GripVertical, Save, Trash } from "lucide-react";
 import styled from "styled-components";
@@ -16,7 +16,7 @@ interface SemesterColumnProps {
   onRemoveSubject: (columnId: string, subjectId: string) => void;
   onRemoveColumn: (columnId: string) => void;
   onRenameColumn?: (columnId: string, newTitle: string) => void;
-  onUpdatePrerequisites?: (subjectId: string, prerequisites: Subject[]) => void;
+  onUpdatePrerequisites?: (subjectId: string, prerequisites: SubjectModel[]) => void;
 }
 
 const Container = styled.div`

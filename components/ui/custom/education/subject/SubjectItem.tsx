@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import { FacultyModel, MajorModel, Subject } from "@/app/api/model/model";
+import { FacultyModel, MajorModel, SubjectModel } from "@/app/api/model/model";
 import { Badge } from "@/components/ui/badge";
 import { Book, Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
 
@@ -19,26 +19,32 @@ const iconColors = [
   { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200" },
 ];
 
-// Icon map for major departments
-const iconMap = {
-  Calculator,
-  DraftingCompass,
-  LampWallDown,
-  ScanEyeIcon,
-  TextSearchIcon,
-  Book, // default fallback
-};
+// Icon array for random selection
+const icons = [Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon, Book];
 
-const SubjectItem = ({ subject, department }: { subject?: Subject; department?: FacultyModel }) => {
-  // Use a stable property like department ID to ensure consistent color assignment
+const SubjectItem = ({
+  subject,
+  department,
+  onUpdate,
+}: {
+  subject?: SubjectModel;
+  department?: FacultyModel;
+  onUpdate?: (updatedSubject: SubjectModel) => Promise<void>;
+}) => {
+  // Use a stable property like subject ID to ensure consistent color assignment
   const { bg, text, border } = useMemo(() => {
-    // Generate a deterministic color index based on the department's ID
-    const colorIndex = department ? department.id % iconColors.length : 0;
+    // Generate a deterministic color index based on the subject's ID
+    const colorIndex = subject?.id ? Number(subject.id) % iconColors.length : 0;
     return iconColors[colorIndex];
-  }, [department?.id]);
+  }, [subject?.id]);
 
-  // Resolve the icon from the department's icon key
-  const Icon = department ? iconMap[department.icon as keyof typeof iconMap] || Book : Book;
+  // Randomly select an icon based on subject ID for consistency
+  const Icon = useMemo(() => {
+    if (!subject) return Book;
+    const iconIndex = subject.id ? Number(subject.id) % icons.length : 0;
+    return icons[iconIndex];
+  }, [subject?.id]);
+
   const [open, setOpen] = useState(false);
 
   return (
@@ -70,7 +76,7 @@ const SubjectItem = ({ subject, department }: { subject?: Subject; department?: 
           </p>
         </div>
       </div>
-      <SubjectDetailDialog subject={subject!} open={open} onOpenChange={setOpen} />
+      <SubjectDetailDialog subject={subject!} open={open} onOpenChange={setOpen} onSubmit={onUpdate} />
     </Card>
   );
 };

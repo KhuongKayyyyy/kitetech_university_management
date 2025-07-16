@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import SubjectSearchDialog from "@/components/ui/custom/education/curriculum/SearchSubjectDialog";
 import { Search } from "lucide-react";
 
@@ -16,8 +16,8 @@ interface SearchSubjectSectionProps {
   openSearch: boolean;
   setOpenSearch: (open: boolean) => void;
   departmentId: number;
-  globalSelectedSubjects: Subject[];
-  onSelect: (subjects: Subject[]) => void;
+  globalSelectedSubjects: SubjectModel[];
+  onSelect: (subjects: SubjectModel[]) => void;
   onOpenGlobalSearch: () => void;
 }
 

@@ -3,7 +3,7 @@
 import React from "react";
 
 import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -11,9 +11,9 @@ import { BookOpen, Check, Plus, Trash, X } from "lucide-react";
 
 interface AddSubjectPrerequisiteProps {
   currentSubject: CurriculumnSubjectModel;
-  subjects?: Subject[];
-  selectedPrerequisites?: Subject[];
-  onAddPrerequisites?: (subjects: Subject[]) => void;
+  subjects?: SubjectModel[];
+  selectedPrerequisites?: SubjectModel[];
+  onAddPrerequisites?: (subjects: SubjectModel[]) => void;
   onRemovePrerequisite?: (subjectId: string) => void;
 }
 
@@ -25,9 +25,9 @@ export default function AddSubjectPrerequisite({
   onRemovePrerequisite,
 }: AddSubjectPrerequisiteProps) {
   const [open, setOpen] = React.useState(false);
-  const [hoveredSubject, setHoveredSubject] = React.useState<Subject | null>(null);
+  const [hoveredSubject, setHoveredSubject] = React.useState<SubjectModel | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedSubjects, setSelectedSubjects] = React.useState<Subject[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = React.useState<SubjectModel[]>([]);
 
   // Filter out the current subject and apply search/prerequisite filters
   const filteredSubjects = subjects.filter((subject) => {
@@ -39,7 +39,7 @@ export default function AddSubjectPrerequisite({
     return matchesSearch && notAlreadyPrerequisite && notCurrentSubject;
   });
 
-  const handleSubjectToggle = (subject: Subject) => {
+  const handleSubjectToggle = (subject: SubjectModel) => {
     const isAlreadyPrerequisite = selectedPrerequisites.some((s) => s.subjectId === subject.subjectId);
     if (isAlreadyPrerequisite) {
       return;
@@ -55,15 +55,15 @@ export default function AddSubjectPrerequisite({
     });
   };
 
-  const isSubjectSelected = (subject: Subject) => {
+  const isSubjectSelected = (subject: SubjectModel) => {
     return selectedSubjects.some((s) => s.subjectId === subject.subjectId);
   };
 
-  const isSubjectAlreadyPrerequisite = (subject: Subject) => {
+  const isSubjectAlreadyPrerequisite = (subject: SubjectModel) => {
     return selectedPrerequisites.some((s) => s.subjectId === subject.subjectId);
   };
 
-  const handleRemoveSubject = (subject: Subject) => {
+  const handleRemoveSubject = (subject: SubjectModel) => {
     setSelectedSubjects((prev) => prev.filter((s) => s.subjectId !== subject.subjectId));
   };
 

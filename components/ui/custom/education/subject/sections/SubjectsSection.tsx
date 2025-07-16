@@ -2,81 +2,129 @@
 
 import React, { useMemo, useState } from "react";
 
-import { departmentData, subjects } from "@/app/api/fakedata";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { AddSubjectDialog } from "@/components/ui/custom/education/subject/AddSubjectDialog";
 import SubjectItem from "@/components/ui/custom/education/subject/SubjectItem";
 import { SubjectTable } from "@/components/ui/custom/education/subject/SubjectTable";
+import { useDepartments } from "@/hooks/useDeparment";
+import { useSubjects } from "@/hooks/useSubject";
 import { BookOpen, Grid, List, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
-
-// Helper to flatten all majors and map by ID
-const getMajorMap = () => {
-  const majorMap = new Map<number, { major: any; departmentName: string }>();
-  departmentData.forEach((dept) => {
-    dept.majors.forEach((major) => {
-      majorMap.set(major.id, {
-        major,
-        departmentName: dept.name,
-      });
-    });
-  });
-  return majorMap;
-};
 
 export default function SubjectsSection() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
-  const [selectedMajor, setSelectedMajor] = useState("all");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [openAddSubjectDialog, setOpenAddSubjectDialog] = useState(false);
-  const majorMap = getMajorMap();
 
-  // Get unique departments and majors for filters
-  const departments = useMemo(() => Array.from(new Set(departmentData.map((dept) => dept.name))), []);
+  const { departments } = useDepartments();
+  const { subjects, loading, error, addSubject, updateSubject, deleteSubjects } = useSubjects();
 
-  const availableMajors = useMemo(() => {
-    if (selectedDepartment === "all") return [];
-    const dept = departmentData.find((d) => d.name === selectedDepartment);
-    return dept ? dept.majors : [];
-  }, [selectedDepartment]);
+  // Handle adding a new subject
+  const handleAddSubject = async (subjectData: Omit<SubjectModel, "id">) => {
+    try {
+      console.log("Handling add subject:", subjectData);
+      await addSubject(subjectData);
+      toast.success("Subject added successfully!");
+    } catch (error) {
+      console.error("Failed to add subject:", error);
+      toast.error("Failed to add subject. Please try again.");
+      throw error; // Re-throw to let the dialog handle it
+    }
+  };
+
+  // Handle updating a subject
+  const handleUpdateSubject = async (updatedSubject: SubjectModel) => {
+    try {
+      console.log("Handling update subject:", updatedSubject);
+      await updateSubject(updatedSubject);
+      toast.success("Subject " + updatedSubject.name + " updated successfully!");
+    } catch (error) {
+      console.error("Failed to update subject:", error);
+      toast.error("Failed to update subject. Please try again.");
+      throw error; // Re-throw to let the dialog handle it
+    }
+  };
+
+  // Handle deleting subjects
+  const handleDeleteSubjects = async (subjectIds: string[]) => {
+    try {
+      console.log("Handling delete subjects:", subjectIds);
+      await deleteSubjects(subjectIds);
+      toast.success(`${subjectIds.length} subject${subjectIds.length > 1 ? "s" : ""} deleted successfully!`);
+    } catch (error) {
+      console.error("Failed to delete subjects:", error);
+      toast.error("Failed to delete subjects. Please try again.");
+      throw error; // Re-throw to let the dialog handle it
+    }
+  };
+
+  // Create department map for quick lookup
+  const departmentMap = useMemo(() => {
+    const map = new Map();
+    departments.forEach((department) => {
+      map.set(department.id, department);
+    });
+    return map;
+  }, [departments]);
 
   // Filter subjects based on search and filters
   const filteredSubjects = useMemo(() => {
+    if (!subjects || !Array.isArray(subjects)) return [];
+
     return subjects.filter((subject) => {
-      const majorInfo = majorMap.get(Number(subject.majorId));
-      if (!majorInfo) return false;
+      const department = departmentMap.get(subject.faculty_id);
+      if (!department) return false;
 
       const matchesSearch =
         subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (subject.description ?? "").toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesDepartment = selectedDepartment === "all" || majorInfo.departmentName === selectedDepartment;
+      const matchesDepartment = selectedDepartment === "all" || department.name === selectedDepartment;
 
-      const matchesMajor = selectedMajor === "all" || majorInfo.major.name === selectedMajor;
-
-      return matchesSearch && matchesDepartment && matchesMajor;
+      return matchesSearch && matchesDepartment;
     });
-  }, [subjects, searchTerm, selectedDepartment, selectedMajor, majorMap]);
+  }, [subjects, searchTerm, selectedDepartment, departmentMap]);
 
-  // Group filtered subjects by majorId
+  // Group filtered subjects by department
   const groupedSubjects = useMemo(() => {
-    const grouped: { [majorId: number]: Subject[] } = {};
+    if (!filteredSubjects || !Array.isArray(filteredSubjects)) return {};
+
+    const grouped: { [departmentName: string]: SubjectModel[] } = {};
     filteredSubjects.forEach((subject) => {
-      if (!grouped[Number(subject.majorId)]) {
-        grouped[Number(subject.majorId)] = [];
+      const department = departmentMap.get(subject.faculty_id);
+      if (!department) return;
+
+      const departmentName = department.name;
+      if (!grouped[departmentName]) {
+        grouped[departmentName] = [];
       }
-      grouped[Number(subject.majorId)].push(subject);
+      grouped[departmentName].push(subject);
     });
     return grouped;
-  }, [filteredSubjects]);
+  }, [filteredSubjects, departmentMap]);
 
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedDepartment("all");
-    setSelectedMajor("all");
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">Error loading subjects: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -116,31 +164,13 @@ export default function SubjectsSection() {
           {/* Department Filter */}
           <select
             value={selectedDepartment}
-            onChange={(e) => {
-              setSelectedDepartment(e.target.value);
-              setSelectedMajor("all");
-            }}
+            onChange={(e) => setSelectedDepartment(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="all">All Departments</option>
             {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
-
-          {/* Major Filter */}
-          <select
-            value={selectedMajor}
-            onChange={(e) => setSelectedMajor(e.target.value)}
-            disabled={selectedDepartment === "all"}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <option value="all">All Majors</option>
-            {availableMajors.map((major) => (
-              <option key={major.id} value={major.name}>
-                {major.name}
+              <option key={dept.id} value={dept.name}>
+                {dept.name}
               </option>
             ))}
           </select>
@@ -166,7 +196,7 @@ export default function SubjectsSection() {
           </div>
 
           {/* Reset Filters */}
-          {(searchTerm || selectedDepartment !== "all" || selectedMajor !== "all") && (
+          {(searchTerm || selectedDepartment !== "all") && (
             <button
               onClick={resetFilters}
               className="text-primary hover:text-primary/80 font-medium px-3 py-2 rounded-lg hover:bg-primary/10 transition-colors"
@@ -178,7 +208,7 @@ export default function SubjectsSection() {
 
         {/* Results Count */}
         <div className="mt-3 text-sm text-gray-600">
-          Showing {filteredSubjects.length} of {subjects.length} subjects
+          Showing {filteredSubjects.length} of {subjects?.length || 0} subjects
         </div>
       </div>
 
@@ -192,22 +222,25 @@ export default function SubjectsSection() {
               <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
             </div>
           ) : (
-            Object.entries(groupedSubjects).map(([majorId, subjectList]) => {
-              const majorInfo = majorMap.get(Number(majorId));
-              if (!majorInfo) return null;
-
+            Object.entries(groupedSubjects).map(([departmentName, subjectList]) => {
               return (
-                <div key={majorId} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <div key={departmentName} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                   <div className="mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">{majorInfo.major.name}</h2>
-                    <p className="text-sm text-gray-600">
-                      Department: {majorInfo.departmentName} • {subjectList.length} subjects
-                    </p>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">{departmentName}</h2>
+                    <p className="text-sm text-gray-600">{subjectList.length} subjects</p>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {subjectList.map((subject) => (
-                      <SubjectItem key={subject.id} subject={subject} />
-                    ))}
+                    {subjectList.map((subject) => {
+                      const department = departmentMap.get(subject.faculty_id);
+                      return (
+                        <SubjectItem
+                          key={subject.id}
+                          subject={subject}
+                          department={department}
+                          onUpdate={handleUpdateSubject}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -215,17 +248,11 @@ export default function SubjectsSection() {
           )}
         </div>
       ) : (
-        <SubjectTable subjects={filteredSubjects} />
+        <SubjectTable subjects={filteredSubjects} onUpdate={handleUpdateSubject} onDelete={handleDeleteSubjects} />
       )}
 
       {/* Add Subject Dialog */}
-      <AddSubjectDialog
-        open={openAddSubjectDialog}
-        setOpen={setOpenAddSubjectDialog}
-        onSubmit={() => {
-          toast.success("Subject added successfully");
-        }}
-      />
+      <AddSubjectDialog open={openAddSubjectDialog} setOpen={setOpenAddSubjectDialog} onSubmit={handleAddSubject} />
     </>
   );
 }

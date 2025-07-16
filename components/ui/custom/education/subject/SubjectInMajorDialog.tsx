@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { subjects } from "@/app/api/fakedata";
-import { MajorModel, Subject } from "@/app/api/model/model";
+import { MajorModel, SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -33,7 +33,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Trash } from "lucide-react";
 
 import AddSubjectToMajorDialog from "./AddSubjectToMajorDialog";
 
-export const columns: ColumnDef<Subject>[] = [
+export const columns: ColumnDef<SubjectModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -136,7 +136,7 @@ export function SubjectInMajorTable({ major, setMajor }: { major: MajorModel; se
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const handleAddSubject = (subjectsToAdd: Subject[]) => {
+  const handleAddSubject = (subjectsToAdd: SubjectModel[]) => {
     if (setMajor) {
       const updatedSubjects = [...(major.subjects || []), ...subjectsToAdd];
       setMajor({ ...major, subjects: updatedSubjects });

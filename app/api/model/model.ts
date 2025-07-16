@@ -1,17 +1,18 @@
+import { GradingFormulaModel } from "./GradingFormulaModel";
+
 export interface Teacher {
   id: number;
   name: string;
   username?: string;
 }
-
-export interface Subject {
+export interface SubjectModel {
   id: string;
-  subjectId: string;
   name: string;
-  description?: string;
-  majorId: string;
-  departmentId: number;
   credits: number;
+  description?: string;
+  faculty_id: number;
+  gradingFormulaId: number;
+  gradingFormula?: GradingFormulaModel;
 }
 
 export interface MajorModel {
@@ -26,6 +27,7 @@ export interface FacultyModel {
   name: string;
   contact_info?: string;
   dean?: string;
+  icon?: string;
   majors?: MajorModel[];
 }
 

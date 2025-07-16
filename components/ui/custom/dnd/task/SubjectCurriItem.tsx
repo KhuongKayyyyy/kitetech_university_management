@@ -2,7 +2,7 @@ import React from "react";
 
 import { subjects } from "@/app/api/fakedata";
 import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Draggable } from "@hello-pangea/dnd";
@@ -15,7 +15,7 @@ interface SubjectProps {
   index: number;
   isGhost?: boolean;
   onRemove?: () => void;
-  onUpdatePrerequisites?: (subjectId: string, prerequisites: Subject[]) => void;
+  onUpdatePrerequisites?: (subjectId: string, prerequisites: SubjectModel[]) => void;
 }
 
 const SubjectCurriItem: React.FC<SubjectProps> = ({
@@ -30,12 +30,12 @@ const SubjectCurriItem: React.FC<SubjectProps> = ({
     onRemove?.();
   };
 
-  const [prerequisitesState, setPrerequisitesState] = React.useState<Subject[]>(
+  const [prerequisitesState, setPrerequisitesState] = React.useState<SubjectModel[]>(
     curriSubject.PrerequisiteSubjects || [],
   );
 
   // Handle adding multiple prerequisites at once (can be one or more)
-  const handleAddPrerequisites = (newSubjects: Subject[]) => {
+  const handleAddPrerequisites = (newSubjects: SubjectModel[]) => {
     const updatedPrerequisites = [...prerequisitesState, ...newSubjects];
     setPrerequisitesState(updatedPrerequisites);
     onUpdatePrerequisites?.(curriSubject.SubjectID, updatedPrerequisites);

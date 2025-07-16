@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import CurriculumBoard from "@/components/ui/custom/education/curriculum/CurriculumBoard";
 import CurriculumSummary from "@/components/ui/custom/education/curriculum/CurriculumSummary";
 import SaveCurriculumDialog from "@/components/ui/custom/education/curriculum/SaveCurriculumDialog";
@@ -32,7 +32,7 @@ export default function CreateCurriculumPage() {
   const [targetColumnId, setTargetColumnId] = useState<string | null>(null);
   const [targetBoardId, setTargetBoardId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [globalSelectedSubjects, setGlobalSelectedSubjects] = useState<Subject[]>([]);
+  const [globalSelectedSubjects, setGlobalSelectedSubjects] = useState<SubjectModel[]>([]);
 
   const [state, setState] = useState<{
     boards: Board[];
@@ -133,8 +133,8 @@ export default function CreateCurriculumPage() {
   };
 
   // Get all globally selected subjects across all boards and columns
-  const getAllGloballySelectedSubjects = (): Subject[] => {
-    const allSelectedSubjects: Subject[] = [];
+  const getAllGloballySelectedSubjects = (): SubjectModel[] => {
+    const allSelectedSubjects: SubjectModel[] = [];
 
     state.boards.forEach((board) => {
       Object.values(board.semesterColumn).forEach((column) => {
@@ -147,7 +147,7 @@ export default function CreateCurriculumPage() {
               name: subject.SubjectName,
               credits: subject.TotalCredits,
               majorId: subject.MajorID,
-              departmentId: 1,
+              faculty_id: 1,
             });
           }
         });
@@ -175,7 +175,7 @@ export default function CreateCurriculumPage() {
     setOpenSearch(true);
   };
 
-  const handleSelectSubjects = (subjects: Subject[]) => {
+  const handleSelectSubjects = (subjects: SubjectModel[]) => {
     if (!targetColumnId || !targetBoardId || subjects.length === 0) return;
 
     const board = state.boards.find((b) => b.id === targetBoardId);
@@ -407,7 +407,7 @@ export default function CreateCurriculumPage() {
   };
 
   // Add prerequisite update function
-  const handleUpdatePrerequisites = (subjectId: string, prerequisites: Subject[]) => {
+  const handleUpdatePrerequisites = (subjectId: string, prerequisites: SubjectModel[]) => {
     setState((prev) => ({
       ...prev,
       subjects: {

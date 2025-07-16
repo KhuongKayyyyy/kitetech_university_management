@@ -10,7 +10,7 @@ import {
   skillSubjects,
   subjects,
 } from "@/app/api/fakedata";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
 import { cn, getDepartmentNameById } from "@/lib/utils";
@@ -21,17 +21,17 @@ import SubjectItem from "../subject/SubjectItem";
 type SubjectSearchDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedSubjects: Subject[];
-  onSelect?: (subjects: Subject[]) => void;
+  selectedSubjects: SubjectModel[];
+  onSelect?: (subjects: SubjectModel[]) => void;
   subjectType: string;
   departmentId: number;
 };
 
 function renderSubjectGroup(
   heading: string,
-  subjectList: Subject[],
-  onSelect?: (subject: Subject) => void,
-  onHover?: (subject: Subject | null) => void,
+  subjectList: SubjectModel[],
+  onSelect?: (subject: SubjectModel) => void,
+  onHover?: (subject: SubjectModel | null) => void,
   showMeta?: boolean,
   icon?: React.ReactNode,
 ) {
@@ -55,7 +55,7 @@ function renderSubjectGroup(
             <span className="flex-1">{subject.name}</span>
             {showMeta && (
               <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded-full">
-                {getDepartmentNameById(subject.departmentId)}
+                {getDepartmentNameById(subject.faculty_id)}
               </span>
             )}
           </div>
@@ -76,22 +76,22 @@ export default function SubjectSearchDialog({
   subjectType,
   selectedSubjects: existingSelectedSubjects,
 }: SubjectSearchDialogProps) {
-  const [hoveredSubject, setHoveredSubject] = React.useState<Subject | null>(null);
+  const [hoveredSubject, setHoveredSubject] = React.useState<SubjectModel | null>(null);
   const [selectedMajorId, setSelectedMajorId] = React.useState<String | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedSubjects, setSelectedSubjects] = React.useState<Subject[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = React.useState<SubjectModel[]>([]);
 
   const department = departmentData.find((d) => d.id === departmentId);
   const majors = department?.majors ?? [];
 
   const filteredSubjects = subjects.filter((subject) => {
-    const matchesDepartment = subject.departmentId === departmentId;
+    const matchesDepartment = subject.faculty_id === departmentId;
     const matchesMajor = selectedMajorId === null || subject.majorId === selectedMajorId;
     const matchesSearch = subject.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesDepartment && matchesMajor && matchesSearch;
   });
 
-  const handleSubjectToggle = (subject: Subject) => {
+  const handleSubjectToggle = (subject: SubjectModel) => {
     // Check if subject is already in the existing curriculum
     const isAlreadyAdded = existingSelectedSubjects.some((s) => s.subjectId === subject.subjectId);
     if (isAlreadyAdded) {
@@ -108,15 +108,15 @@ export default function SubjectSearchDialog({
     });
   };
 
-  const isSubjectSelected = (subject: Subject) => {
+  const isSubjectSelected = (subject: SubjectModel) => {
     return selectedSubjects.some((s) => s.subjectId === subject.subjectId);
   };
 
-  const isSubjectAlreadyAdded = (subject: Subject) => {
+  const isSubjectAlreadyAdded = (subject: SubjectModel) => {
     return existingSelectedSubjects.some((s) => s.subjectId === subject.subjectId);
   };
 
-  const handleRemoveSubject = (subject: Subject) => {
+  const handleRemoveSubject = (subject: SubjectModel) => {
     setSelectedSubjects((prev) => prev.filter((s) => s.subjectId !== subject.subjectId));
   };
 

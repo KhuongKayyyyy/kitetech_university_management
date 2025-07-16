@@ -1,7 +1,7 @@
 import React from "react";
 
 import { CurriculumnSubjectModel, defaultCurriculumnSubject } from "@/app/api/model/CurriculumnSubjectModel";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { SemesterColumn } from "@/components/ui/custom/dnd/column/SemesterColumn";
 import { SubjectType } from "@/constants/enum/SubjectType";
@@ -47,7 +47,7 @@ interface CurriculumBoardProps {
   onRemoveSubject: (columnId: string, subjectId: string, boardId: string) => void;
   onRemoveColumn: (columnId: string, boardId: string) => void;
   onRenameColumn: (columnId: string, newTitle: string, boardId: string) => void;
-  onUpdatePrerequisites: (subjectId: string, prerequisites: Subject[]) => void;
+  onUpdatePrerequisites: (subjectId: string, prerequisites: SubjectModel[]) => void;
 }
 
 export default function CurriculumBoard({

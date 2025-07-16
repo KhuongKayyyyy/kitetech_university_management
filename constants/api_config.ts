@@ -38,4 +38,11 @@ export const API_CONFIG = {
   ADD_GRADING_TYPE: "/api/grade-types",
   UPDATE_GRADING_TYPE: (id: string) => `/api/grade-types/${id}`,
   DELETE_GRADING_TYPE: (id: string) => `/api/grade-types/${id}`,
+
+  // Subject
+  GET_SUBJECTS: "/api/subjects",
+  GET_SUBJECT: (id: string) => `/api/subjects/${id}`,
+  ADD_SUBJECT: "/api/subjects",
+  UPDATE_SUBJECT: (id: string) => `/api/subjects/${id}`,
+  DELETE_SUBJECT: (id: string) => `/api/subjects/${id}`,
 };

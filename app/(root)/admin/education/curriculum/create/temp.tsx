@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 import { CurriculumnSubjectModel, defaultCurriculumnSubject } from "@/app/api/model/CurriculumnSubjectModel";
-import { Subject } from "@/app/api/model/model";
+import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { SemesterColumn } from "@/components/ui/custom/dnd/column/SemesterColumn";
 import SubjectSearchDialog from "@/components/ui/custom/education/curriculum/SearchSubjectDialog";
@@ -54,7 +54,7 @@ export default function CreateCurriculumPage() {
   const [targetColumnId, setTargetColumnId] = useState<string | null>(null);
   const [targetBoardId, setTargetBoardId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [globalSelectedSubjects, setGlobalSelectedSubjects] = useState<Subject[]>([]);
+  const [globalSelectedSubjects, setGlobalSelectedSubjects] = useState<SubjectModel[]>([]);
 
   const [state, setState] = useState<{
     boards: Board[];
@@ -155,8 +155,8 @@ export default function CreateCurriculumPage() {
   };
 
   // Get all globally selected subjects across all boards and columns
-  const getAllGloballySelectedSubjects = (): Subject[] => {
-    const allSelectedSubjects: Subject[] = [];
+  const getAllGloballySelectedSubjects = (): SubjectModel[] => {
+    const allSelectedSubjects: SubjectModel[] = [];
 
     state.boards.forEach((board) => {
       Object.values(board.semesterColumn).forEach((column) => {
@@ -169,7 +169,7 @@ export default function CreateCurriculumPage() {
               name: subject.SubjectName,
               credits: subject.TotalCredits,
               majorId: subject.MajorID,
-              departmentId: 1,
+              faculty_id: 1,
             });
           }
         });
@@ -188,7 +188,7 @@ export default function CreateCurriculumPage() {
     setOpenSearch(true);
   };
 
-  const handleSelectSubjects = (subjects: Subject[], columnId: string, boardId: string) => {
+  const handleSelectSubjects = (subjects: SubjectModel[], columnId: string, boardId: string) => {
     if (!columnId || !boardId || subjects.length === 0) return;
 
     const board = state.boards.find((b) => b.id === boardId);

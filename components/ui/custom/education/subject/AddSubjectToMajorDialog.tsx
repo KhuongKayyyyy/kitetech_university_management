@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { MajorModel, Subject } from "@/app/api/model/model";
+import { MajorModel, SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -21,8 +21,8 @@ import { Plus, Search } from "lucide-react";
 
 interface AddSubjectToMajorDialogProps {
   major: MajorModel;
-  availableSubjects: Subject[];
-  onAddSubjects: (subjects: Subject[]) => void;
+  availableSubjects: SubjectModel[];
+  onAddSubjects: (subjects: SubjectModel[]) => void;
 }
 
 export default function AddSubjectToMajorDialog({
@@ -32,7 +32,7 @@ export default function AddSubjectToMajorDialog({
 }: AddSubjectToMajorDialogProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<SubjectModel[]>([]);
 
   //   // Filter subjects based on search term and exclude already added subjects
   //   const filteredSubjects = availableSubjects.filter((subject) => {
@@ -41,7 +41,7 @@ export default function AddSubjectToMajorDialog({
   //     return matchesSearch && notAlreadyInMajor;
   //   });
 
-  const handleSubjectToggle = (subject: Subject) => {
+  const handleSubjectToggle = (subject: SubjectModel) => {
     setSelectedSubjects((prev) => {
       const isSelected = prev.some((s) => s.id === subject.id);
       if (isSelected) {

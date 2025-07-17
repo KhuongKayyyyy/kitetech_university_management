@@ -1,4 +1,4 @@
-export interface Class {
+export interface ClassModel {
   id: number;
   majorId: number;
   academicYearId: number;
@@ -8,7 +8,7 @@ export interface Class {
 }
 
 
-export const mockClasses: Class[] = [
+export const mockClasses: ClassModel[] = [
   { id: 1, majorId: 1, academicYearId: 1, curriculumId: 1, classCode: "CS2021A", description: "Computer Science Class A - 2021 intake" },
   { id: 2, majorId: 1, academicYearId: 1, curriculumId: 1, classCode: "CS2021B", description: "Computer Science Class B - 2021 intake" },
   { id: 3, majorId: 1, academicYearId: 2, curriculumId: 2, classCode: "CS2022A", description: "Computer Science Class A - 2022 intake" },

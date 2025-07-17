@@ -17,8 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { APP_ROUTES } from "@/constants/AppRoutes";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import { CalendarDays, Clock, FileText, Hash } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface AddRegistrationPeriodProps {
   open: boolean;
@@ -31,6 +33,7 @@ export default function AddRegistrationPeriodDialog({
   setOpen,
   onAddRegistrationPeriod,
 }: AddRegistrationPeriodProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     semesterId: "",
     startDate: "",
@@ -83,9 +86,7 @@ export default function AddRegistrationPeriodDialog({
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       const newRegistrationPeriod: RegistrationPeriod = {
         id: 0,
@@ -97,6 +98,9 @@ export default function AddRegistrationPeriodDialog({
       };
 
       onAddRegistrationPeriod(newRegistrationPeriod);
+      router.push(
+        `${APP_ROUTES.REGISTRATION_PERIOD}/${newRegistrationPeriod.id}?name=${newRegistrationPeriod.description}`,
+      );
       handleClose();
     } catch (error) {
       console.error("Error adding registration period:", error);

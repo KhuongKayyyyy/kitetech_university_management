@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { curriculumData, majorData } from "@/app/api/fakedata";
-import { Class } from "@/app/api/model/ClassModel";
+import { ClassModel } from "@/app/api/model/ClassModel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +21,7 @@ import { useGradingFormulas } from "@/hooks/useGradingFormula";
 interface AddClassDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onAddClass?: (classData: Omit<Class, "id">) => void;
+  onAddClass?: (classData: Omit<ClassModel, "id">) => void;
 }
 
 export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDialogProps) {
@@ -43,7 +43,7 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
       return;
     }
 
-    const newClass: Omit<Class, "id"> = {
+    const newClass: Omit<ClassModel, "id"> = {
       majorId: parseInt(formData.majorId),
       academicYearId: parseInt(formData.academicYearId),
       curriculumId: parseInt(formData.curriculumId),

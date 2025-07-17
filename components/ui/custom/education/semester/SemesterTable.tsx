@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { AcademicYearModel } from "@/app/api/model/AcademicYearModel";
+import { SemesterModel } from "@/app/api/model/SemesterModel";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,7 +28,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
 
-export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
+export const semesterColumns: ColumnDef<SemesterModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -59,13 +59,13 @@ export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "year",
+    accessorKey: "name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Academic Year <ArrowUpDown className="ml-2 h-4 w-4" />
+        Semester Name <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("year")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
   },
   {
     accessorKey: "start_date",
@@ -92,17 +92,33 @@ export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
         Status <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => (
-      <div className={`capitalize ${row.getValue("status") === "active" ? "text-green-600" : "text-gray-600"}`}>
-        {row.getValue("status")}
-      </div>
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <div
+          className={`capitalize ${
+            status === "Active" ? "text-green-600" : status === "ExamPeriod" ? "text-blue-600" : "text-gray-600"
+          }`}
+        >
+          {status}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "description",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Description <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div className="max-w-xs truncate">{row.getValue("description") || "No description"}</div>,
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const academicYear = row.original;
+      const semester = row.original;
       const [openDialog, setOpenDialog] = React.useState(false);
 
       return (
@@ -116,11 +132,11 @@ export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(academicYear.year.toString())}>
-                Copy Academic Year Name
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(semester.name)}>
+                Copy Semester Name
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setOpenDialog(true)}>Edit Academic Year</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setOpenDialog(true)}>Edit Semester</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </>
@@ -129,14 +145,14 @@ export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
   },
 ];
 
-export function AcademicYearTable({ academicYears }: { academicYears: AcademicYearModel[] }) {
+export function SemesterTable({ semesters }: { semesters: SemesterModel[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data: academicYears,
-    columns: academicYearColumns,
+    data: semesters,
+    columns: semesterColumns,
     state: {
       sorting,
       columnVisibility,
@@ -212,8 +228,8 @@ export function AcademicYearTable({ academicYears }: { academicYears: AcademicYe
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={academicYearColumns.length} className="h-24 text-center">
-                    No academic years found.
+                  <TableCell colSpan={semesterColumns.length} className="h-24 text-center">
+                    No semesters found.
                   </TableCell>
                 </TableRow>
               )}

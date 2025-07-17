@@ -11,7 +11,7 @@ export interface SemesterModel {
 export const MOCK_SEMESTERS: SemesterModel[] = [
   {
     id: 1,
-    academic_year_id: 5,
+    academic_year_id: 25,
     name: "Semester 1 2024-2025",
     start_date: "2023-09-01",
     end_date: "2023-12-31",
@@ -20,7 +20,7 @@ export const MOCK_SEMESTERS: SemesterModel[] = [
   },
   {
     id: 2, 
-    academic_year_id: 5,
+    academic_year_id: 25,
     name: "Semester 2 2024-2025",
     start_date: "2024-01-15",
     end_date: "2024-05-15",
@@ -29,7 +29,7 @@ export const MOCK_SEMESTERS: SemesterModel[] = [
   },
   {
     id: 3,
-    academic_year_id: 4,
+    academic_year_id: 24,
     name: "Semester 1 2023-2024",
     start_date: "2022-09-01", 
     end_date: "2022-12-31",
@@ -38,7 +38,7 @@ export const MOCK_SEMESTERS: SemesterModel[] = [
   },
   {
     id: 4,
-    academic_year_id: 4, 
+    academic_year_id: 24, 
     name: "Semester 2 2023-2024",
     start_date: "2023-01-15",
     end_date: "2023-05-15",

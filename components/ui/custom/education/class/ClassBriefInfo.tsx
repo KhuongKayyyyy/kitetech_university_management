@@ -1,9 +1,9 @@
 import React from "react";
 
-import { Class } from "@/app/api/model/ClassModel";
+import { ClassModel } from "@/app/api/model/ClassModel";
 
 interface ClassBriefInfoProps {
-  classItem: Class;
+  classItem: ClassModel;
 }
 
 export default function ClassBriefInfo({ classItem }: ClassBriefInfoProps) {

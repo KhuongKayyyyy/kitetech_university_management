@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 
-import { Class, mockClasses } from "@/app/api/model/ClassModel";
+import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
 import { Button } from "@/components/ui/button";
 import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialog";
 import ClassBriefInfo from "@/components/ui/custom/education/class/ClassBriefInfo";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { BookOpen, ChevronLeft, ChevronRight, Grid, List, Plus, Search } from "lucide-react";
 
 const page = () => {
-  const [classes, setClasses] = useState<Class[]>(mockClasses);
+  const [classes, setClasses] = useState<ClassModel[]>(mockClasses);
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedYear, setSelectedYear] = useState("2024");

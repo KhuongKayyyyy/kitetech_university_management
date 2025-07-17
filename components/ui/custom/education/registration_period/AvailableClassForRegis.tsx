@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { AcademicYearModel } from "@/app/api/model/AcademicYearModel";
+import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -14,12 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ColumnDef,
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
@@ -28,7 +30,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
 
-export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
+export const availableClassColumns: ColumnDef<ClassModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -59,96 +61,127 @@ export const academicYearColumns: ColumnDef<AcademicYearModel>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "year",
+    accessorKey: "id",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Academic Year <ArrowUpDown className="ml-2 h-4 w-4" />
+        Class ID <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("year")}</div>,
+    cell: ({ row }) => <div className="text-center">{row.getValue("id")}</div>,
   },
   {
-    accessorKey: "start_date",
+    accessorKey: "classCode",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Start Date <ArrowUpDown className="ml-2 h-4 w-4" />
+        Class Code <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div>{row.getValue("start_date")}</div>,
+    cell: ({ row }) => <div className="font-medium">{row.getValue("classCode")}</div>,
   },
   {
-    accessorKey: "end_date",
+    accessorKey: "description",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        End Date <ArrowUpDown className="ml-2 h-4 w-4" />
+        Description <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div>{row.getValue("end_date")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.getValue("description")}</div>,
   },
   {
-    accessorKey: "status",
+    accessorKey: "majorId",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Status <ArrowUpDown className="ml-2 h-4 w-4" />
+        Major ID <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => (
-      <div className={`capitalize ${row.getValue("status") === "active" ? "text-green-600" : "text-gray-600"}`}>
-        {row.getValue("status")}
-      </div>
+    cell: ({ row }) => <div className="text-center">{row.getValue("majorId")}</div>,
+  },
+  {
+    accessorKey: "academicYearId",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Academic Year ID <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
     ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("academicYearId")}</div>,
+  },
+  {
+    accessorKey: "curriculumId",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Curriculum ID <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("curriculumId")}</div>,
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const academicYear = row.original;
-      const [openDialog, setOpenDialog] = React.useState(false);
+      const classItem = row.original;
 
       return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(academicYear.year.toString())}>
-                Copy Academic Year Name
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setOpenDialog(true)}>Edit Academic Year</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(classItem.id.toString())}>
+              Copy Class ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Edit Class</DropdownMenuItem>
+            <DropdownMenuItem>View Details</DropdownMenuItem>
+            <DropdownMenuItem>Register for Class</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
     },
   },
 ];
 
-export function AcademicYearTable({ academicYears }: { academicYears: AcademicYearModel[] }) {
+interface AvailableClassTableProps {
+  availableClasses?: ClassModel[];
+  onEditClass?: (classItem: ClassModel) => void;
+  onViewDetails?: (classItem: ClassModel) => void;
+  onRegisterClass?: (classItem: ClassModel) => void;
+  onDeleteClass?: (classItem: ClassModel) => void;
+}
+
+export default function AvailableClassForRegis({
+  availableClasses = mockClasses,
+  onEditClass,
+  onViewDetails,
+  onRegisterClass,
+  onDeleteClass,
+}: AvailableClassTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data: academicYears,
-    columns: academicYearColumns,
+    data: availableClasses,
+    columns: availableClassColumns,
     state: {
       sorting,
+      columnFilters,
       columnVisibility,
       rowSelection,
     },
     enableRowSelection: true,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
@@ -156,6 +189,12 @@ export function AcademicYearTable({ academicYears }: { academicYears: AcademicYe
   return (
     <div className="w-full flex flex-col">
       <div className="flex items-center py-4 gap-4">
+        <Input
+          placeholder="Filter available classes..."
+          value={(table.getColumn("classCode")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("classCode")?.setFilterValue(event.target.value)}
+          className="max-w-sm shadow-md"
+        />
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -179,6 +218,7 @@ export function AcademicYearTable({ academicYears }: { academicYears: AcademicYe
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
           {isAnyRowSelected && (
             <Button variant="destructive" size="sm" className="text-white shadow-md">
               <TrashIcon className="w-4 h-4 mr-2" /> Delete Selected
@@ -212,8 +252,8 @@ export function AcademicYearTable({ academicYears }: { academicYears: AcademicYe
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={academicYearColumns.length} className="h-24 text-center">
-                    No academic years found.
+                  <TableCell colSpan={availableClassColumns.length} className="h-24 text-center">
+                    No available classes found.
                   </TableCell>
                 </TableRow>
               )}

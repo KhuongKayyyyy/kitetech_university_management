@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Class } from "@/app/api/model/ClassModel";
+import { ClassModel } from "@/app/api/model/ClassModel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,10 +18,10 @@ import { BookOpen, Calendar, Edit, GraduationCap, MoreHorizontal, Trash2, Users 
 import { useRouter } from "next/navigation";
 
 interface ClassItemProps {
-  classData: Class;
-  onEdit?: (classData: Class) => void;
-  onDelete?: (classData: Class) => void;
-  onViewDetails?: (classData: Class) => void;
+  classData: ClassModel;
+  onEdit?: (classData: ClassModel) => void;
+  onDelete?: (classData: ClassModel) => void;
+  onViewDetails?: (classData: ClassModel) => void;
 }
 
 export default function ClassItem({ classData, onEdit, onDelete, onViewDetails }: ClassItemProps) {

@@ -144,7 +144,13 @@ export default function SaveCurriculumDialog({
           <Button variant="outline" onClick={onCancel} className="px-6">
             Cancel
           </Button>
-          <Button onClick={onSave} className="px-6 bg-primary hover:bg-primary/90">
+          <Button
+            onClick={() => {
+              console.log("Full curriculum data:", { steps, boards, subjects });
+              onSave?.();
+            }}
+            className="px-6 bg-primary hover:bg-primary/90"
+          >
             Confirm & Save
           </Button>
         </DialogFooter>

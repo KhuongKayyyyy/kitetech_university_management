@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Class } from "@/app/api/model/ClassModel";
+import { ClassModel } from "@/app/api/model/ClassModel";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -30,7 +30,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
 
-export const classColumns: ColumnDef<Class>[] = [
+export const classColumns: ColumnDef<ClassModel>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -135,7 +135,7 @@ export const classColumns: ColumnDef<Class>[] = [
   },
 ];
 
-export function ClassTable({ classes }: { classes: Class[] }) {
+export function ClassTable({ classes }: { classes: ClassModel[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});

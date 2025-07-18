@@ -62,7 +62,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       },
       {
         title: "Education",
-        url: "#",
+        url: "/admin/education",
         icon: Book,
         items: [
           {
@@ -92,49 +92,24 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           },
         ],
       },
+
       {
-        title: "Documentation",
-        url: "#",
+        title: "E-learning",
+        url: "/admin/elearning",
         icon: BookOpen,
+        isActive: true,
         items: [
           {
-            title: "Introduction",
-            url: "#",
+            title: "Overview",
+            url: "/admin/elearning",
           },
           {
-            title: "Get Started",
-            url: "#",
+            title: "Course",
+            url: "/admin/elearning/course",
           },
           {
-            title: "Tutorials",
-            url: "#",
-          },
-          {
-            title: "Changelog",
-            url: "#",
-          },
-        ],
-      },
-      {
-        title: "Settings",
-        url: "#",
-        icon: Settings2,
-        items: [
-          {
-            title: "General",
-            url: "#",
-          },
-          {
-            title: "Team",
-            url: "#",
-          },
-          {
-            title: "Billing",
-            url: "#",
-          },
-          {
-            title: "Limits",
-            url: "#",
+            title: "Teacher",
+            url: "/admin/elearning/teacher",
           },
         ],
       },

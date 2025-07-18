@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useAcademicYears } from "@/hooks/useAcademicYear";
 import { format } from "date-fns";
 import { Calendar, CalendarDays, Save, X } from "lucide-react";
 import { toast } from "sonner";
@@ -34,8 +35,8 @@ export default function AddNewSemesterDialog({
   onOpenChange,
   onSemesterAdd,
   trigger,
-  academicYears = [],
 }: AddNewSemesterDialogProps) {
+  const { academicYears } = useAcademicYears();
   const [formData, setFormData] = useState<Omit<SemesterModel, "id">>({
     name: "",
     description: "",

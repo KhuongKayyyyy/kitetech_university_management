@@ -13,6 +13,7 @@ import { AvailableSubjectTable } from "@/components/ui/custom/education/registra
 import EditDatePeriod from "@/components/ui/custom/education/registration_period/EditDatePeriod";
 import EditRegisPeriodDialog from "@/components/ui/custom/education/registration_period/EditRegisPeriodDialog";
 import RegistrationDetailSectionMap from "@/components/ui/custom/education/registration_period/RegistrationDetailSectionMap";
+import AddSubjectClassDialog from "@/components/ui/custom/elearning/course/AddSubjectClassDialog";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import {
   AlertCircle,
@@ -488,7 +489,7 @@ export default function page() {
                     </div>
                     <Button onClick={() => setOpenAddAdvailableSubject(true)}>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Subject
+                      Add Subject Class
                     </Button>
                   </div>
                 </div>
@@ -534,12 +535,14 @@ export default function page() {
           }}
         />
 
-        <AddAdvailableSubject
+        {/* <AddAdvailableSubject
           open={openAddAdvailableSubject}
           setOpen={setOpenAddAdvailableSubject}
           registrationPeriodId={registrationPeriod.id}
           onSubmit={handleAddSubject}
-        />
+        /> */}
+
+        <AddSubjectClassDialog isOpen={openAddAdvailableSubject} onOpenChange={setOpenAddAdvailableSubject} />
       </div>
     </div>
   );

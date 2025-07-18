@@ -33,22 +33,22 @@ export default function AddSubjectPrerequisite({
   const filteredSubjects = subjects.filter((subject) => {
     const matchesSearch =
       subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      subject.subjectId.toString().toLowerCase().includes(searchQuery.toLowerCase());
-    const notAlreadyPrerequisite = !selectedPrerequisites.some((prereq) => prereq.subjectId === subject.subjectId);
-    const notCurrentSubject = subject.subjectId !== currentSubject.SubjectID;
+      subject.id.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    const notAlreadyPrerequisite = !selectedPrerequisites.some((prereq) => prereq.id === subject.id);
+    const notCurrentSubject = subject.id !== currentSubject.SubjectID;
     return matchesSearch && notAlreadyPrerequisite && notCurrentSubject;
   });
 
   const handleSubjectToggle = (subject: SubjectModel) => {
-    const isAlreadyPrerequisite = selectedPrerequisites.some((s) => s.subjectId === subject.subjectId);
+    const isAlreadyPrerequisite = selectedPrerequisites.some((s) => s.id === subject.id);
     if (isAlreadyPrerequisite) {
       return;
     }
 
     setSelectedSubjects((prev) => {
-      const isSelected = prev.some((s) => s.subjectId === subject.subjectId);
+      const isSelected = prev.some((s) => s.id === subject.id);
       if (isSelected) {
-        return prev.filter((s) => s.subjectId !== subject.subjectId);
+        return prev.filter((s) => s.id !== subject.id);
       } else {
         return [...prev, subject];
       }
@@ -56,15 +56,15 @@ export default function AddSubjectPrerequisite({
   };
 
   const isSubjectSelected = (subject: SubjectModel) => {
-    return selectedSubjects.some((s) => s.subjectId === subject.subjectId);
+    return selectedSubjects.some((s) => s.id === subject.id);
   };
 
   const isSubjectAlreadyPrerequisite = (subject: SubjectModel) => {
-    return selectedPrerequisites.some((s) => s.subjectId === subject.subjectId);
+    return selectedPrerequisites.some((s) => s.id === subject.id);
   };
 
   const handleRemoveSubject = (subject: SubjectModel) => {
-    setSelectedSubjects((prev) => prev.filter((s) => s.subjectId !== subject.subjectId));
+    setSelectedSubjects((prev) => prev.filter((s) => s.id !== subject.id));
   };
 
   const handleAddSubjects = () => {
@@ -75,7 +75,7 @@ export default function AddSubjectPrerequisite({
 
   const handleRemovePrerequisite = (subjectId: string) => {
     onRemovePrerequisite?.(subjectId);
-    setSelectedSubjects((prev) => prev.filter((s) => s.subjectId !== subjectId));
+    setSelectedSubjects((prev) => prev.filter((s) => s.id !== subjectId));
   };
 
   return (
@@ -93,14 +93,14 @@ export default function AddSubjectPrerequisite({
           <div className="flex flex-wrap gap-2">
             {selectedPrerequisites.map((prerequisite) => (
               <div
-                key={prerequisite.subjectId}
+                key={prerequisite.id}
                 className="group flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg px-3 py-2 border border-slate-200 transition-all duration-200"
               >
                 <BookOpen size={14} className="text-blue-500" />
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">{prerequisite.name}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">{prerequisite.subjectId}</span>
+                    <span className="text-xs text-slate-500">{prerequisite.id}</span>
                     <span className="text-xs text-slate-400">•</span>
                     <span className="text-xs text-slate-500">{prerequisite.credits} credits</span>
                   </div>
@@ -109,7 +109,7 @@ export default function AddSubjectPrerequisite({
                   variant="ghost"
                   size="sm"
                   className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-2 hover:bg-red-50 hover:text-red-500"
-                  onClick={() => handleRemovePrerequisite(prerequisite.subjectId.toString())}
+                  onClick={() => handleRemovePrerequisite(prerequisite.id.toString())}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -149,7 +149,7 @@ export default function AddSubjectPrerequisite({
                   const alreadyPrerequisite = isSubjectAlreadyPrerequisite(subject);
                   return (
                     <CommandItem
-                      key={subject.subjectId}
+                      key={subject.id}
                       onSelect={() => handleSubjectToggle(subject)}
                       onMouseEnter={() => setHoveredSubject(subject)}
                       onMouseLeave={() => setHoveredSubject(null)}
@@ -183,7 +183,7 @@ export default function AddSubjectPrerequisite({
                         <span className={cn("font-medium", alreadyPrerequisite && "text-muted-foreground")}>
                           {subject.name}
                         </span>
-                        <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.subjectId}</span>
+                        <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.id}</span>
                       </div>
                       {alreadyPrerequisite && (
                         <span className="text-xs text-muted-foreground pl-6">
@@ -216,7 +216,7 @@ export default function AddSubjectPrerequisite({
                       <h3 className="font-semibold text-lg">{hoveredSubject.name}</h3>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Code: {hoveredSubject.subjectId}</span>
+                      <span>Code: {hoveredSubject.id}</span>
                       <span>Credits: {hoveredSubject.credits}</span>
                     </div>
                     {hoveredSubject.description && (
@@ -245,10 +245,10 @@ export default function AddSubjectPrerequisite({
               <div className="space-y-2 max-h-full overflow-y-auto">
                 {selectedSubjects.length > 0 ? (
                   selectedSubjects.map((subject) => (
-                    <div key={subject.subjectId} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border">
+                    <div key={subject.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border">
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm truncate">{subject.name}</div>
-                        <div className="text-xs text-muted-foreground">{subject.subjectId}</div>
+                        <div className="text-xs text-muted-foreground">{subject.id}</div>
                       </div>
                       <button
                         onClick={() => handleRemoveSubject(subject)}

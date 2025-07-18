@@ -2,8 +2,8 @@ export interface CurriculumModel {
   id: number;
   name: string;
   academicYear: string;
-  department: string;
-  major: string;
+  departmentId: string;
+  majorId: string;
   totalCredits?: number;
   totalCourses?: number;
 }

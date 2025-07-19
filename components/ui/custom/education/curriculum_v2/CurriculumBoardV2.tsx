@@ -72,7 +72,8 @@ interface CurriculumBoardV2Props {
   onRemoveSubject: (columnId: string, subjectId: string, boardId: string) => void;
   onRemoveColumn: (columnId: string, boardId: string) => void;
   onRenameColumn: (columnId: string, newTitle: string, boardId: string) => void;
-  onUpdatePrerequisites: (subjectId: string, prerequisites: SubjectModel[]) => void;
+  onUpdatePrerequisites: (subjectId: string, prerequisites: SubjectModel[], newSubjects?: SubjectModel[]) => void;
+  existingSubjectIds?: Set<string>; // New prop
 }
 
 export default function CurriculumBoardV2({
@@ -86,6 +87,7 @@ export default function CurriculumBoardV2({
   onRemoveColumn,
   onRenameColumn,
   onUpdatePrerequisites,
+  existingSubjectIds,
 }: CurriculumBoardV2Props) {
   if (!currentStepBoard) {
     return (
@@ -136,7 +138,12 @@ export default function CurriculumBoardV2({
                   const column = currentStepBoard.semesterColumn[columnId];
                   if (!column) return null;
 
-                  const columnSubjects = column.subjectIds.map((subjectId) => subjects[subjectId]).filter(Boolean);
+                  const columnSubjects = column.subjectIds
+                    .map((subjectId) => ({
+                      mappingId: subjectId,
+                      subject: subjects[subjectId],
+                    }))
+                    .filter((item) => item.subject); // Filter out any undefined subjects
 
                   return (
                     <SemesterColumnV2
@@ -153,6 +160,7 @@ export default function CurriculumBoardV2({
                         onRenameColumn(colId, newTitle, currentStepBoard.id)
                       }
                       onUpdatePrerequisites={onUpdatePrerequisites}
+                      existingSubjectIds={existingSubjectIds}
                     />
                   );
                 })}

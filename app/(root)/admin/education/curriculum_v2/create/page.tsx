@@ -19,7 +19,7 @@ import { useDepartments } from "@/hooks/useDeparment";
 import { useMajors } from "@/hooks/useMajor";
 import { FileInput, FolderPlus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 
 type Board = {
   id: string;
@@ -212,26 +212,69 @@ export default function CreateCurriculumV2Page() {
     });
   };
 
-  // Remove a subject from a semester column in a board
-  const removeSubjectFromSemesterColumn = (columnId: string, subjectId: string, boardId: string) => {
-    setState((prev) => {
-      const boards = prev.boards.map((board) => {
-        if (board.id !== boardId) return board;
-        const column = board.semesterColumn[columnId];
-        const updatedSubjectIds = column.subjectIds.filter((id) => id !== subjectId);
-        return {
-          ...board,
-          semesterColumn: {
-            ...board.semesterColumn,
-            [columnId]: {
-              ...column,
-              subjectIds: updatedSubjectIds,
-            },
-          },
-        };
-      });
-      return { ...prev, boards };
+  // Check if a subject is being used as a prerequisite by other subjects
+  const isSubjectUsedAsPrerequisite = (subjectId: string): string[] => {
+    const dependentSubjects: string[] = [];
+    Object.values(state.subjects).forEach((subject) => {
+      if (subject.PrerequisiteSubjects?.some((prereq) => prereq.id === subjectId)) {
+        dependentSubjects.push(subject.SubjectName);
+      }
     });
+    return dependentSubjects;
+  };
+
+  // Remove a subject from a semester column in a board
+  const removeSubjectFromSemesterColumn = (columnId: string, mappingId: string, boardId: string) => {
+    try {
+      const subjectToRemove = state.subjects[mappingId];
+      if (!subjectToRemove) {
+        toast.error("Subject not found in curriculum");
+        return;
+      }
+
+      // Check if this subject is used as a prerequisite
+      const dependentSubjects = isSubjectUsedAsPrerequisite(subjectToRemove.SubjectID);
+      if (dependentSubjects.length > 0) {
+        toast.error(
+          `Cannot remove "${subjectToRemove.SubjectName}" because it's a prerequisite for: ${dependentSubjects.join(", ")}. Remove the prerequisite relationships first.`,
+        );
+        return;
+      }
+
+      setState((prev) => {
+        const boards = prev.boards.map((board) => {
+          if (board.id !== boardId) return board;
+          const column = board.semesterColumn[columnId];
+          if (!column) {
+            toast.error("Column not found in board");
+            return board;
+          }
+
+          const updatedSubjectIds = column.subjectIds.filter((id) => id !== mappingId);
+
+          return {
+            ...board,
+            semesterColumn: {
+              ...board.semesterColumn,
+              [columnId]: {
+                ...column,
+                subjectIds: updatedSubjectIds,
+              },
+            },
+          };
+        });
+
+        // Remove the subject from the subjects object
+        const { [mappingId]: removedSubject, ...remainingSubjects } = prev.subjects;
+
+        return { ...prev, boards, subjects: remainingSubjects };
+      });
+
+      toast.success(`Successfully removed "${subjectToRemove.SubjectName}" from curriculum`);
+    } catch (error) {
+      console.error("Error removing subject from semester column:", error);
+      toast.error("Failed to remove subject from curriculum");
+    }
   };
 
   // Get all globally selected subjects across all boards and columns
@@ -240,8 +283,8 @@ export default function CreateCurriculumV2Page() {
 
     state.boards.forEach((board) => {
       Object.values(board.semesterColumn).forEach((column) => {
-        column.subjectIds.forEach((subjectId) => {
-          const subject = state.subjects[subjectId];
+        column.subjectIds.forEach((mappingId) => {
+          const subject = state.subjects[mappingId];
           if (subject) {
             allSelectedSubjects.push({
               id: subject.SubjectID,
@@ -289,9 +332,10 @@ export default function CreateCurriculumV2Page() {
     const newSubjectIds: string[] = [];
 
     subjects.forEach((subject) => {
-      const newSubjectId = subject.id;
+      // Generate a unique mapping ID while keeping the actual SubjectID
+      const uniqueMappingId = `curri-subject-${subject.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const newSubject: CurriculumnSubjectModel = {
-        SubjectID: newSubjectId,
+        SubjectID: subject.id, // Keep the actual subject ID
         SubjectName: subject.name,
         SubjectName_EN: subject.name,
         TotalCredits: subject.credits,
@@ -309,8 +353,8 @@ export default function CreateCurriculumV2Page() {
         SemesterName: column.title,
         PrerequisiteSubjects: [],
       };
-      newSubjects[newSubjectId] = newSubject;
-      newSubjectIds.push(newSubjectId);
+      newSubjects[uniqueMappingId] = newSubject; // Use unique ID as mapping key
+      newSubjectIds.push(uniqueMappingId); // Add unique ID to column
     });
 
     setState((prev) => {
@@ -447,6 +491,225 @@ export default function CreateCurriculumV2Page() {
     });
   };
 
+  // Add prerequisite update function with auto-add logic
+  const handleUpdatePrerequisites = (
+    subjectId: string,
+    prerequisites: SubjectModel[],
+    newSubjects: SubjectModel[] = [],
+  ) => {
+    console.log("=== handleUpdatePrerequisites called ===");
+    console.log("subjectId:", subjectId);
+    console.log("prerequisites:", prerequisites);
+    console.log("newSubjects:", newSubjects);
+    console.log("Current subjects in state:", Object.keys(state.subjects));
+
+    // Find the target mapping ID first
+    const targetMappingId = Object.keys(state.subjects).find((key) => state.subjects[key].SubjectID === subjectId);
+    console.log("Found target mapping ID:", targetMappingId);
+
+    if (!targetMappingId) {
+      console.log("Subject not found for ID:", subjectId);
+      toast.error("Subject not found in curriculum");
+      return;
+    }
+
+    // Check which new prerequisites are not already in the curriculum
+    const existingSubjectIds = new Set(Object.values(state.subjects).map((subject) => subject.SubjectID));
+    const missingPrerequisites = newSubjects.filter((subject) => !existingSubjectIds.has(subject.id));
+
+    console.log("Existing subject IDs:", Array.from(existingSubjectIds));
+    console.log("Missing prerequisites:", missingPrerequisites);
+
+    // If no new subjects to add, just update the current subject's prerequisites
+    if (newSubjects.length === 0 || missingPrerequisites.length === 0) {
+      console.log("No missing prerequisites, just updating subject prerequisites");
+      setState((prev) => {
+        const updatedSubject = {
+          ...prev.subjects[targetMappingId],
+          PrerequisiteSubjects: prerequisites,
+          HasPrerequisite: prerequisites.length > 0,
+        };
+
+        console.log("Updating subject with prerequisites:", updatedSubject);
+
+        return {
+          ...prev,
+          subjects: {
+            ...prev.subjects,
+            [targetMappingId]: updatedSubject,
+          },
+        };
+      });
+
+      if (newSubjects.length === 0) {
+        toast.success("Prerequisites updated successfully");
+      } else {
+        toast.info("All selected prerequisites are already in curriculum");
+      }
+      return;
+    }
+
+    // Find the current subject by SubjectID instead of mapping ID
+    const currentSubjectEntry = Object.entries(state.subjects).find(([_, subject]) => subject.SubjectID === subjectId);
+    if (!currentSubjectEntry) {
+      // Just update prerequisites if current subject not found
+      const targetMappingId = Object.keys(state.subjects).find((key) => state.subjects[key].SubjectID === subjectId);
+      if (targetMappingId) {
+        setState((prev) => ({
+          ...prev,
+          subjects: {
+            ...prev.subjects,
+            [targetMappingId]: {
+              ...prev.subjects[targetMappingId],
+              PrerequisiteSubjects: prerequisites,
+              HasPrerequisite: prerequisites.length > 0,
+            },
+          },
+        }));
+      }
+      return;
+    }
+
+    const [currentMappingId, currentSubject] = currentSubjectEntry;
+    // Find target semester for prerequisites (one semester before current)
+    const currentSemester = currentSubject.Semester;
+    const targetSemester = Math.max(1, currentSemester - 1);
+
+    // Find the board that contains the current subject
+    const currentBoard = state.boards.find((board) =>
+      Object.values(board.semesterColumn).some((column) => column.subjectIds.includes(currentMappingId)),
+    );
+
+    if (!currentBoard) {
+      // Just update prerequisites if board not found
+      setState((prev) => ({
+        ...prev,
+        subjects: {
+          ...prev.subjects,
+          [currentMappingId]: {
+            ...prev.subjects[currentMappingId],
+            PrerequisiteSubjects: prerequisites,
+            HasPrerequisite: prerequisites.length > 0,
+          },
+        },
+      }));
+      return;
+    }
+
+    // Find or create a column for the target semester
+    let targetColumnId = Object.keys(currentBoard.semesterColumn).find(
+      (columnId) => currentBoard.semesterColumn[columnId].semesterNumber === targetSemester,
+    );
+
+    // If no column exists for target semester, find the earliest available semester
+    if (!targetColumnId) {
+      const availableColumns = Object.entries(currentBoard.semesterColumn)
+        .filter(([_, column]) => column.semesterNumber < currentSemester)
+        .sort(([_, a], [__, b]) => a.semesterNumber - b.semesterNumber);
+
+      if (availableColumns.length > 0) {
+        targetColumnId = availableColumns[0][0];
+      } else {
+        // Create a new column for semester 1 if none exists
+        targetColumnId = `semester-1-${currentBoard.id}`;
+      }
+    }
+
+    // Auto-add missing prerequisites
+    setState((prev) => {
+      const newSubjects: { [key: string]: CurriculumnSubjectModel } = {};
+      const addedSubjectIds: string[] = [];
+
+      missingPrerequisites.forEach((subject) => {
+        // Generate a unique mapping ID while keeping the actual SubjectID
+        const uniqueMappingId = `curri-subject-${subject.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const targetColumn = prev.boards.find((b) => b.id === currentBoard.id)?.semesterColumn[targetColumnId];
+        const semesterNumber = targetColumn?.semesterNumber || 1;
+
+        const newSubject: CurriculumnSubjectModel = {
+          SubjectID: subject.id, // Keep the actual subject ID
+          SubjectName: subject.name,
+          SubjectName_EN: subject.name,
+          TotalCredits: subject.credits,
+          MajorID: curriculumInfo?.majorId || "",
+          Semester: semesterNumber,
+          SemesterColumnId: semesterNumber,
+          ProgramSemester: semesterNumber,
+          IsRequired: true,
+          AcademicYear: parseInt(curriculumInfo?.academicYear || "2024"),
+          AcademicYearID: parseInt(curriculumInfo?.academicYear || "2024"),
+          LectureCredits: subject.credits,
+          PrerequisiteType: 0,
+          HasPrerequisite: false,
+          TotalPrerequisiteTypes: 0,
+          SemesterName: targetColumn?.title || `Semester ${semesterNumber}`,
+          PrerequisiteSubjects: [],
+        };
+        newSubjects[uniqueMappingId] = newSubject; // Use unique ID as mapping key
+        addedSubjectIds.push(uniqueMappingId); // Add unique ID to column
+      });
+
+      // Update boards to include new subjects
+      const updatedBoards = prev.boards.map((board) => {
+        if (board.id !== currentBoard.id) return board;
+
+        // Ensure target column exists
+        const updatedSemesterColumn = { ...board.semesterColumn };
+        const updatedColumnOrder = [...board.columnOrder];
+
+        if (!updatedSemesterColumn[targetColumnId]) {
+          const semesterNumber = targetSemester;
+          updatedSemesterColumn[targetColumnId] = {
+            id: targetColumnId,
+            title: board.type === "core" ? `Semester ${semesterNumber}` : `${board.name} ${semesterNumber}`,
+            subjectIds: [],
+            curriculumTypeId: board.curriculumTypeId,
+            semesterNumber,
+          };
+          updatedColumnOrder.push(targetColumnId);
+          updatedColumnOrder.sort((a, b) => {
+            const aNum = parseInt(a.split("-")[1]) || 0;
+            const bNum = parseInt(b.split("-")[1]) || 0;
+            return aNum - bNum;
+          });
+        }
+
+        // Add new subjects to target column
+        updatedSemesterColumn[targetColumnId] = {
+          ...updatedSemesterColumn[targetColumnId],
+          subjectIds: [...updatedSemesterColumn[targetColumnId].subjectIds, ...addedSubjectIds],
+        };
+
+        return {
+          ...board,
+          semesterColumn: updatedSemesterColumn,
+          columnOrder: updatedColumnOrder,
+        };
+      });
+
+      return {
+        ...prev,
+        boards: updatedBoards,
+        subjects: {
+          ...prev.subjects,
+          ...newSubjects,
+          [currentMappingId]: {
+            ...prev.subjects[currentMappingId],
+            PrerequisiteSubjects: prerequisites,
+            HasPrerequisite: prerequisites.length > 0,
+          },
+        },
+      };
+    });
+
+    // Show user notification about auto-added subjects
+    const subjectNames = missingPrerequisites.map((s) => s.name).join(", ");
+    toast.success(
+      `Added ${missingPrerequisites.length} prerequisite subject(s) to semester ${targetSemester}: ${subjectNames}`,
+      { duration: 5000 },
+    );
+  };
+
   const nextStep = () => {
     if (currentStep < selectedBoardTypes.length) {
       setCurrentStep(currentStep + 1);
@@ -482,20 +745,6 @@ export default function CreateCurriculumV2Page() {
       });
       return { ...prev, boards };
     });
-  };
-
-  // Add prerequisite update function
-  const handleUpdatePrerequisites = (subjectId: string, prerequisites: SubjectModel[]) => {
-    setState((prev) => ({
-      ...prev,
-      subjects: {
-        ...prev.subjects,
-        [subjectId]: {
-          ...prev.subjects[subjectId],
-          PrerequisiteSubjects: prerequisites,
-        },
-      },
-    }));
   };
 
   const handleSave = () => {
@@ -612,6 +861,7 @@ export default function CreateCurriculumV2Page() {
           onRemoveColumn={removeSemesterColumn}
           onRenameColumn={renameColumn}
           onUpdatePrerequisites={handleUpdatePrerequisites}
+          existingSubjectIds={new Set(Object.values(state.subjects).map((subject) => subject.SubjectID))}
         />
 
         {/* Summary Section */}
@@ -644,6 +894,7 @@ export default function CreateCurriculumV2Page() {
           onCancel={() => setShowSaveDialog(false)}
         />
       </div>
+      <Toaster />
     </div>
   );
 }

@@ -211,12 +211,17 @@ export default function CurriculumSummaryV2({ steps, boards, subjects, curriculu
                           </div>
                           {semesterSubjects.length > 0 ? (
                             <div className="space-y-1">
-                              {semesterSubjects.map((subject) => (
-                                <div key={subject.SubjectID} className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-700">{subject.SubjectName}</span>
-                                  <span className="text-gray-500">{subject.TotalCredits} credits</span>
-                                </div>
-                              ))}
+                              {semesterSubjects.map((subject) => {
+                                const subjectName = subject.SubjectName;
+                                const subjectCredits = subject.TotalCredits;
+
+                                return (
+                                  <div key={subject.SubjectID} className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-700">{subjectName}</span>
+                                    <span className="text-gray-500">{subjectCredits} credits</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           ) : (
                             <p className="text-xs text-gray-500 italic">No subjects assigned</p>

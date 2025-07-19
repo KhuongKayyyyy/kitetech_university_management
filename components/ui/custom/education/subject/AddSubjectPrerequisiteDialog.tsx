@@ -6,28 +6,31 @@ import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel
 import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
+import { useSubjects } from "@/hooks/useSubject";
 import { cn } from "@/lib/utils";
 import { BookOpen, Check, Plus, Trash, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface AddSubjectPrerequisiteProps {
-  currentSubject: CurriculumnSubjectModel;
-  subjects?: SubjectModel[];
+  currentSubject: any; // Can be either old or new structure
   selectedPrerequisites?: SubjectModel[];
   onAddPrerequisites?: (subjects: SubjectModel[]) => void;
   onRemovePrerequisite?: (subjectId: string) => void;
+  existingSubjectIds?: Set<string>; // Set of curriculum subject IDs
 }
 
 export default function AddSubjectPrerequisite({
   currentSubject,
-  subjects = [],
   selectedPrerequisites = [],
   onAddPrerequisites,
   onRemovePrerequisite,
+  existingSubjectIds = new Set(),
 }: AddSubjectPrerequisiteProps) {
   const [open, setOpen] = React.useState(false);
   const [hoveredSubject, setHoveredSubject] = React.useState<SubjectModel | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedSubjects, setSelectedSubjects] = React.useState<SubjectModel[]>([]);
+  const { subjects, loading, error } = useSubjects();
 
   // Filter out the current subject and apply search/prerequisite filters
   const filteredSubjects = subjects.filter((subject) => {
@@ -74,8 +77,23 @@ export default function AddSubjectPrerequisite({
   };
 
   const handleRemovePrerequisite = (subjectId: string) => {
-    onRemovePrerequisite?.(subjectId);
-    setSelectedSubjects((prev) => prev.filter((s) => s.id !== subjectId));
+    try {
+      // Convert to string for consistent comparison since IDs might be numbers or strings
+      const prerequisiteToRemove = selectedPrerequisites.find((p) => p.id.toString() === subjectId.toString());
+      if (!prerequisiteToRemove) {
+        toast.error("Prerequisite not found in selected list");
+        return;
+      }
+
+      onRemovePrerequisite?.(subjectId);
+      // Filter by converting both IDs to string for consistent comparison
+      setSelectedSubjects((prev) => prev.filter((s) => s.id.toString() !== subjectId.toString()));
+
+      toast.success(`Removed "${prerequisiteToRemove.name}" as prerequisite`);
+    } catch (error) {
+      console.error("Error removing prerequisite:", error);
+      toast.error("Failed to remove prerequisite");
+    }
   };
 
   return (
@@ -109,7 +127,11 @@ export default function AddSubjectPrerequisite({
                   variant="ghost"
                   size="sm"
                   className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-2 hover:bg-red-50 hover:text-red-500"
-                  onClick={() => handleRemovePrerequisite(prerequisite.id.toString())}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Removing prerequisite with ID:", prerequisite.id);
+                    handleRemovePrerequisite(prerequisite.id.toString());
+                  }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -144,9 +166,19 @@ export default function AddSubjectPrerequisite({
         <div className="flex h-[60vh] max-h-[70vh] overflow-hidden">
           <div className="w-1/2 overflow-y-auto border-r">
             <CommandGroup heading="Available Subjects">
-              {filteredSubjects.length > 0 ? (
+              {loading ? (
+                <div className="px-4 py-8 text-center text-muted-foreground">
+                  <div className="mb-2">Loading subjects...</div>
+                </div>
+              ) : error ? (
+                <div className="px-4 py-8 text-center text-destructive">
+                  <div className="mb-2">Error loading subjects</div>
+                  <div className="text-sm">{error.message}</div>
+                </div>
+              ) : filteredSubjects.length > 0 ? (
                 filteredSubjects.map((subject) => {
                   const alreadyPrerequisite = isSubjectAlreadyPrerequisite(subject);
+                  const isAlreadyInCurriculum = existingSubjectIds.has(subject.id);
                   return (
                     <CommandItem
                       key={subject.id}
@@ -184,6 +216,16 @@ export default function AddSubjectPrerequisite({
                           {subject.name}
                         </span>
                         <span className="ml-auto text-xs bg-muted px-2 py-1 rounded-full">{subject.id}</span>
+                        {!isAlreadyInCurriculum && !alreadyPrerequisite && (
+                          <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                            Will be auto-added
+                          </span>
+                        )}
+                        {isAlreadyInCurriculum && !alreadyPrerequisite && (
+                          <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            In curriculum
+                          </span>
+                        )}
                       </div>
                       {alreadyPrerequisite && (
                         <span className="text-xs text-muted-foreground pl-6">

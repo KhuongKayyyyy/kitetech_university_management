@@ -18,13 +18,17 @@ interface SemesterColumnV2Props {
     curriculumTypeId: string;
     semesterNumber: number;
   };
-  subjects: CurriculumnSubjectModel[];
+  subjects: Array<{
+    mappingId: string;
+    subject: CurriculumnSubjectModel;
+  }>;
   index: number;
   onAddSubject: (columnId: string) => void;
   onRemoveSubject: (columnId: string, subjectId: string) => void;
   onRemoveColumn: (columnId: string) => void;
   onRenameColumn?: (columnId: string, newTitle: string) => void;
-  onUpdatePrerequisites?: (subjectId: string, prerequisites: SubjectModel[]) => void;
+  onUpdatePrerequisites?: (subjectId: string, prerequisites: SubjectModel[], newSubjects?: SubjectModel[]) => void;
+  existingSubjectIds?: Set<string>; // New prop
 }
 
 const Container = styled.div`
@@ -279,6 +283,7 @@ export default function SemesterColumnV2({
   onRemoveColumn,
   onRenameColumn,
   onUpdatePrerequisites,
+  existingSubjectIds,
 }: SemesterColumnV2Props) {
   const columnRef = React.useRef<HTMLDivElement>(null);
   const [height, setHeight] = React.useState<number | undefined>(undefined);
@@ -384,13 +389,15 @@ export default function SemesterColumnV2({
                       </div>
                     </EmptyState>
                   ) : (
-                    subjects.map((subject, index) => (
-                      <div key={subject.SubjectID} style={{ width: "100%", marginBottom: "12px" }}>
+                    subjects.map((subjectItem, index) => (
+                      <div key={subjectItem.subject.SubjectID} style={{ width: "100%", marginBottom: "12px" }}>
                         <SubjectCurriItemV2
-                          subject={subject}
+                          subject={subjectItem.subject}
                           index={index}
-                          onRemove={() => onRemoveSubject(column.id, subject.SubjectID)}
+                          mappingId={subjectItem.mappingId}
+                          onRemove={() => onRemoveSubject(column.id, subjectItem.mappingId)}
                           onUpdatePrerequisites={onUpdatePrerequisites}
+                          existingSubjectIds={existingSubjectIds}
                         />
                       </div>
                     ))

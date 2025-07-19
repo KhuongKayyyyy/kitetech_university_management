@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Draggable } from "@hello-pangea/dnd";
 import { BookOpen, Clock, GripVertical, Trash } from "lucide-react";
 
-import AddSubjectPrerequisite from "../../education/subject/AddSubjectPrerequisite";
+import AddSubjectPrerequisite from "../../education/subject/AddSubjectPrerequisiteDialog";
 
 interface SubjectProps {
   subject: CurriculumnSubjectModel;

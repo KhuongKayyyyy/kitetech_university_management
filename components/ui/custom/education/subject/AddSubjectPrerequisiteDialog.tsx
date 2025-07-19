@@ -38,7 +38,8 @@ export default function AddSubjectPrerequisite({
       subject.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       subject.id.toString().toLowerCase().includes(searchQuery.toLowerCase());
     const notAlreadyPrerequisite = !selectedPrerequisites.some((prereq) => prereq.id === subject.id);
-    const notCurrentSubject = subject.id !== currentSubject.SubjectID;
+    // Fix the comparison by converting both to strings
+    const notCurrentSubject = subject.id.toString() !== currentSubject.SubjectID.toString();
     return matchesSearch && notAlreadyPrerequisite && notCurrentSubject;
   });
 

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 
-import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
+import { convertToSimplified, CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { SubjectModel } from "@/app/api/model/model";
 import { Button } from "@/components/ui/button";
 import CreateCurriculumDialog, {
@@ -55,6 +55,11 @@ export default function CreateCurriculumV2Page() {
   const { departments } = useDepartments();
   const { majors } = useMajors();
   const { academicYears } = useAcademicYears();
+
+  // Helper function to generate curriculum subject IDs in new format
+  const generateCurriculumSubjectId = (subjectId: string): string => {
+    return `subject-${subjectId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
 
   // Memoize the mapped arrays to prevent infinite re-renders
   const facultiesOptions = useMemo(() => {
@@ -281,23 +286,34 @@ export default function CreateCurriculumV2Page() {
   const getAllGloballySelectedSubjects = (): SubjectModel[] => {
     const allSelectedSubjects: SubjectModel[] = [];
 
+    console.log("=== Building global selected subjects list ===");
+    console.log("Current state.subjects:", Object.keys(state.subjects));
+
     state.boards.forEach((board) => {
       Object.values(board.semesterColumn).forEach((column) => {
         column.subjectIds.forEach((mappingId) => {
           const subject = state.subjects[mappingId];
           if (subject) {
-            allSelectedSubjects.push({
-              id: subject.SubjectID,
+            const subjectForFiltering = {
+              id: subject.SubjectID.toString(), // Ensure consistent string type for ID
               name: subject.SubjectName,
               credits: subject.TotalCredits,
               faculty_id: parseInt(curriculumInfo?.facultyId || "1"),
               gradingFormulaId: 0,
-            });
+              description: "", // Add description field to match SubjectModel
+            };
+            allSelectedSubjects.push(subjectForFiltering);
+            console.log(`Added subject to global list: ${subjectForFiltering.name} (ID: ${subjectForFiltering.id})`);
           }
         });
       });
     });
 
+    console.log(
+      "Final global selected subjects for filtering:",
+      allSelectedSubjects.map((s) => ({ id: s.id, name: s.name })),
+    );
+    console.log("=== End building global selected subjects list ===");
     return allSelectedSubjects;
   };
 
@@ -331,11 +347,11 @@ export default function CreateCurriculumV2Page() {
     const newSubjects: { [key: string]: CurriculumnSubjectModel } = {};
     const newSubjectIds: string[] = [];
 
-    subjects.forEach((subject) => {
-      // Generate a unique mapping ID while keeping the actual SubjectID
-      const uniqueMappingId = `curri-subject-${subject.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    subjects.forEach((subject, index) => {
+      // Use the new simplified ID format
+      const uniqueMappingId = generateCurriculumSubjectId(subject.id.toString());
       const newSubject: CurriculumnSubjectModel = {
-        SubjectID: subject.id, // Keep the actual subject ID
+        SubjectID: subject.id.toString(), // Convert to string and keep the actual subject ID
         SubjectName: subject.name,
         SubjectName_EN: subject.name,
         TotalCredits: subject.credits,
@@ -756,13 +772,74 @@ export default function CreateCurriculumV2Page() {
   };
 
   const handleActualSave = () => {
-    // TODO: Implement actual save logic
-    console.log("Saving curriculum...", {
+    // Generate simplified format for export
+    console.log("=== DEBUGGING PREREQUISITE CONVERSION ===");
+    console.log("Original subjects before conversion:");
+    Object.entries(state.subjects).forEach(([mappingId, subject]) => {
+      if (subject.PrerequisiteSubjects && subject.PrerequisiteSubjects.length > 0) {
+        console.log(
+          `Subject ${subject.SubjectName} (${subject.SubjectID}) has prerequisites:`,
+          subject.PrerequisiteSubjects.map((p) => `${p.name} (ID: ${p.id})`),
+        );
+      }
+    });
+
+    const simplifiedSubjects = convertToSimplified(state.subjects, state.boards);
+
+    // Current format - complete data structure
+    const currentFormat = {
       curriculumInfo,
       boards: state.boards,
       subjects: state.subjects,
+    };
+
+    // Simplified format - new structure requested by user
+    const simplifiedFormat = {
+      curriculumInfo,
+      boards: state.boards,
+      subjects: simplifiedSubjects,
+    };
+
+    // TODO: Implement actual save logic
+    console.log("Saving curriculum (current format):", currentFormat);
+    console.log("Simplified format:", simplifiedFormat);
+
+    // Show comparison in a more readable way
+    console.log("\n=== COMPARISON ===");
+    console.log("BEFORE (Current complex format):");
+    Object.entries(state.subjects)
+      .slice(0, 2) // Show first 2 subjects for better debugging
+      .forEach(([id, subject]) => {
+        console.log(`${id}:`, {
+          SubjectID: subject.SubjectID,
+          SubjectName: subject.SubjectName,
+          TotalCredits: subject.TotalCredits,
+          Semester: subject.Semester,
+          SemesterColumnId: subject.SemesterColumnId,
+          IsRequired: subject.IsRequired,
+          PrerequisiteSubjects: subject.PrerequisiteSubjects,
+          // ... and many more fields
+        });
+      });
+
+    console.log("\nAFTER (New simplified format):");
+    Object.entries(simplifiedSubjects)
+      .slice(0, 2) // Show first 2 subjects for better debugging
+      .forEach(([id, subject]) => {
+        console.log(`${id}:`, subject);
+      });
+
+    // Show detailed prerequisite mapping
+    console.log("\n=== PREREQUISITE MAPPING DETAILS ===");
+    Object.entries(simplifiedSubjects).forEach(([newId, simplified]) => {
+      if (simplified.PrerequisiteSubjects && simplified.PrerequisiteSubjects.length > 0) {
+        console.log(
+          `Simplified subject ${simplified.SubjectID} has prerequisite IDs: [${simplified.PrerequisiteSubjects.join(", ")}]`,
+        );
+      }
     });
-    toast.success("Curriculum saved successfully!");
+
+    toast.success("Curriculum saved successfully! Check console for both formats and prerequisite mapping details.");
     setShowSaveDialog(false);
     router.push("/admin/education/curriculum");
   };
@@ -853,7 +930,7 @@ export default function CreateCurriculumV2Page() {
         <CurriculumBoardV2
           currentStepBoard={currentStepBoard}
           currentStep={currentStepType}
-          subjects={state.subjects}
+          subjects={state.subjects} // Pass the full state.subjects
           onDragEnd={onDragEnd}
           onAddSemester={addSemester}
           onOpenSearchDialog={openSearchDialog}

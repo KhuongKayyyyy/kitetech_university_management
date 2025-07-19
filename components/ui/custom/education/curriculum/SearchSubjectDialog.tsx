@@ -91,8 +91,16 @@ export default function SubjectSearchDialog({
 
   const handleSubjectToggle = (subject: SubjectModel) => {
     // Check if subject is already in the existing curriculum
-    const isAlreadyAdded = existingSelectedSubjects.some((s) => s.id === subject.id);
+    const isAlreadyAdded = existingSelectedSubjects.some((s) => s.id.toString() === subject.id.toString());
+    console.log(`Trying to toggle subject ${subject.name} (ID: ${subject.id})`);
+    console.log(
+      `Existing subjects:`,
+      existingSelectedSubjects.map((s) => ({ id: s.id, name: s.name })),
+    );
+    console.log(`Is already added: ${isAlreadyAdded}`);
+
     if (isAlreadyAdded) {
+      console.log(`Blocking selection of ${subject.name} - already in curriculum`);
       return; // Don't allow selection if already added
     }
 
@@ -111,7 +119,11 @@ export default function SubjectSearchDialog({
   };
 
   const isSubjectAlreadyAdded = (subject: SubjectModel) => {
-    return existingSelectedSubjects.some((s) => s.id === subject.id);
+    const isAdded = existingSelectedSubjects.some((s) => s.id.toString() === subject.id.toString());
+    if (isAdded) {
+      console.log(`Subject ${subject.name} (ID: ${subject.id}) is already added - filtering out`);
+    }
+    return isAdded;
   };
 
   const handleRemoveSubject = (subject: SubjectModel) => {

@@ -3,7 +3,7 @@
 import React from "react";
 
 import { curriculumData } from "@/app/api/fakedata";
-import { FakeCurriclumnData } from "@/app/api/fakedata/FakeCurriclumnData";
+import { FakeCurriculumSubjects } from "@/app/api/fakedata/FakeCurriculumV2Data";
 import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Button } from "@/components/ui/button";
 import CurriculumItem from "@/components/ui/custom/education/curriculum/CurriculumItem";
@@ -13,6 +13,9 @@ import { useParams } from "next/navigation";
 
 export default function page() {
   const { id } = useParams();
+
+  // Convert the V2 curriculum subjects object to array format for GeneratedCurriBoard
+  const curriculumSubjectsArray = Object.values(FakeCurriculumSubjects) as CurriculumnSubjectModel[];
 
   return (
     <div className="space-y-6 p-6">
@@ -31,10 +34,10 @@ export default function page() {
       </div>
 
       {/* Curriculum Item */}
-      <CurriculumItem curriculum={curriculumData[0]} onEdit={() => {}} onDelete={() => {}} />
+      <CurriculumItem curriculum={curriculumData[0] as CurriculumModel} onEdit={() => {}} onDelete={() => {}} />
 
-      {/* Generated Curriculum Board */}
-      <GeneratedCurriBoard subjects={FakeCurriclumnData as CurriculumnSubjectModel[]} />
+      {/* Generated Curriculum Board - Using V2 Data */}
+      <GeneratedCurriBoard subjects={curriculumSubjectsArray} />
     </div>
   );
 }

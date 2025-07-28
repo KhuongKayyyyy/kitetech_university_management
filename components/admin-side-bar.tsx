@@ -51,6 +51,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             url: "/admin/users",
           },
           {
+            title: "Account",
+            url: "/admin/users/account",
+          },
+          {
             title: "Student",
             url: "/admin/users/student",
           },
@@ -114,23 +118,6 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         ],
       },
     ],
-    projects: [
-      {
-        name: "Design Engineering",
-        url: "#",
-        icon: Frame,
-      },
-      {
-        name: "Sales & Marketing",
-        url: "#",
-        icon: PieChart,
-      },
-      {
-        name: "Travel",
-        url: "#",
-        icon: Map,
-      },
-    ],
   };
 
   return (
@@ -154,7 +141,6 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>{userInfo && <NavUser user={userInfo} />}</SidebarFooter>
       <SidebarRail />

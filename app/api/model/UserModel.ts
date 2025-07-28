@@ -1,4 +1,6 @@
-export interface User {
+import { RoleModel } from "./RoleModel";
+
+export interface UserModel {
   id: number;
   username: string;
   password: string;
@@ -6,7 +8,7 @@ export interface User {
   email: string;
   isActive: boolean;
   isDeleted: boolean;
-  role: Role;
+  role: RoleModel;
   created_at: string;
   updated_at: string;
   avatar: string;

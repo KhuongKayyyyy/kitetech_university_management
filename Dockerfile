@@ -29,7 +29,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
 # Mở port
-EXPOSE 4444
+EXPOSE 3000
 
 # Chạy app
 CMD ["npm", "start"]

@@ -28,11 +28,8 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# Cấu hình biến môi trường
-ENV NODE_ENV=production
-
 # Mở port
-EXPOSE 3000
+EXPOSE 4444
 
 # Chạy app
 CMD ["npm", "start"]

@@ -1,0 +1,114 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker environment
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub (optional, if pushing image)
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: install package
+        run: npm install
+
+      - name: Build Docker image
+        run: docker build --no-cache -t ${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }} .
+
+      - name: Add tag docker image (optional)
+        run: docker tag ${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }} ${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }}_${{ github.sha }}
+
+      - name: Push Docker image to docker hub (optional)
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }}_${{ github.sha }}
+
+      - name: Deploy to Server (using SSH and Docker)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PASS: ${{ secrets.SSH_PASS }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          TAG_NAME: ${{ secrets.TAG_NAME }}
+        run: |
+          sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no -p 24700 $SSH_USERNAME@$SSH_HOST << 'EOF'
+            mkdir -p /container && cd /container
+            if docker ps -aq --filter name=${{ secrets.IMAGE_NAME }}-develop | grep -q .; then
+                docker stop ${{ secrets.IMAGE_NAME }}-develop || true
+                docker rm -f ${{ secrets.IMAGE_NAME }}-develop || true
+            fi
+            if docker images --filter=reference=${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop --quiet | grep -q .; then
+                docker images --filter=reference=${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop --quiet | xargs -r docker rmi -f
+            fi
+            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }}_${{ github.sha }}
+            docker run -d -p 8888:8888 --name ${{ secrets.IMAGE_NAME }}-develop ${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }}_${{ github.sha }}
+          EOF
+
+      - name: Send success email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '✅ University Management Frontend CI/CD: Triển khai thành công'
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: 'University Management Frontend <${{ secrets.SMTP_USERNAME }}>'
+          html_body: |
+            <html>
+              <body style="font-family: Arial, sans-serif; background-color: #f7f9fa; padding: 20px;">
+                <div style="max-width: 600px; margin: auto; background-color: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05); padding: 20px;">
+                  <h2 style="color: #2c974b;">✅ University Management Frontend CI/CD triển khai thành công!</h2>
+
+                  <p>Xin chào team 👋,</p>
+                  <p>Dưới đây là thông tin về lần triển khai mới nhất từ <strong>University</strong>:</p>
+
+                  <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tr>
+                      <td style="padding: 8px; font-weight: bold;">📦 Repository:</td>
+                      <td style="padding: 8px;">${{ github.repository }}</td>
+                    </tr>
+                    <tr style="background-color: #f0f0f0;">
+                      <td style="padding: 8px; font-weight: bold;">🔀 Branch:</td>
+                      <td style="padding: 8px;">${{ github.ref }}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; font-weight: bold;">🧱 Image:</td>
+                      <td style="padding: 8px;">${{ secrets.DOCKER_USERNAME }}/${{ secrets.IMAGE_NAME }}-develop:${{ secrets.TAG_NAME }}</td>
+                    </tr>
+                    <tr style="background-color: #f0f0f0;">
+                      <td style="padding: 8px; font-weight: bold;">🚀 Deploy to:</td>
+                      <td style="padding: 8px;">${{ secrets.SSH_HOST }}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; font-weight: bold;">🕒 Time:</td>
+                      <td style="padding: 8px;">${{ github.event.head_commit.timestamp }}</td>
+                    </tr>
+                    <tr style="background-color: #f0f0f0;">
+                      <td style="padding: 8px; font-weight: bold;">👤 By:</td>
+                      <td style="padding: 8px;">${{ github.actor }}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; font-weight: bold;">📝 Commit:</td>
+                      <td style="padding: 8px;">${{ github.event.head_commit.message }}</td>
+                    </tr>
+                  </table>
+
+                  <p style="margin-top: 20px;">🎉 Cảm ơn bạn đã sử dụng CI/CD pipeline.</p>
+                  <p style="font-size: 12px; color: gray;">Email được gửi tự động từ GitHub Actions. Vui lòng không trả lời.</p>
+                </div>
+              </body>
+            </html>

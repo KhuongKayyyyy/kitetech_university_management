@@ -129,7 +129,7 @@ const mockUsers: UserModel[] = [
 // Custom global filter function for multi-column searching
 const globalFilterFn: FilterFn<UserModel> = (row, columnId, filterValue) => {
   const searchableRowContent =
-    `${row.original.username} ${row.original.full_name} ${row.original.email} ${row.original.role.name}`.toLowerCase();
+    `${row.original.username || ""} ${row.original.full_name || ""} ${row.original.email || ""} ${row.original.role?.name || ""}`.toLowerCase();
   const searchTerm = (filterValue ?? "").toLowerCase();
   return searchableRowContent.includes(searchTerm);
 };
@@ -143,105 +143,26 @@ const statusFilterFn: FilterFn<UserModel> = (row, columnId, filterValue: string[
 const roleFilterFn: FilterFn<UserModel> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true;
   const role = row.original.role;
-  return filterValue.includes(role.name || "");
+  return filterValue.includes(role?.name || "");
 };
-
-const columns: ColumnDef<UserModel>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-0.5"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-0.5"
-      />
-    ),
-    size: 40,
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    header: "User",
-    accessorKey: "username",
-    cell: ({ row }) => (
-      <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.full_name}</div>
-        <div className="text-sm text-muted-foreground">@{row.original.username}</div>
-        <div className="text-sm text-muted-foreground">{row.original.email}</div>
-      </div>
-    ),
-    size: 250,
-    enableHiding: false,
-  },
-  {
-    header: "Role",
-    accessorKey: "role",
-    cell: ({ row }) => {
-      const role = row.original.role;
-      return (
-        <div className="space-y-1">
-          <div className="font-medium text-foreground">{role.name}</div>
-          <div className="text-sm text-muted-foreground">{role.description}</div>
-        </div>
-      );
-    },
-    size: 200,
-    filterFn: roleFilterFn,
-  },
-  {
-    header: "Status",
-    accessorKey: "isActive",
-    cell: ({ row }) => {
-      const isActive = row.getValue("isActive") as boolean;
-      return (
-        <Badge
-          variant={isActive ? "default" : "secondary"}
-          className={cn(
-            isActive
-              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-100 dark:bg-gray-800/50 dark:text-gray-400",
-          )}
-        >
-          {isActive ? "Active" : "Inactive"}
-        </Badge>
-      );
-    },
-    size: 100,
-    filterFn: statusFilterFn,
-  },
-  {
-    header: "Created",
-    accessorKey: "created_at",
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"));
-      return <div className="text-sm text-muted-foreground">{date.toLocaleDateString()}</div>;
-    },
-    size: 120,
-  },
-  {
-    id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }) => <RowActions row={row} />,
-    size: 60,
-    enableHiding: false,
-  },
-];
 
 interface AccountTableProps {
   users?: UserModel[];
   searchTerm?: string;
+  onDeleteUser?: (userId: string) => Promise<void>;
+  onEditUser?: (user: UserModel) => void;
+  isDeleting?: boolean;
+  isUpdating?: boolean;
 }
 
-export default function AccountTable({ users, searchTerm }: AccountTableProps) {
+export default function AccountTable({
+  users,
+  searchTerm,
+  onDeleteUser,
+  onEditUser,
+  isDeleting,
+  isUpdating,
+}: AccountTableProps) {
   const id = useId();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -270,12 +191,123 @@ export default function AccountTable({ users, searchTerm }: AccountTableProps) {
     }
   }, [users]);
 
-  const handleDeleteRows = () => {
+  const handleDeleteRows = async () => {
     const selectedRows = table.getSelectedRowModel().rows;
-    const updatedData = data.filter((item) => !selectedRows.some((row) => String(row.original.id) === String(item.id)));
-    setData(updatedData);
-    table.resetRowSelection();
+    const selectedUserIds = selectedRows.map((row) => row.original.id?.toString()).filter(Boolean);
+
+    if (!onDeleteUser || selectedUserIds.length === 0) return;
+
+    try {
+      // Delete each selected user
+      for (const userId of selectedUserIds) {
+        if (userId) {
+          await onDeleteUser(userId);
+        }
+      }
+
+      // Update local data by removing deleted users
+      const updatedData = data.filter((item) => !selectedUserIds.includes(item.id?.toString()));
+      setData(updatedData);
+      table.resetRowSelection();
+    } catch (error) {
+      console.error("Error deleting users:", error);
+    }
   };
+
+  // Create a wrapper for RowActions that has access to onDeleteUser
+  const RowActionsWrapper = ({ row }: { row: Row<UserModel> }) => (
+    <RowActions row={row} onDeleteUser={onDeleteUser} onEditUser={onEditUser} isUpdating={isUpdating} />
+  );
+
+  const columns: ColumnDef<UserModel>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          className="translate-y-0.5"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-0.5"
+        />
+      ),
+      size: 40,
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      header: "User",
+      accessorKey: "username",
+      cell: ({ row }) => (
+        <div className="space-y-1">
+          <div className="font-medium text-foreground">{row.original.full_name || "N/A"}</div>
+          <div className="text-sm text-muted-foreground">@{row.original.username || "N/A"}</div>
+          <div className="text-sm text-muted-foreground">{row.original.email || "N/A"}</div>
+        </div>
+      ),
+      size: 250,
+      enableHiding: false,
+    },
+    {
+      header: "Role",
+      accessorKey: "role",
+      cell: ({ row }) => {
+        const role = row.original.role;
+        return (
+          <div className="space-y-1">
+            <div className="font-medium text-foreground">{role?.name || "N/A"}</div>
+            <div className="text-sm text-muted-foreground">{role?.description || "No description"}</div>
+          </div>
+        );
+      },
+      size: 200,
+      filterFn: roleFilterFn,
+    },
+    {
+      header: "Status",
+      accessorKey: "isActive",
+      cell: ({ row }) => {
+        const isActive = row.getValue("isActive") as boolean;
+        return (
+          <Badge
+            variant={isActive ? "default" : "secondary"}
+            className={cn(
+              isActive
+                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-100 dark:bg-gray-800/50 dark:text-gray-400",
+            )}
+          >
+            {isActive ? "Active" : "Inactive"}
+          </Badge>
+        );
+      },
+      size: 100,
+      filterFn: statusFilterFn,
+    },
+    {
+      header: "Created",
+      accessorKey: "created_at",
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("created_at"));
+        return <div className="text-sm text-muted-foreground">{date.toLocaleDateString()}</div>;
+      },
+      size: 120,
+    },
+    {
+      id: "actions",
+      header: () => <span className="sr-only">Actions</span>,
+      cell: ({ row }) => <RowActionsWrapper row={row} />,
+      size: 60,
+      enableHiding: false,
+    },
+  ];
 
   const table = useReactTable({
     data,
@@ -305,7 +337,9 @@ export default function AccountTable({ users, searchTerm }: AccountTableProps) {
   }, []);
 
   const uniqueRoleValues = useMemo(() => {
-    const roles = Array.from(new Set(data.map((user) => user.role.name).filter(Boolean)));
+    const roles = Array.from(
+      new Set(data.map((user) => user?.role?.name).filter((roleName) => roleName != null && roleName !== "")),
+    );
     return roles;
   }, [data]);
 
@@ -323,8 +357,10 @@ export default function AccountTable({ users, searchTerm }: AccountTableProps) {
   const roleCounts = useMemo(() => {
     const counts = new Map<string, number>();
     data.forEach((user) => {
-      const roleName = user.role.name || "";
-      counts.set(roleName, (counts.get(roleName) || 0) + 1);
+      const roleName = user?.role?.name || "";
+      if (roleName) {
+        counts.set(roleName, (counts.get(roleName) || 0) + 1);
+      }
     });
     return counts;
   }, [data]);
@@ -525,7 +561,7 @@ export default function AccountTable({ users, searchTerm }: AccountTableProps) {
                 </span>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm" className="gap-2">
+                    <Button variant="destructive" size="sm" className="gap-2" disabled={isDeleting}>
                       <Trash className="h-4 w-4" />
                       Delete
                     </Button>
@@ -542,12 +578,13 @@ export default function AccountTable({ users, searchTerm }: AccountTableProps) {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteRows}
+                        disabled={isDeleting}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        Delete
+                        {isDeleting ? "Deleting..." : "Delete"}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -714,19 +751,48 @@ export default function AccountTable({ users, searchTerm }: AccountTableProps) {
   );
 }
 
-function RowActions({ row }: { row: Row<UserModel> }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+function RowActions({
+  row,
+  onDeleteUser,
+  onEditUser,
+  isUpdating,
+}: {
+  row: Row<UserModel>;
+  onDeleteUser?: (userId: string) => Promise<void>;
+  onEditUser?: (user: UserModel) => void;
+  isUpdating?: boolean;
+}) {
   const user = row.original;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!user.id || !onDeleteUser) return;
+
+    try {
+      setIsDeleting(true);
+      await onDeleteUser(user.id.toString());
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEdit = () => {
+    if (onEditUser) {
+      onEditUser(user);
+    }
+  };
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={isUpdating}>
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">Open menu</span>
           </Button>
@@ -737,18 +803,44 @@ function RowActions({ row }: { row: Row<UserModel> }) {
               <Eye className="h-4 w-4" />
               View Details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setEditDialogOpen(true)} className="gap-2">
+            <DropdownMenuItem onClick={handleEdit} className="gap-2" disabled={isUpdating}>
               <Edit className="h-4 w-4" />
-              Edit User
+              {isUpdating ? "Updating..." : "Edit User"}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
+          <DropdownMenuItem
+            onClick={() => setShowDeleteDialog(true)}
+            className="gap-2 text-destructive focus:text-destructive"
+            disabled={isUpdating}
+          >
             <Trash className="h-4 w-4" />
             Delete User
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{user.full_name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

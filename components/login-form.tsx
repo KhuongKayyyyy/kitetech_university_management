@@ -13,8 +13,8 @@ import { toast, Toaster } from "sonner";
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [username, setUsername] = useState("nguyendatkhuong");
-  const [password, setPassword] = useState("datkhuong1123");
+  const [username, setUsername] = useState("52100973");
+  const [password, setPassword] = useState("52100973");
   const handleLogin = async () => {
     try {
       const { userInfo } = await authService.login({ username, password });

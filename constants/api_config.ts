@@ -4,6 +4,13 @@ export const API_CONFIG = {
   REGISTER: "/api/auth/register",
   GET_USER_INFO: "/api/auth/current-user",
 
+  // User
+  GET_USERS: "/api/user",
+  GET_USER: (id: string) => `/api/user/${id}`,
+  ADD_USER: "/api/user",
+  UPDATE_USER: (id: string) => `/api/user/${id}`,
+  DELETE_USER: (id: string) => `/api/user/${id}`,
+
   // Academic Year
   GET_ACADEMIC_YEARS: "/api/academic-years",
   GET_ACADEMIC_YEAR: (id: string) => `/api/academic-years/${id}`,

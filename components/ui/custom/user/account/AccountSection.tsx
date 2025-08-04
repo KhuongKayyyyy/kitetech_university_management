@@ -2,92 +2,39 @@
 
 import React, { useMemo, useRef, useState } from "react";
 
-import { UserModel } from "@/app/api/model/UserModel";
+import { UserCreateModel, UserModel } from "@/app/api/model/UserModel";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useUsers } from "@/hooks/useUser";
 import { ChevronLeft, ChevronRight, CircleX, Grid, List, Plus, Search, Users } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 import AccountItem from "./AccountItem";
 import AccountTable from "./AccountTable";
-
-// Mock data for users (same as in AccountTable)
-const mockUsers: UserModel[] = [
-  {
-    id: 1,
-    username: "admin",
-    password: "",
-    full_name: "Administrator",
-    email: "admin@example.com",
-    isActive: true,
-    isDeleted: false,
-    role: {
-      id: 1,
-      name: "Admin",
-      description: "Full system access",
-      isActive: true,
-    },
-    created_at: "2024-01-01",
-    updated_at: "2024-01-01",
-    avatar: "",
-  },
-  {
-    id: 2,
-    username: "teacher1",
-    password: "",
-    full_name: "John Teacher",
-    email: "john.teacher@example.com",
-    isActive: true,
-    isDeleted: false,
-    role: {
-      id: 2,
-      name: "Teacher",
-      description: "Teaching and grading access",
-      isActive: true,
-    },
-    created_at: "2024-01-02",
-    updated_at: "2024-01-02",
-    avatar: "",
-  },
-  {
-    id: 3,
-    username: "student1",
-    password: "",
-    full_name: "Jane Student",
-    email: "jane.student@example.com",
-    isActive: true,
-    isDeleted: false,
-    role: {
-      id: 3,
-      name: "Student",
-      description: "Limited access for students",
-      isActive: true,
-    },
-    created_at: "2024-01-03",
-    updated_at: "2024-01-03",
-    avatar: "",
-  },
-];
+import CreateNewAccountDialog from "./CreateNewAccountDialog";
+import UpdateAccountDialog from "./UpdateAccountDialog";
 
 export default function AccountSection() {
+  const { users, loading, error, addUser, isAdding, deleteUser, isDeleting, updateUser, isUpdating } = useUsers();
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemsPerPage = 9; // 3x3 grid for cards
-  const users = mockUsers;
 
   // Filter users based on search term
   const filteredUsers = useMemo(() => {
     if (!searchTerm.trim()) {
-      return users;
+      return users || [];
     }
 
     const searchLower = searchTerm.toLowerCase();
-    return users.filter(
+    return (users || []).filter(
       (user) =>
-        user.full_name.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower) ||
-        user.username.toLowerCase().includes(searchLower) ||
-        (user.role.name || "").toLowerCase().includes(searchLower),
+        user?.full_name?.toLowerCase().includes(searchLower) ||
+        user?.email?.toLowerCase().includes(searchLower) ||
+        user?.username?.toLowerCase().includes(searchLower) ||
+        user?.role?.name?.toLowerCase().includes(searchLower),
     );
   }, [searchTerm, users]);
 
@@ -101,6 +48,131 @@ export default function AccountSection() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  const [isCreateAccountDialogOpen, setIsCreateAccountDialogOpen] = useState(false);
+  const [isUpdateAccountDialogOpen, setIsUpdateAccountDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserModel | null>(null);
+
+  const handleCreateAccount = async (userData: UserCreateModel) => {
+    try {
+      await addUser(userData);
+    } catch (error) {
+      // Error is already handled by the hook
+      console.error("Error creating account:", error);
+    }
+  };
+
+  const handleUpdateAccount = async (userData: UserModel) => {
+    try {
+      await updateUser(userData);
+    } catch (error) {
+      // Error is already handled by the hook
+      console.error("Error updating account:", error);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await deleteUser(userId);
+    } catch (error) {
+      // Error is already handled by the hook
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  const handleEditUser = (user: UserModel) => {
+    setSelectedUser(user);
+    setIsUpdateAccountDialogOpen(true);
+  };
+
+  // Loading skeleton components
+  const HeaderSkeleton = () => (
+    <div className="mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-5 w-80" />
+        </div>
+        <Skeleton className="h-10 w-28" />
+      </div>
+    </div>
+  );
+
+  const ControlsSkeleton = () => (
+    <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+        <Skeleton className="h-10 w-full max-w-md" />
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const TableSkeleton = () => (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-12 w-full" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+
+  const CardsSkeleton = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 9 }).map((_, i) => (
+        <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="flex-1">
+              <Skeleton className="h-5 w-32 mb-2" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+          <div className="flex justify-between items-center mt-4">
+            <Skeleton className="h-6 w-16" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <HeaderSkeleton />
+        <ControlsSkeleton />
+        {viewMode === "table" ? <TableSkeleton /> : <CardsSkeleton />}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="text-center py-12">
+          <Users className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading users</h3>
+          <p className="text-gray-600 mb-4">{error?.message}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -116,7 +188,11 @@ export default function AccountSection() {
           </div>
 
           {/* Add User Button */}
-          <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+          <Button
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+            onClick={() => setIsCreateAccountDialogOpen(true)}
+            disabled={isAdding}
+          >
             <Plus className="w-4 h-4" />
             Add User
           </Button>
@@ -151,7 +227,7 @@ export default function AccountSection() {
           {/* View Toggle and Stats */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-              {filteredUsers.length} of {users.length} users
+              {filteredUsers.length} of {users?.length || 0} users
             </span>
 
             {/* View Mode Toggle */}
@@ -186,7 +262,12 @@ export default function AccountSection() {
             {searchTerm ? "Try adjusting your search criteria." : "Get started by adding your first user."}
           </p>
           {!searchTerm && (
-            <Button className="mt-4" variant="outline">
+            <Button
+              className="mt-4"
+              variant="outline"
+              onClick={() => setIsCreateAccountDialogOpen(true)}
+              disabled={isAdding}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add First User
             </Button>
@@ -194,13 +275,27 @@ export default function AccountSection() {
         </div>
       ) : viewMode === "table" ? (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <AccountTable users={users} searchTerm={searchTerm} />
+          <AccountTable
+            users={filteredUsers}
+            searchTerm={searchTerm}
+            onDeleteUser={handleDeleteUser}
+            onEditUser={handleEditUser}
+            isDeleting={isDeleting}
+            isUpdating={isUpdating}
+          />
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedUsers.map((user) => (
-              <AccountItem key={user.id} user={user} />
+              <AccountItem
+                key={user.id}
+                user={user}
+                onDelete={handleDeleteUser}
+                onEdit={handleEditUser}
+                isDeleting={isDeleting}
+                isUpdating={isUpdating}
+              />
             ))}
           </div>
 
@@ -252,6 +347,21 @@ export default function AccountSection() {
           )}
         </>
       )}
+
+      <CreateNewAccountDialog
+        isOpen={isCreateAccountDialogOpen}
+        setIsOpen={setIsCreateAccountDialogOpen}
+        onCreateAccount={handleCreateAccount}
+        isAdding={isAdding}
+      />
+      <UpdateAccountDialog
+        isOpen={isUpdateAccountDialogOpen}
+        setIsOpen={setIsUpdateAccountDialogOpen}
+        user={selectedUser}
+        onUpdateAccount={handleUpdateAccount}
+        isUpdating={isUpdating}
+      />
+      <Toaster />
     </div>
   );
 }

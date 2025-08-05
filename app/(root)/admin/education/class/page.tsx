@@ -5,10 +5,8 @@ import React, { useMemo, useState } from "react";
 import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
 import { Button } from "@/components/ui/button";
 import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialog";
-import ClassBriefInfo from "@/components/ui/custom/education/class/ClassBriefInfo";
 import ClassItem from "@/components/ui/custom/education/class/ClassItem";
 import { ClassTable } from "@/components/ui/custom/education/class/ClassTable";
-import { Input } from "@/components/ui/input";
 import { BookOpen, ChevronLeft, ChevronRight, Grid, List, Plus, Search } from "lucide-react";
 
 const page = () => {

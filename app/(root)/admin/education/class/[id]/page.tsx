@@ -8,11 +8,13 @@ import CurriculumSection from "@/components/ui/custom/education/class/sections/C
 import PerformanceSection from "@/components/ui/custom/education/class/sections/PerformanceSection";
 import StudentSection from "@/components/ui/custom/education/class/sections/StudentSection";
 import { Calendar, GraduationCap, Plus } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 export default function page() {
   const [activeSection, setActiveSection] = useState("student");
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const name = searchParams.get("name");
 
   // Refs for sections
   const studentSectionRef = useRef<HTMLDivElement>(null);
@@ -56,7 +58,7 @@ export default function page() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
               <GraduationCap className="w-8 h-8 text-primary" />
-              Class {id} Management
+              Class {name || id} Management
             </h1>
             <p className="text-gray-600 mt-1">Comprehensive class management dashboard</p>
           </div>

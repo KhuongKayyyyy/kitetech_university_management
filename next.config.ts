@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NEST_PUBLIC_API_BASE_URL ?? 'http://103.56.162.192:8888' + '/:path*',
+        destination: process.env.NEST_PUBLIC_API_BASE_URL + '/:path*',
       },
     ]
   },

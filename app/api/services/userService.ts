@@ -9,8 +9,22 @@ export const userService = {
       console.log(response.data);
       return response.data;
     } catch (error: any) {
-      handleServiceError(error, "Failed to fetch users");
-      throw error;
+      console.error("getUsers error:", error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 500) {
+        toast.error("Server is currently unavailable. Please try again later.");
+        throw new Error("Server error - please try again later");
+      } else if (error.response?.status === 401) {
+        toast.error("Authentication required. Please log in again.");
+        throw new Error("Authentication required");
+      } else if (error.code === "ECONNREFUSED" || error.message?.includes("Network Error")) {
+        toast.error("Cannot connect to server. Please check your internet connection.");
+        throw new Error("Network error - cannot connect to server");
+      } else {
+        handleServiceError(error, "Failed to fetch users");
+        throw error;
+      }
     }
   },
 
@@ -19,6 +33,7 @@ export const userService = {
       const response = await userRepository.getUser(id);
       return response.data;
     } catch (error: any) {
+      console.error("getUser error:", error);
       handleServiceError(error, "Failed to fetch user");
       throw error;
     }
@@ -29,6 +44,7 @@ export const userService = {
       const response = await userRepository.addUser(user);
       return response.data;
     } catch (error: any) {
+      console.error("addUser error:", error);
       handleServiceError(error, "Failed to add user");
       throw error;
     }
@@ -39,6 +55,7 @@ export const userService = {
       const response = await userRepository.updateUser(user);
       return response.data;
   } catch (error: any) {
+      console.error("updateUser error:", error);
       handleServiceError(error, "Failed to update user");
       throw error;
     }
@@ -49,6 +66,7 @@ export const userService = {
       const response = await userRepository.deleteUser(id);
       return response.data;
     } catch (error: any) {
+      console.error("deleteUser error:", error);
       handleServiceError(error, "Failed to delete user");
       throw error;
     }
@@ -56,6 +74,8 @@ export const userService = {
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {
-  toast.error(error.response?.data?.message || fallbackMessage);
+  const errorMessage = error.response?.data?.message || fallbackMessage;
+  console.error("Service error:", errorMessage);
+  toast.error(errorMessage);
   throw error;
 }

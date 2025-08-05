@@ -6,7 +6,7 @@ import { UserCreateModel, UserModel } from "@/app/api/model/UserModel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUsers } from "@/hooks/useUser";
-import { ChevronLeft, ChevronRight, CircleX, Grid, List, Plus, Search, Users } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, CircleX, Grid, List, Plus, Search, Users } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 import AccountItem from "./AccountItem";
@@ -163,12 +163,25 @@ export default function AccountSection() {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <div className="text-center py-12">
-          <Users className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading users</h3>
-          <p className="text-gray-600 mb-4">{error?.message}</p>
-          <Button onClick={() => window.location.reload()} variant="outline">
-            Try Again
-          </Button>
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">API Connection Error</h3>
+          <p className="text-gray-600 mb-4">
+            {error.message || "Unable to connect to the server. Please check your connection and try again."}
+          </p>
+          <div className="space-y-2 text-sm text-gray-500 mb-6">
+            <p>• Check if the API server is running</p>
+            <p>• Verify your internet connection</p>
+            <p>• Try refreshing the page</p>
+            <p>• Contact support if the issue persists</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="default">
+              Try Again
+            </Button>
+          </div>
         </div>
       </div>
     );

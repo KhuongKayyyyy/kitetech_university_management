@@ -2,6 +2,7 @@ export interface Teacher {
   id: number;
   name: string;
   username?: string;
+  email?: string;
 }
 
 export interface TeacherDetailed {

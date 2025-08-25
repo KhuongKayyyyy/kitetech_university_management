@@ -40,7 +40,7 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewDetails }
   const router = useRouter();
   return (
     <Card
-      onClick={() => router.push(`${APP_ROUTES.CLASS}/${classData.id}?name=Class${classData.classCode}`)}
+      onClick={() => router.push(`${APP_ROUTES.CLASS}/${classData.id}?name=Class${classData.class_code}`)}
       className="group relative overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -58,7 +58,7 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewDetails }
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <h3 className="text-xl font-bold text-foreground leading-tight group-hover:text-blue-600 transition-colors duration-300">
-                  {classData.classCode}
+                  {classData.class_code}
                 </h3>
                 <Badge
                   variant="secondary"
@@ -110,13 +110,15 @@ export default function ClassItem({ classData, onEdit, onDelete, onViewDetails }
             <div className="flex flex-col items-center p-3 rounded-xl bg-orange-50 border border-orange-100 dark:bg-orange-900/20 dark:border-orange-800/30 group-hover:scale-105 transition-transform duration-200">
               <BookOpen className="w-4 h-4 text-orange-600 dark:text-orange-400 mb-1" />
               <span className="text-xs font-medium text-orange-700 dark:text-orange-300">Major</span>
-              <span className="text-sm font-bold text-orange-800 dark:text-orange-200">{classData.majorId}</span>
+              <span className="text-center text-sm font-semibold text-orange-800 dark:text-orange-200">
+                {classData.major?.name}
+              </span>
             </div>
 
             <div className="flex flex-col items-center p-3 rounded-xl bg-green-50 border border-green-100 dark:bg-green-900/20 dark:border-green-800/30 group-hover:scale-105 transition-transform duration-200">
               <Calendar className="w-4 h-4 text-green-600 dark:text-green-400 mb-1" />
               <span className="text-xs font-medium text-green-700 dark:text-green-300">Year</span>
-              <span className="text-sm font-bold text-green-800 dark:text-green-200">{classData.academicYearId}</span>
+              <span className="text-sm font-bold text-green-800 dark:text-green-200">{classData.academic_year}</span>
             </div>
 
             <div className="flex flex-col items-center p-3 rounded-xl bg-purple-50 border border-purple-100 dark:bg-purple-900/20 dark:border-purple-800/30 group-hover:scale-105 transition-transform duration-200">

@@ -34,7 +34,7 @@ export default function AccountSection() {
         user?.full_name?.toLowerCase().includes(searchLower) ||
         user?.email?.toLowerCase().includes(searchLower) ||
         user?.username?.toLowerCase().includes(searchLower) ||
-        user?.role?.name?.toLowerCase().includes(searchLower),
+        user?.role?.toLowerCase().includes(searchLower),
     );
   }, [searchTerm, users]);
 
@@ -201,14 +201,14 @@ export default function AccountSection() {
           </div>
 
           {/* Add User Button */}
-          <Button
+          {/* <Button
             className="flex items-center gap-2 bg-primary hover:bg-primary/90"
             onClick={() => setIsCreateAccountDialogOpen(true)}
             disabled={isAdding}
           >
             <Plus className="w-4 h-4" />
             Add User
-          </Button>
+          </Button> */}
         </div>
       </div>
 

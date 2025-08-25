@@ -1,5 +1,3 @@
-import { RoleModel } from "./RoleModel";
-
 export interface UserModel {
   id?: number;
   username?: string;
@@ -8,7 +6,7 @@ export interface UserModel {
   email?: string;
   isActive?: boolean;
   isDeleted?: boolean;
-  role?: RoleModel;
+  role?: string;
   created_at?: string;
   updated_at?: string;
   avatar?: string;

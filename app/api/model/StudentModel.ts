@@ -1,13 +1,13 @@
+import { ClassModel } from "./ClassModel";
+
 export interface Student {
-  id: number;
-  name: string;
-  username?: string;
-  classId: number;
-  majorId: number;
-  departmentId: number;
-  location: string;
-  birthday: string;
-  isActivated: boolean;
-  studentEmail: string;
-  studentId: string;
-} 
+  id?: number;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gender?: number;
+  birth_date?: string;
+  classes?: ClassModel;
+  class_id?: number;
+}

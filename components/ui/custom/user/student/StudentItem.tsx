@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Student } from "@/app/api/model/model";
+import { Student } from "@/app/api/model/StudentModel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,25 +12,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Calendar, Edit, GraduationCap, Mail, MapPin, MoreHorizontal, Trash2, User } from "lucide-react";
+import { Calendar, Edit, GraduationCap, Mail, MapPin, MoreHorizontal, Phone, Trash2, User } from "lucide-react";
 
 interface StudentItemProps {
   student: Student;
+  onStudentUpdated?: () => void;
   onEdit?: (student: Student) => void;
   onDelete?: (student: Student) => void;
 }
 
-export default function StudentItem({ student, onEdit, onDelete }: StudentItemProps) {
-  const getStatusBadge = (isActivated: boolean) => {
-    return isActivated ? (
-      <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-        Active
-      </Badge>
-    ) : (
-      <Badge variant="secondary" className="bg-gray-500 hover:bg-gray-600 text-white">
-        Inactive
-      </Badge>
-    );
+export default function StudentItem({ student, onStudentUpdated, onEdit, onDelete }: StudentItemProps) {
+  const getGenderDisplay = (gender: number) => {
+    switch (gender) {
+      case 0:
+        return "Female";
+      case 1:
+        return "Male";
+      default:
+        return "Other";
+    }
   };
 
   return (
@@ -40,14 +40,15 @@ export default function StudentItem({ student, onEdit, onDelete }: StudentItemPr
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h3 className="font-semibold text-lg leading-tight group-hover:text-primary group-hover:scale-105 transition-all duration-200">
-                {student.name}
+                {student.full_name}
               </h3>
-              {getStatusBadge(student.isActivated)}
+              <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                Active
+              </Badge>
             </div>
-            {student.username && <p className="text-sm text-gray-600 mb-1">@{student.username}</p>}
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <User className="w-3 h-3" />
-              <span>ID: {student.studentId}</span>
+              <span>ID: {student.id}</span>
             </div>
           </div>
           <DropdownMenu>
@@ -84,15 +85,19 @@ export default function StudentItem({ student, onEdit, onDelete }: StudentItemPr
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Mail className="w-4 h-4 text-primary" />
-            <span className="truncate">{student.studentEmail}</span>
+            <span className="truncate">{student.email}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Phone className="w-4 h-4 text-primary" />
+            <span>{student.phone}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <MapPin className="w-4 h-4 text-primary" />
-            <span>{student.location}</span>
+            <span>{student.address}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar className="w-4 h-4 text-primary" />
-            <span>{new Date(student.birthday).toLocaleDateString()}</span>
+            <span>{new Date(student.birth_date ?? "").toLocaleDateString()}</span>
           </div>
         </div>
 
@@ -100,16 +105,16 @@ export default function StudentItem({ student, onEdit, onDelete }: StudentItemPr
         <div className="pt-2 border-t border-gray-100">
           <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
             <div>
-              <span className="font-medium">Class ID:</span>
-              <p className="text-gray-800">{student.classId}</p>
+              <span className="font-medium">Gender:</span>
+              <p className="text-gray-800">{getGenderDisplay(student.gender ?? 0)}</p>
             </div>
             <div>
-              <span className="font-medium">Major ID:</span>
-              <p className="text-gray-800">{student.majorId}</p>
+              <span className="font-medium">Class:</span>
+              <p className="text-gray-800">{student.classes?.class_code}</p>
             </div>
             <div className="col-span-2">
-              <span className="font-medium">Department ID:</span>
-              <p className="text-gray-800">{student.departmentId}</p>
+              <span className="font-medium">Department:</span>
+              <p className="text-gray-800">{student.classes?.major?.faculty?.name || "Unknown"}</p>
             </div>
           </div>
         </div>

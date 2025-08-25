@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { ClassModel } from "@/app/api/model/ClassModel";
+import { classService } from "@/app/api/services/classService";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,9 +29,17 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Edit, Loader2, MoreHorizontal, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
 
-export const classColumns: ColumnDef<ClassModel>[] = [
+interface ClassTableProps {
+  classes: ClassModel[];
+  onClassUpdate?: (updatedClass: ClassModel) => void;
+  onClassDelete?: (deletedClassId: number) => void;
+  onAddClass?: () => void;
+}
+
+const createClassColumns = (onClassDelete?: (deletedClassId: number) => void): ColumnDef<ClassModel>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -61,13 +70,13 @@ export const classColumns: ColumnDef<ClassModel>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "classCode",
+    accessorKey: "class_code",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Class Code <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("classCode")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.getValue("class_code")}</div>,
   },
   {
     accessorKey: "description",
@@ -79,54 +88,88 @@ export const classColumns: ColumnDef<ClassModel>[] = [
     cell: ({ row }) => <div className="text-muted-foreground">{row.getValue("description")}</div>,
   },
   {
-    accessorKey: "majorId",
+    accessorKey: "major.name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Major ID <ArrowUpDown className="ml-2 h-4 w-4" />
+        Major <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("majorId")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.original.major?.name}</div>,
   },
   {
-    accessorKey: "academicYearId",
+    accessorKey: "academic_year",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Academic Year <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("academicYearId")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.getValue("academic_year")}</div>,
   },
   {
-    accessorKey: "curriculumId",
+    accessorKey: "major.faculty.name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Curriculum ID <ArrowUpDown className="ml-2 h-4 w-4" />
+        Faculty <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("curriculumId")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.original.major?.faculty?.name}</div>,
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
       const classData = row.original;
+      const [isDeleting, setIsDeleting] = React.useState(false);
+
+      const handleDeleteClass = async () => {
+        if (!classData.id) return;
+
+        try {
+          setIsDeleting(true);
+          await classService.deleteClass(classData.id);
+          onClassDelete?.(classData.id);
+          toast.success("Class deleted successfully!");
+        } catch (error) {
+          console.error("Error deleting class:", error);
+        } finally {
+          setIsDeleting(false);
+        }
+      };
+
+      const handleEditClass = () => {
+        // This would typically open an edit dialog
+        // For now, we'll just log the action
+        console.log("Edit class:", classData);
+        toast.info("Edit functionality to be implemented");
+      };
 
       return (
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" className="h-8 w-8 p-0" disabled={isDeleting}>
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(classData.classCode)}>
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(classData.class_code || "")}>
                 Copy Class Code
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit Class</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEditClass}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Class
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDeleteClass}
+                className="text-destructive focus:text-destructive"
+                disabled={isDeleting}
+              >
+                <TrashIcon className="w-4 h-4 mr-2" />
+                Delete Class
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </>
@@ -135,11 +178,14 @@ export const classColumns: ColumnDef<ClassModel>[] = [
   },
 ];
 
-export function ClassTable({ classes }: { classes: ClassModel[] }) {
+export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }: ClassTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const classColumns = React.useMemo(() => createClassColumns(onClassDelete), [onClassDelete]);
 
   const table = useReactTable({
     data: classes,
@@ -159,9 +205,34 @@ export function ClassTable({ classes }: { classes: ClassModel[] }) {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    meta: {
+      onClassUpdate,
+      onClassDelete,
+      onAddClass,
+    },
   });
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
+
+  const handleDeleteSelected = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedIds = selectedRows.map((row) => row.original.id).filter((id) => id !== undefined) as number[];
+
+    if (selectedIds.length === 0) return;
+
+    try {
+      setIsDeleting(true);
+      await Promise.all(selectedIds.map((id) => classService.deleteClass(id)));
+
+      selectedIds.forEach((id) => onClassDelete?.(id));
+      setRowSelection({});
+      toast.success(`${selectedIds.length} class(es) deleted successfully!`);
+    } catch (error) {
+      console.error("Error deleting selected classes:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col">
@@ -189,12 +260,19 @@ export function ClassTable({ classes }: { classes: ClassModel[] }) {
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" className="shadow-md">
+          <Button variant="outline" className="shadow-md" onClick={onAddClass}>
             + Add Class
           </Button>
           {isAnyRowSelected && (
-            <Button variant="destructive" size="sm" className="text-white shadow-md">
-              <TrashIcon className="w-4 h-4 mr-2" /> Delete Selected
+            <Button
+              variant="destructive"
+              size="sm"
+              className="text-white shadow-md"
+              onClick={handleDeleteSelected}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <TrashIcon className="w-4 h-4 mr-2" />}
+              Delete Selected
             </Button>
           )}
         </div>

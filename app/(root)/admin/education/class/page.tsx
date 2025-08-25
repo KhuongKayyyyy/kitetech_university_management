@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
+import { ClassModel } from "@/app/api/model/ClassModel";
+import { classService } from "@/app/api/services/classService";
 import { Button } from "@/components/ui/button";
 import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialog";
 import ClassItem from "@/components/ui/custom/education/class/ClassItem";
@@ -10,19 +11,37 @@ import { ClassTable } from "@/components/ui/custom/education/class/ClassTable";
 import { BookOpen, ChevronLeft, ChevronRight, Grid, List, Plus, Search } from "lucide-react";
 
 const page = () => {
-  const [classes, setClasses] = useState<ClassModel[]>(mockClasses);
+  const [classes, setClasses] = useState<ClassModel[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedYear, setSelectedYear] = useState("2024");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9); // Default 3x3 grid for cards
 
+  // Fetch classes from service
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        setLoading(true);
+        const classesData = await classService.getClasses();
+        setClasses(classesData);
+      } catch (error) {
+        console.error("Error fetching classes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
   const filteredClasses = useMemo(() => {
     if (!searchQuery) return classes;
 
     return classes.filter(
       (classItem) =>
-        classItem.classCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        classItem.class_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         classItem.description?.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [classes, searchQuery]);
@@ -40,6 +59,21 @@ const page = () => {
 
   const handleAddClass = () => {
     setOpen(true);
+  };
+
+  const handleClassAdded = async (newClass: ClassModel) => {
+    // Refresh the classes list
+    try {
+      setLoading(true);
+      const classesData = await classService.getClasses();
+      setClasses(classesData);
+      // Reset to first page when new item is added
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("Error refreshing classes:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePageChange = (page: number) => {
@@ -60,6 +94,16 @@ const page = () => {
 
   //   add class dialog
   const [open, setOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="px-6 bg-primary-foreground py-6 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading classes...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
@@ -232,7 +276,7 @@ const page = () => {
         </div>
       )}
 
-      <AddClassDialog open={open} setOpen={setOpen} onAddClass={handleAddClass} />
+      <AddClassDialog open={open} setOpen={setOpen} onAddClass={handleClassAdded} />
     </div>
   );
 };

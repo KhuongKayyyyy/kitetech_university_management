@@ -66,6 +66,13 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
             </Label>
             <Input id="name" value={newDepartment.name} onChange={handleInputChange} className="col-span-3" />
           </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="code" className="text-right">
+              Code
+            </Label>
+            <Input id="code" value={newDepartment.code} onChange={handleInputChange} className="col-span-3" />
+          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Contact Info
@@ -82,28 +89,14 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
             <Label htmlFor="dean" className="text-right">
               Dean
             </Label>
-            <Select
-              value={newDepartment.dean}
-              onValueChange={(value) => setNewDepartment((prev) => ({ ...prev, dean: value }))}
-            >
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select a dean" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="john-smith">Dr. John Smith</SelectItem>
-                <SelectItem value="mary-johnson">Dr. Mary Johnson</SelectItem>
-                <SelectItem value="robert-wilson">Dr. Robert Wilson</SelectItem>
-                <SelectItem value="susan-brown">Dr. Susan Brown</SelectItem>
-                <SelectItem value="michael-davis">Dr. Michael Davis</SelectItem>
-                <SelectItem value="jennifer-garcia">Dr. Jennifer Garcia</SelectItem>
-                <SelectItem value="david-miller">Dr. David Miller</SelectItem>
-                <SelectItem value="lisa-anderson">Dr. Lisa Anderson</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="dean"
+              value={newDepartment.dean || ""}
+              onChange={handleInputChange}
+              placeholder="Enter dean name"
+              className="col-span-3"
+            />
           </div>
-
-          {/* Same major table component used in detail dialog */}
-          <MajorInDepartTable department={newDepartment} setDepartment={setNewDepartment} />
         </div>
         <DialogFooter>
           <Button onClick={handleSave}>Create</Button>

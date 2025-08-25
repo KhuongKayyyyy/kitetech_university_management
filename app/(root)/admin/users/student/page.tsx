@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { students } from "@/app/api/fakedata";
+import { Student } from "@/app/api/model/StudentModel";
+import { studentService } from "@/app/api/services/studentService";
 import { Button } from "@/components/ui/button";
 import AddStudentDialog from "@/components/ui/custom/user/student/AddStudentDialog";
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
@@ -14,7 +15,26 @@ export default function StudentPage() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [openAddStudentDialog, setOpenAddStudentDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 9; // 3x4 grid for cards
+
+  // Fetch students data
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const data = await studentService.getStudents();
+        setStudents(data);
+      } catch (error) {
+        console.error("Failed to fetch students:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   // Filter students based on search term
   const filteredStudents = useMemo(() => {
@@ -25,12 +45,13 @@ export default function StudentPage() {
     const searchLower = searchTerm.toLowerCase();
     return students.filter(
       (student) =>
-        student.name.toLowerCase().includes(searchLower) ||
-        student.studentEmail.toLowerCase().includes(searchLower) ||
-        student.studentId.toLowerCase().includes(searchLower) ||
-        student.location.toLowerCase().includes(searchLower),
+        student.full_name?.toLowerCase().includes(searchLower) ||
+        student.email?.toLowerCase().includes(searchLower) ||
+        student.phone?.toLowerCase().includes(searchLower) ||
+        student.address?.toLowerCase().includes(searchLower) ||
+        student.classes?.class_code?.toLowerCase().includes(searchLower),
     );
-  }, [searchTerm]);
+  }, [searchTerm, students]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -42,6 +63,28 @@ export default function StudentPage() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  const handleStudentAdded = async () => {
+    try {
+      const data = await studentService.getStudents();
+      setStudents(data);
+    } catch (error) {
+      console.error("Failed to refresh students:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading students...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -120,7 +163,7 @@ export default function StudentPage() {
             {searchTerm ? "Try adjusting your search criteria." : "Get started by adding your first student."}
           </p>
           {!searchTerm && (
-            <Button className="mt-4" variant="outline">
+            <Button className="mt-4" variant="outline" onClick={() => setOpenAddStudentDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add First Student
             </Button>
@@ -130,7 +173,7 @@ export default function StudentPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedStudents.map((student) => (
-              <StudentItem key={student.id} student={student} />
+              <StudentItem key={student.id} student={student} onStudentUpdated={handleStudentAdded} />
             ))}
           </div>
 
@@ -184,10 +227,14 @@ export default function StudentPage() {
         </>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <StudentTable students={filteredStudents} />
+          <StudentTable students={filteredStudents} onStudentUpdated={handleStudentAdded} />
         </div>
       )}
-      <AddStudentDialog open={openAddStudentDialog} onClose={() => setOpenAddStudentDialog(false)} />
+      <AddStudentDialog
+        open={openAddStudentDialog}
+        onClose={() => setOpenAddStudentDialog(false)}
+        onStudentAdded={handleStudentAdded}
+      />
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import React from "react";
 
 import { AcademicYearModel } from "@/app/api/model/AcademicYearModel";
-import { MOCK_SEMESTERS, SemesterModel } from "@/app/api/model/SemesterModel";
+import { SemesterModel } from "@/app/api/model/SemesterModel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { APP_ROUTES } from "@/constants/AppRoutes";
+import { useSemestersByAcademicYear } from "@/hooks/useSemester";
 import { format } from "date-fns";
 import { Calendar, Check, Clock, GraduationCap } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,13 +17,13 @@ interface AcademicYearItemProps {
 export default function AcademicYearItem({ academicYear }: AcademicYearItemProps) {
   const router = useRouter();
   const isActive = academicYear.status === "Active";
-  const semesters = MOCK_SEMESTERS.filter((semester) => semester.academic_year_id === academicYear.id);
+  const { semesters } = useSemestersByAcademicYear(academicYear.id + "");
 
   return (
     <div
-      onClick={() =>
-        router.push(`${APP_ROUTES.ADMIN}/education/${academicYear.id}?name=${"Academic Year " + academicYear.year}`)
-      }
+    // onClick={() =>
+    //   router.push(`${APP_ROUTES.ADMIN}/education/${academicYear.id}?name=${"Academic Year " + academicYear.year}`)
+    // }
     >
       <TooltipProvider>
         <Tooltip>
@@ -56,7 +56,7 @@ export default function AcademicYearItem({ academicYear }: AcademicYearItemProps
                 <span className="text-lg font-semibold">Semesters Overview</span>
               </div>
               <div className="flex flex-col gap-3">
-                {semesters.map((semester) => (
+                {semesters.map((semester: SemesterModel) => (
                   <div
                     key={semester.id}
                     className="flex items-center justify-between bg-secondary/20 hover:bg-secondary/30 p-3 rounded-lg transition-colors"

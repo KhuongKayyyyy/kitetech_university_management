@@ -13,6 +13,16 @@ export const departmentService = {
     }
   },
 
+  getDepartmentById: async (id: number) => {
+    try {
+      const response = await departmentRepository.getDepartmentById(id);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to fetch department");
+      throw error;
+    }
+  },
+
   addDepartment: async (department: FacultyModel) => {
     try {
       const response = await departmentRepository.addDepartment(department);

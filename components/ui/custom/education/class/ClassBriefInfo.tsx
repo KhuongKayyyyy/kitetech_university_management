@@ -12,7 +12,7 @@ export default function ClassBriefInfo({ classItem }: ClassBriefInfoProps) {
       <div className="space-y-4">
         {/* Class Name */}
         <div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-1">{classItem.classCode}</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-1">{classItem.class_code}</h3>
           <p className="text-sm text-gray-500">Class ID: {classItem.id}</p>
         </div>
 
@@ -21,7 +21,7 @@ export default function ClassBriefInfo({ classItem }: ClassBriefInfoProps) {
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Major ID</label>
-              <p className="text-sm font-medium text-gray-900">{classItem.majorId}</p>
+              <p className="text-sm font-medium text-gray-900">{classItem.major_id}</p>
             </div>
           </div>
         </div>

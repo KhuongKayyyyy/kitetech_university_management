@@ -64,9 +64,6 @@ const DepartmentItem = ({ department: initialDepartment, onDelete, isSelected, o
         <h1 className="text-lg sm:text-xl md:text-2xl font-semibold leading-tight break-words text-foreground group-hover:text-primary transition-colors duration-200">
           {department.name}
         </h1>
-        <p className="text-sm sm:text-sm md:text-base text-muted-foreground break-words font-medium">
-          {department.majors?.length} {department.majors?.length === 1 ? "major" : "majors"}
-        </p>
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-4">
         <DepartmentDialog

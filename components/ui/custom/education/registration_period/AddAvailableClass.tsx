@@ -49,18 +49,18 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
     if (searchTerm) {
       filtered = filtered.filter(
         (cls) =>
-          cls.classCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cls.class_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
           cls.description?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     // Filter by major
     if (selectedMajor !== "all") {
-      filtered = filtered.filter((cls) => cls.majorId === parseInt(selectedMajor));
+      filtered = filtered.filter((cls) => cls.major_id === parseInt(selectedMajor));
     } else if (selectedDepartment !== "all") {
       // If department is selected but major is "all", filter by department
       const departmentMajorIds = filteredMajors.map((major) => major.id);
-      filtered = filtered.filter((cls) => departmentMajorIds.includes(cls.majorId));
+      filtered = filtered.filter((cls) => departmentMajorIds.includes(cls.major_id));
     }
 
     return filtered;
@@ -71,7 +71,7 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
     const groups: Record<string, Record<string, typeof mockClasses>> = {};
 
     filteredClasses.forEach((cls) => {
-      const major = majors.find((m) => m.id === cls.majorId);
+      const major = majors.find((m) => m.id === cls.major_id);
       const department = departments.find((d) => d.id === major?.faculty?.id);
 
       if (department && major) {
@@ -210,7 +210,7 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
                               />
                               <div className="flex-1">
                                 <Label htmlFor={`class-${cls.id}`} className="text-sm font-medium cursor-pointer">
-                                  {cls.classCode}
+                                  {cls.class_code}
                                 </Label>
                                 {cls.description && <p className="text-xs text-muted-foreground">{cls.description}</p>}
                               </div>

@@ -78,8 +78,8 @@ import {
 } from "lucide-react";
 
 // Custom filter function for multi-column searching
-const multiColumnFilterFn: FilterFn<Teacher> = (row, filterValue) => {
-  const searchableRowContent = `${row.original.name} ${row.original.teacherEmail} ${row.original.id}`.toLowerCase();
+const multiColumnFilterFn: FilterFn<Teacher> = (row, columnId, filterValue) => {
+  const searchableRowContent = `${row.original.full_name} ${row.original.email} ${row.original.id}`.toLowerCase();
   const searchTerm = (filterValue ?? "").toLowerCase();
   return searchableRowContent.includes(searchTerm);
 };
@@ -88,6 +88,12 @@ const statusFilterFn: FilterFn<Teacher> = (row, columnId, filterValue: string[])
   if (!filterValue?.length) return true;
   const status = row.getValue(columnId) as boolean;
   return filterValue.includes(status ? "active" : "inactive");
+};
+
+const departmentFilterFn: FilterFn<Teacher> = (row, columnId, filterValue: string[]) => {
+  if (!filterValue?.length) return true;
+  const department = row.original.department;
+  return filterValue.includes(department || "");
 };
 
 const columns: ColumnDef<Teacher>[] = [
@@ -118,7 +124,7 @@ const columns: ColumnDef<Teacher>[] = [
     accessorKey: "name",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.name}</div>
+        <div className="font-medium text-foreground">{row.original.full_name}</div>
         <div className="text-sm text-muted-foreground">{row.original.id}</div>
       </div>
     ),
@@ -131,8 +137,8 @@ const columns: ColumnDef<Teacher>[] = [
     accessorKey: "email",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.teacherEmail}</div>
-        <div className="text-sm text-muted-foreground">{row.original.location}</div>
+        <div className="font-medium text-foreground">{row.original.email}</div>
+        <div className="text-sm text-muted-foreground">{row.original.phone}</div>
       </div>
     ),
     size: 250,
@@ -142,38 +148,29 @@ const columns: ColumnDef<Teacher>[] = [
     accessorKey: "departmentId",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{getDepartmentNameById(row.original.departmentId)}</div>
+        <div className="font-medium text-foreground">{row.original.department}</div>
         <div className="text-sm text-muted-foreground">Teacher</div>
       </div>
     ),
     size: 220,
+    filterFn: departmentFilterFn,
   },
   {
     header: "Birthday",
-    accessorKey: "birthday",
-    cell: ({ row }) => <div className="font-medium text-foreground">{row.original.birthday}</div>,
-    size: 120,
-  },
-  {
-    header: "Status",
-    accessorKey: "isActivated",
+    accessorKey: "birth_date",
     cell: ({ row }) => {
-      const isActive = row.getValue("isActivated") as boolean;
-      return (
-        <Badge
-          variant={isActive ? "default" : "secondary"}
-          className={cn(
-            isActive
-              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-100 dark:bg-gray-800/50 dark:text-gray-400",
-          )}
-        >
-          {isActive ? "Active" : "Inactive"}
-        </Badge>
-      );
+      const birthDate = row.original.birth_date;
+      if (!birthDate) return <div className="text-muted-foreground">-</div>;
+
+      const formatted = new Date(birthDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+
+      return <div className="font-medium text-foreground">{formatted}</div>;
     },
-    size: 100,
-    filterFn: statusFilterFn,
+    size: 120,
   },
   {
     id: "actions",
@@ -252,20 +249,10 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
     return ["active", "inactive"];
   }, []);
 
-  // Get counts for each status
-  const statusCounts = useMemo(() => {
-    const activeCount = data.filter((teacher) => teacher.isActivated).length;
-    const inactiveCount = data.filter((teacher) => !teacher.isActivated).length;
-    return new Map([
-      ["active", activeCount],
-      ["inactive", inactiveCount],
-    ]);
+  const uniqueDepartmentValues = useMemo(() => {
+    const departments = Array.from(new Set(data.map((teacher) => teacher.department).filter(Boolean)));
+    return departments.sort();
   }, [data]);
-
-  const selectedStatuses = useMemo(() => {
-    const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
-    return filterValue ?? [];
-  }, [table.getColumn("isActivated")?.getFilterValue()]);
 
   const handleStatusChange = (checked: boolean, value: string) => {
     const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
@@ -283,17 +270,30 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
     table.getColumn("isActivated")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
   };
 
+  const handleDepartmentChange = (checked: boolean, value: string) => {
+    const filterValue = table.getColumn("departmentId")?.getFilterValue() as string[];
+    const newFilterValue = filterValue ? [...filterValue] : [];
+
+    if (checked) {
+      newFilterValue.push(value);
+    } else {
+      const index = newFilterValue.indexOf(value);
+      if (index > -1) {
+        newFilterValue.splice(index, 1);
+      }
+    }
+
+    table.getColumn("departmentId")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+  };
+
   const globalFilterValue = useMemo(() => {
     return (table.getColumn("name")?.getFilterValue() ?? "") as string;
   }, [table.getColumn("name")?.getFilterValue()]);
 
-  const hasActiveFilters = useMemo(() => {
-    return globalFilterValue || selectedStatuses.length > 0;
-  }, [globalFilterValue, selectedStatuses.length]);
-
   const clearAllFilters = () => {
     table.getColumn("name")?.setFilterValue("");
     table.getColumn("isActivated")?.setFilterValue(undefined);
+    table.getColumn("departmentId")?.setFilterValue(undefined);
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -305,42 +305,69 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            {/* Status Filter */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                placeholder="Search teachers..."
+                value={globalFilterValue}
+                onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+                className="pl-10"
+              />
+            </div>
+
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Status
-                  {selectedStatuses.length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {selectedStatuses.length}
+                <Button variant="outline" className="gap-2 border-dashed">
+                  <ListFilter className="h-4 w-4" />
+                  Department
+                  {table.getColumn("departmentId")?.getFilterValue() && (
+                    <Badge variant="secondary" className="ml-1 px-1">
+                      {(table.getColumn("departmentId")?.getFilterValue() as string[])?.length}
                     </Badge>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-3" align="start">
-                <div className="space-y-3">
-                  <div className="text-sm font-medium">Filter by status</div>
-                  <div className="space-y-2">
-                    {uniqueStatusValues.map((value) => (
-                      <div key={value} className="flex items-center space-x-2">
+              <PopoverContent className="w-56 p-0" align="start">
+                <div className="p-4 space-y-3">
+                  <div className="font-medium text-sm">Filter by Department</div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {uniqueDepartmentValues.map((department) => (
+                      <label key={department} className="flex items-center gap-2 cursor-pointer">
                         <Checkbox
-                          id={`status-${value}`}
-                          checked={selectedStatuses.includes(value)}
-                          onCheckedChange={(checked: boolean) => handleStatusChange(checked, value)}
+                          checked={
+                            (table.getColumn("departmentId")?.getFilterValue() as string[])?.includes(department) ??
+                            false
+                          }
+                          onCheckedChange={(checked) => handleDepartmentChange(!!checked, department)}
                         />
-                        <Label htmlFor={`status-${value}`} className="flex-1 text-sm font-normal">
-                          <div className="flex items-center justify-between">
-                            <span className="capitalize">{value}</span>
-                            <span className="text-xs text-muted-foreground">{statusCounts.get(value)}</span>
-                          </div>
-                        </Label>
-                      </div>
+                        <span className="text-sm">{department}</span>
+                      </label>
                     ))}
                   </div>
+                  {table.getColumn("departmentId")?.getFilterValue() && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => table.getColumn("departmentId")?.setFilterValue(undefined)}
+                      className="w-full"
+                    >
+                      Clear
+                    </Button>
+                  )}
                 </div>
               </PopoverContent>
             </Popover>
+
+            {/* Clear All Filters */}
+            {(globalFilterValue ||
+              table.getColumn("isActivated")?.getFilterValue() ||
+              table.getColumn("departmentId")?.getFilterValue()) && (
+              <Button variant="ghost" onClick={clearAllFilters} className="gap-2">
+                <CircleX className="h-4 w-4" />
+                Clear filters
+              </Button>
+            )}
 
             {/* Column Visibility */}
             <DropdownMenu>
@@ -368,14 +395,6 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
                   ))}
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <Button variant="ghost" onClick={clearAllFilters} className="gap-2">
-                <CircleX className="h-4 w-4" />
-                Clear filters
-              </Button>
-            )}
           </div>
 
           {/* Bulk Actions */}
@@ -433,10 +452,15 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <ChevronUp className="h-4 w-4" />,
-                          desc: <ChevronDown className="h-4 w-4" />,
-                        }[header.column.getIsSorted() as string] ?? null}
+                        {(() => {
+                          const sortDirection = header.column.getIsSorted();
+                          if (sortDirection === "asc") {
+                            return <ChevronUp className="h-4 w-4" />;
+                          } else if (sortDirection === "desc") {
+                            return <ChevronDown className="h-4 w-4" />;
+                          }
+                          return null;
+                        })()}
                       </div>
                     ) : (
                       <div className="text-sm font-medium">

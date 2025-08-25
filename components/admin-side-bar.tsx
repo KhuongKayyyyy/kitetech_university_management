@@ -47,10 +47,6 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         isActive: true,
         items: [
           {
-            title: "Overview",
-            url: "/admin/users",
-          },
-          {
             title: "Account",
             url: "/admin/users/account",
           },

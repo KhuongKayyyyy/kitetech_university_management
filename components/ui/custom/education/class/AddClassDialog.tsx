@@ -1,7 +1,10 @@
+"use client";
+
 import React, { useState } from "react";
 
 import { curriculumData, majorData } from "@/app/api/fakedata";
 import { ClassModel } from "@/app/api/model/ClassModel";
+import { classService } from "@/app/api/services/classService";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,55 +14,63 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useDepartments } from "@/hooks/useDeparment";
-import { useGradingFormulas } from "@/hooks/useGradingFormula";
+import { useAcademicYears } from "@/hooks/useAcademicYear";
+import { useMajors } from "@/hooks/useMajor";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AddClassDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onAddClass?: (classData: Omit<ClassModel, "id">) => void;
+  onAddClass?: (classData: ClassModel) => void;
 }
 
 export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDialogProps) {
-  const { departments } = useDepartments();
-  const { gradingFormulas } = useGradingFormulas();
+  const { academicYears } = useAcademicYears();
+  const { majors } = useMajors();
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     majorId: "",
     academicYearId: "",
     curriculumId: "",
-    classCode: "",
     description: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.majorId || !formData.academicYearId || !formData.curriculumId || !formData.classCode) {
+    if (!formData.majorId || !formData.academicYearId || !formData.curriculumId) {
       return;
     }
 
     const newClass: Omit<ClassModel, "id"> = {
-      majorId: parseInt(formData.majorId),
-      academicYearId: parseInt(formData.academicYearId),
+      major_id: parseInt(formData.majorId),
+      academic_year: parseInt(formData.academicYearId),
       curriculumId: parseInt(formData.curriculumId),
-      classCode: formData.classCode,
       description: formData.description || undefined,
     };
 
-    onAddClass?.(newClass);
-    setOpen(false);
-    setFormData({
-      majorId: "",
-      academicYearId: "",
-      curriculumId: "",
-      classCode: "",
-      description: "",
-    });
+    try {
+      setLoading(true);
+      const addedClass = await classService.addClass(newClass as ClassModel);
+      onAddClass?.(addedClass);
+      toast.success("Class added successfully!");
+      setOpen(false);
+      setFormData({
+        majorId: "",
+        academicYearId: "",
+        curriculumId: "",
+        description: "",
+      });
+    } catch (error) {
+      console.error("Error adding class:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -81,40 +92,27 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="classCode" className="text-right">
-                Class Code *
-              </Label>
-              <Input
-                id="classCode"
-                value={formData.classCode}
-                onChange={(e) => handleInputChange("classCode", e.target.value)}
-                placeholder="e.g. CS2024A"
-                className="col-span-3"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="majorId" className="text-right">
                 Major ID *
               </Label>
-              <Select value={formData.majorId} onValueChange={(value) => handleInputChange("majorId", value)} required>
+              <Select
+                value={formData.majorId}
+                onValueChange={(value) => handleInputChange("majorId", value)}
+                required
+                disabled={loading}
+              >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select major" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Computer Science</SelectItem>
-                  <SelectItem value="2">Electrical Engineering</SelectItem>
-                  <SelectItem value="3">Mechanical Engineering</SelectItem>
-                  <SelectItem value="4">Biology</SelectItem>
-                  <SelectItem value="5">Chemistry</SelectItem>
-                  <SelectItem value="6">Physics</SelectItem>
-                  <SelectItem value="7">Mathematics</SelectItem>
-                  <SelectItem value="8">Economics</SelectItem>
+                  {majors.map((major) => (
+                    <SelectItem key={major.id} value={major.id?.toString() || ""}>
+                      {major.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="academicYearId" className="text-right">
                 Academic Year *
@@ -123,15 +121,17 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
                 value={formData.academicYearId}
                 onValueChange={(value) => handleInputChange("academicYearId", value)}
                 required
+                disabled={loading}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select academic year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">2021-2022</SelectItem>
-                  <SelectItem value="2">2022-2023</SelectItem>
-                  <SelectItem value="3">2023-2024</SelectItem>
-                  <SelectItem value="4">2024-2025</SelectItem>
+                  {academicYears.map((academicYear) => (
+                    <SelectItem key={academicYear.id} value={academicYear.year?.toString() || ""}>
+                      {academicYear.year}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -144,6 +144,7 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
                 value={formData.curriculumId}
                 onValueChange={(value) => handleInputChange("curriculumId", value)}
                 required
+                disabled={loading}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select curriculum" />
@@ -169,14 +170,24 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
                 placeholder="Class description (optional)"
                 className="col-span-3"
                 rows={3}
+                disabled={loading}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit">Add Class</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Adding Class...
+                </>
+              ) : (
+                "Add Class"
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

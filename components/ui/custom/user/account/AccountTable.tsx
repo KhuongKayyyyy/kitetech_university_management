@@ -68,68 +68,10 @@ import {
   Trash,
 } from "lucide-react";
 
-// Mock data for users
-const mockUsers: UserModel[] = [
-  {
-    id: 1,
-    username: "admin",
-    password: "",
-    full_name: "Administrator",
-    email: "admin@example.com",
-    isActive: true,
-    isDeleted: false,
-    role: {
-      id: 1,
-      name: "Admin",
-      description: "Full system access",
-      isActive: true,
-    },
-    created_at: "2024-01-01",
-    updated_at: "2024-01-01",
-    avatar: "",
-  },
-  {
-    id: 2,
-    username: "teacher1",
-    password: "",
-    full_name: "John Teacher",
-    email: "john.teacher@example.com",
-    isActive: true,
-    isDeleted: false,
-    role: {
-      id: 2,
-      name: "Teacher",
-      description: "Teaching and grading access",
-      isActive: true,
-    },
-    created_at: "2024-01-02",
-    updated_at: "2024-01-02",
-    avatar: "",
-  },
-  {
-    id: 3,
-    username: "student1",
-    password: "",
-    full_name: "Jane Student",
-    email: "jane.student@example.com",
-    isActive: true,
-    isDeleted: false,
-    role: {
-      id: 3,
-      name: "Student",
-      description: "Limited access for students",
-      isActive: true,
-    },
-    created_at: "2024-01-03",
-    updated_at: "2024-01-03",
-    avatar: "",
-  },
-];
-
 // Custom global filter function for multi-column searching
 const globalFilterFn: FilterFn<UserModel> = (row, columnId, filterValue) => {
   const searchableRowContent =
-    `${row.original.username || ""} ${row.original.full_name || ""} ${row.original.email || ""} ${row.original.role?.name || ""}`.toLowerCase();
+    `${row.original.username || ""} ${row.original.full_name || ""} ${row.original.email || ""} ${row.original.role || ""}`.toLowerCase();
   const searchTerm = (filterValue ?? "").toLowerCase();
   return searchableRowContent.includes(searchTerm);
 };
@@ -143,7 +85,7 @@ const statusFilterFn: FilterFn<UserModel> = (row, columnId, filterValue: string[
 const roleFilterFn: FilterFn<UserModel> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true;
   const role = row.original.role;
-  return filterValue.includes(role?.name || "");
+  return filterValue.includes(role || "");
 };
 
 interface AccountTableProps {
@@ -178,7 +120,7 @@ export default function AccountTable({
     },
   ]);
 
-  const [data, setData] = useState<UserModel[]>(users ?? mockUsers);
+  const [data, setData] = useState<UserModel[]>(users || []);
   useEffect(() => {
     if (users) {
       setData(users);
@@ -262,8 +204,7 @@ export default function AccountTable({
         const role = row.original.role;
         return (
           <div className="space-y-1">
-            <div className="font-medium text-foreground">{role?.name || "N/A"}</div>
-            <div className="text-sm text-muted-foreground">{role?.description || "No description"}</div>
+            <div className="font-medium text-foreground">{role || "N/A"}</div>
           </div>
         );
       },
@@ -338,7 +279,7 @@ export default function AccountTable({
 
   const uniqueRoleValues = useMemo(() => {
     const roles = Array.from(
-      new Set(data.map((user) => user?.role?.name).filter((roleName) => roleName != null && roleName !== "")),
+      new Set(data.map((user) => user?.role).filter((roleName) => roleName != null && roleName !== "")),
     );
     return roles;
   }, [data]);
@@ -357,7 +298,7 @@ export default function AccountTable({
   const roleCounts = useMemo(() => {
     const counts = new Map<string, number>();
     data.forEach((user) => {
-      const roleName = user?.role?.name || "";
+      const roleName = user?.role || "";
       if (roleName) {
         counts.set(roleName, (counts.get(roleName) || 0) + 1);
       }

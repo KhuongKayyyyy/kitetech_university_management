@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { teachers } from "@/app/api/fakedata";
+import { Teacher } from "@/app/api/model/TeacherModel";
+import { teacherService } from "@/app/api/services/teacherService";
 import { Button } from "@/components/ui/button";
 import TeacherItem from "@/components/ui/custom/user/teacher/TeacherItem";
 import TeacherTable from "@/components/ui/custom/user/teacher/TeacherTable";
@@ -14,6 +15,25 @@ export default function TeacherPage() {
   const [openAddTeacherDialog, setOpenAddTeacherDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12; // 3x3 grid for cards
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch teachers data
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        setLoading(true);
+        const teachersData = await teacherService.getTeachers();
+        setTeachers(teachersData);
+      } catch (error) {
+        console.error("Failed to fetch teachers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, []);
 
   // Filter teachers based on search term
   const filteredTeachers = useMemo(() => {
@@ -23,12 +43,12 @@ export default function TeacherPage() {
 
     const searchLower = searchTerm.toLowerCase();
     return teachers.filter(
-      (teacher) =>
-        teacher.name.toLowerCase().includes(searchLower) ||
-        teacher.teacherEmail.toLowerCase().includes(searchLower) ||
-        teacher.location.toLowerCase().includes(searchLower),
+      (teacher: Teacher) =>
+        teacher.full_name?.toLowerCase().includes(searchLower) ||
+        teacher.email?.toLowerCase().includes(searchLower) ||
+        teacher.phone?.toLowerCase().includes(searchLower),
     );
-  }, [searchTerm]);
+  }, [searchTerm, teachers]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredTeachers.length / itemsPerPage);
@@ -40,6 +60,19 @@ export default function TeacherPage() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading teachers...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -127,7 +160,7 @@ export default function TeacherPage() {
       ) : viewMode === "cards" ? (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedTeachers.map((teacher) => (
+            {paginatedTeachers.map((teacher: Teacher) => (
               <TeacherItem key={teacher.id} teacher={teacher} />
             ))}
           </div>

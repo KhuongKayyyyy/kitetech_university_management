@@ -18,6 +18,14 @@ export const API_CONFIG = {
   UPDATE_ACADEMIC_YEAR: (id: string) => `/api/academic-years/${id}`,
   DELETE_ACADEMIC_YEAR: (id: string) => `/api/academic-years/${id}`,
 
+  // Semester
+  GET_SEMESTERS: "/api/semesters",
+  GET_SEMESTER: (id: string) => `/api/semesters/${id}`,
+  ADD_SEMESTER: "/api/semesters",
+  UPDATE_SEMESTER: (id: string) => `/api/semesters/${id}`,
+  DELETE_SEMESTER: (id: string) => `/api/semesters/${id}`,
+  GET_BY_ACADEMIC_YEAR_ID: (academic_year_id: string) => `/api/semesters/academic-year/${academic_year_id}`,
+
   // Department
   GET_DEPARTMENTS: "/api/faculties",
   GET_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
@@ -52,4 +60,26 @@ export const API_CONFIG = {
   ADD_SUBJECT: "/api/subjects",
   UPDATE_SUBJECT: (id: string) => `/api/subjects/${id}`,
   DELETE_SUBJECT: (id: string) => `/api/subjects/${id}`,
+
+  // Class
+  GET_CLASSES: "/api/classes",
+  GET_CLASS: (id: string) => `/api/classes/${id}`,
+  ADD_CLASS: "/api/classes",
+  UPDATE_CLASS: (id: string) => `/api/classes/${id}`,
+  DELETE_CLASS: (id: string) => `/api/classes/${id}`,
+
+  //Student
+  GET_STUDENTS: "/api/students",
+  GET_STUDENT: (id: string) => `/api/students/${id}`,
+  ADD_STUDENT: "/api/students",
+  UPDATE_STUDENT: (id: string) => `/api/students/${id}`,
+  DELETE_STUDENT: (id: string) => `/api/students/${id}`,
+
+
+  // Teacher
+  GET_TEACHERS: "/api/teachers",
+  GET_TEACHER: (id: string) => `/api/teachers/${id}`,
+  ADD_TEACHER: "/api/teachers",
+  UPDATE_TEACHER: (id: string) => `/api/teachers/${id}`,
+  DELETE_TEACHER: (id: string) => `/api/teachers/${id}`,
 };

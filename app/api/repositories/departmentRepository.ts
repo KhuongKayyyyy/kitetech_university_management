@@ -8,11 +8,16 @@ export const departmentRepository = {
   getDepartments: () =>
     axiosClient.get(API_CONFIG.GET_DEPARTMENTS),
 
+  getDepartmentById: (id: number) => {
+    return axiosClient.get(API_CONFIG.GET_DEPARTMENT(id.toString()));
+  },
+
   addDepartment: (department: FacultyModel) => {
     const body = {
       "name": department.name,
       "dean": department.dean,
-      "contact_info": department.contact_info
+      "contact_info": department.contact_info,
+      "code": department.code
     };
     return axiosClient.post(API_CONFIG.ADD_DEPARTMENT, body);
   },
@@ -21,7 +26,8 @@ export const departmentRepository = {
     const body = {
       "name": department.name,
       "dean": department.dean,
-      "contact_info": department.contact_info
+      "contact_info": department.contact_info,
+      "code": department.code
     };
     return axiosClient.patch(API_CONFIG.UPDATE_DEPARTMENT(department.id.toString()), body);
   },

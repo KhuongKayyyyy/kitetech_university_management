@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
@@ -16,10 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Edit, Save, Trash2, X } from "lucide-react";
-import { toast } from "sonner";
 
 import { MajorInDepartTable } from "../major/MajorInDepartTable";
 
@@ -43,6 +42,34 @@ export function DepartmentDialog({
     ...department,
     majors: department.majors ?? [],
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch department data when dialog opens
+  useEffect(() => {
+    const fetchDepartmentData = async () => {
+      if (open && department.id) {
+        setIsLoading(true);
+        try {
+          const departmentData = await departmentService.getDepartmentById(department.id);
+          setEditedDepartment({
+            ...departmentData,
+            majors: departmentData.majors ?? [],
+          });
+        } catch (error) {
+          console.error("Failed to fetch department data:", error);
+          // Fallback to initial department data
+          setEditedDepartment({
+            ...department,
+            majors: department.majors ?? [],
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchDepartmentData();
+  }, [open, department]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -83,96 +110,156 @@ export function DepartmentDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-6">
-          <div className="grid gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium text-foreground">
-                Department Name
-              </Label>
-              <Input
-                id="name"
-                value={editedDepartment.name}
-                onChange={handleInputChange}
-                placeholder="Enter department name..."
-                className="h-11"
-              />
+        {isLoading ? (
+          <div className="space-y-6 py-6">
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Department Name</Label>
+                <Skeleton className="h-11 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Contact Information</Label>
+                <Skeleton className="h-[100px] w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Dean</Label>
+                <Skeleton className="h-11 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-foreground">Code</Label>
+                <Skeleton className="h-11 w-full" />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contact_info" className="text-sm font-medium text-foreground">
-                Contact Information
-              </Label>
-              <Textarea
-                id="contact_info"
-                value={editedDepartment.contact_info}
-                onChange={handleInputChange}
-                placeholder="Enter contact information..."
-                className="min-h-[100px] resize-none"
-                rows={4}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dean" className="text-sm font-medium text-foreground">
-                Dean
-              </Label>
-              <Select
-                value={editedDepartment.dean}
-                onValueChange={(value) => setEditedDepartment((prev) => ({ ...prev, dean: value }))}
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select a dean" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="john-smith">Dr. John Smith</SelectItem>
-                  <SelectItem value="mary-johnson">Dr. Mary Johnson</SelectItem>
-                  <SelectItem value="robert-wilson">Dr. Robert Wilson</SelectItem>
-                  <SelectItem value="susan-brown">Dr. Susan Brown</SelectItem>
-                  <SelectItem value="michael-davis">Dr. Michael Davis</SelectItem>
-                  <SelectItem value="jennifer-garcia">Dr. Jennifer Garcia</SelectItem>
-                  <SelectItem value="david-miller">Dr. David Miller</SelectItem>
-                  <SelectItem value="lisa-anderson">Dr. Lisa Anderson</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="border-t pt-6">
+              <div className="space-y-4">
+                <Skeleton className="h-7 w-48" />
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              </div>
             </div>
           </div>
+        ) : (
+          <div className="space-y-6 py-6">
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium text-foreground">
+                  Department Name
+                </Label>
+                <Input
+                  id="name"
+                  value={editedDepartment.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter department name..."
+                  className="h-11"
+                />
+              </div>
 
-          <div className="border-t pt-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Department Majors</h3>
+              <div className="space-y-2">
+                <Label htmlFor="contact_info" className="text-sm font-medium text-foreground">
+                  Contact Information
+                </Label>
+                <Textarea
+                  id="contact_info"
+                  value={editedDepartment.contact_info}
+                  onChange={handleInputChange}
+                  placeholder="Enter contact information..."
+                  className="min-h-[100px] resize-none"
+                  rows={4}
+                />
+              </div>
 
-              <MajorInDepartTable
-                department={{
-                  ...editedDepartment,
-                  majors: editedDepartment.majors ?? [],
-                }}
-                setDepartment={setEditedDepartment}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="dean" className="text-sm font-medium text-foreground">
+                  Dean
+                </Label>
+                <Input
+                  id="dean"
+                  value={editedDepartment.dean || ""}
+                  onChange={handleInputChange}
+                  placeholder="Enter dean name..."
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dean" className="text-sm font-medium text-foreground">
+                  Code
+                </Label>
+                <Input
+                  id="code"
+                  value={editedDepartment.code || ""}
+                  onChange={handleInputChange}
+                  placeholder="Enter code..."
+                  className="h-11"
+                />
+              </div>
+            </div>
+
+            <div className="border-t pt-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Department Majors</h3>
+
+                <MajorInDepartTable
+                  department={{
+                    ...editedDepartment,
+                    majors: editedDepartment.majors ?? [],
+                  }}
+                  setDepartment={setEditedDepartment}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <DialogFooter className="flex gap-3 pt-6 border-t">
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => {
-              console.log("Delete department:", editedDepartment.id);
-              handleDelete?.();
-            }}
-            className="flex items-center gap-2 text-white"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel} className="flex items-center gap-2">
-            <X className="h-4 w-4" />
-            Cancel
-          </Button>
-          <Button type="submit" onClick={() => handleSave?.(editedDepartment)} className="flex items-center gap-2">
-            <Save className="h-4 w-4" />
-            Save changes
-          </Button>
+          {isLoading ? (
+            <>
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-10 w-28" />
+            </>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  console.log("Delete department:", editedDepartment.id);
+                  handleDelete?.();
+                }}
+                className="flex items-center gap-2 text-white"
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                onClick={() => handleSave?.(editedDepartment)}
+                className="flex items-center gap-2"
+                disabled={isLoading}
+              >
+                <Save className="h-4 w-4" />
+                Save changes
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

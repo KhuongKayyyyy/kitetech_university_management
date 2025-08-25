@@ -12,12 +12,15 @@ import AddAcademicYearDialog from "@/components/ui/custom/education/academic_yea
 import BriefStatsItems from "@/components/ui/custom/education/general/BriefStatsItems";
 import SemesterSection from "@/components/ui/custom/education/semester/SemesterSection";
 import SemesterWeekSection from "@/components/ui/custom/education/semester/SemesterWeekSection";
+import { useSemesters } from "@/hooks/useSemester";
 import { BookOpen, Building2, Calendar, GraduationCap, Plus, Users } from "lucide-react";
 
 export default function Page() {
   const [academicYear, setAcademicYear] = useState<AcademicYearModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+
+  const { semesters, setSemesters, loading: semestersLoading, error: semestersError } = useSemesters();
 
   useEffect(() => {
     const fetchAcademicYears = async () => {
@@ -134,7 +137,7 @@ export default function Page() {
 
       {/* Semesters Section */}
       <div className="mb-8">
-        <SemesterSection semesters={MOCK_SEMESTERS} />
+        <SemesterSection semesters={semesters} />
       </div>
 
       {/* Semester Weeks Section */}

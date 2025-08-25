@@ -82,7 +82,7 @@ import StudentDetailDialog from "./StudentDetailDialog";
 // Custom filter function for multi-column searching
 const multiColumnFilterFn: FilterFn<Student> = (row, filterValue) => {
   const searchableRowContent =
-    `${row.original.name} ${row.original.studentEmail} ${row.original.studentId}`.toLowerCase();
+    `${row.original.full_name} ${row.original.email} ${row.original.phone} ${row.original.address}`.toLowerCase();
   const searchTerm = (filterValue ?? "").toLowerCase();
   return searchableRowContent.includes(searchTerm);
 };
@@ -91,6 +91,18 @@ const statusFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[])
   if (!filterValue?.length) return true;
   const status = row.getValue(columnId) as boolean;
   return filterValue.includes(status ? "active" : "inactive");
+};
+
+const classFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
+  if (!filterValue?.length) return true;
+  const classCode = row.original.classes?.class_code || "";
+  return filterValue.includes(classCode);
+};
+
+const majorFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
+  if (!filterValue?.length) return true;
+  const majorId = row.original.classes?.major_id?.toString() || "";
+  return filterValue.includes(majorId);
 };
 
 const columns: ColumnDef<Student>[] = [
@@ -118,11 +130,11 @@ const columns: ColumnDef<Student>[] = [
   },
   {
     header: "Student",
-    accessorKey: "name",
+    accessorKey: "firstName",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.name}</div>
-        <div className="text-sm text-muted-foreground">{row.original.studentId}</div>
+        <div className="font-medium text-foreground">{row.original.full_name}</div>
+        <div className="text-sm text-muted-foreground">{row.original.id}</div>
       </div>
     ),
     size: 200,
@@ -134,8 +146,8 @@ const columns: ColumnDef<Student>[] = [
     accessorKey: "email",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.studentEmail}</div>
-        <div className="text-sm text-muted-foreground">{row.original.location}</div>
+        <div className="font-medium text-foreground">{row.original.email}</div>
+        <div className="text-sm text-muted-foreground">{row.original.phone}</div>
       </div>
     ),
     size: 250,
@@ -145,25 +157,39 @@ const columns: ColumnDef<Student>[] = [
     accessorKey: "majorId",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{getMajorNameById(row.original.majorId.toString())}</div>
+        <div className="font-medium text-foreground">
+          {getMajorNameById(row.original.classes?.major_id?.toString() || "")}
+        </div>
         <div className="text-sm text-muted-foreground">
-          {getDepartmentNameById(row.original.departmentId)} • {row.original.classId}
+          {getDepartmentNameById(row.original.classes?.major_id || 0)} • {row.original.classes?.class_code || ""}
         </div>
       </div>
     ),
     size: 220,
+    filterFn: majorFilterFn,
+  },
+  {
+    header: "Class",
+    accessorKey: "classCode",
+    cell: ({ row }) => <div className="font-medium text-foreground">{row.original.classes?.class_code || ""}</div>,
+    size: 120,
+    filterFn: classFilterFn,
   },
   {
     header: "Birthday",
-    accessorKey: "birthday",
-    cell: ({ row }) => <div className="font-medium text-foreground">{row.original.birthday}</div>,
+    accessorKey: "dateOfBirth",
+    cell: ({ row }) => {
+      const birthDate = row.original.birth_date;
+      const formattedDate = birthDate ? new Date(birthDate).toLocaleDateString() : "";
+      return <div className="font-medium text-foreground">{formattedDate}</div>;
+    },
     size: 120,
   },
   {
     header: "Status",
-    accessorKey: "isActivated",
+    accessorKey: "isActive",
     cell: ({ row }) => {
-      const isActive = row.getValue("isActivated") as boolean;
+      const isActive = row.getValue("isActive") as boolean;
       return (
         <Badge
           variant={isActive ? "default" : "secondary"}
@@ -191,9 +217,10 @@ const columns: ColumnDef<Student>[] = [
 
 interface StudentDatabaseProps {
   students?: Student[];
+  onStudentUpdated?: () => void;
 }
 
-export default function StudentTable({ students }: StudentDatabaseProps) {
+export default function StudentTable({ students, onStudentUpdated }: StudentDatabaseProps) {
   const id = useId();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -206,7 +233,7 @@ export default function StudentTable({ students }: StudentDatabaseProps) {
 
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: "name",
+      id: "firstName",
       desc: false,
     },
   ]);
@@ -230,6 +257,7 @@ export default function StudentTable({ students }: StudentDatabaseProps) {
     const updatedData = data.filter((item) => !selectedRows.some((row) => String(row.original.id) === String(item.id)));
     setData(updatedData);
     table.resetRowSelection();
+    onStudentUpdated?.();
   };
 
   const table = useReactTable({
@@ -257,23 +285,53 @@ export default function StudentTable({ students }: StudentDatabaseProps) {
     return ["active", "inactive"];
   }, []);
 
-  // Get counts for each status
-  const statusCounts = useMemo(() => {
-    const activeCount = data.filter((student) => student.isActivated).length;
-    const inactiveCount = data.filter((student) => !student.isActivated).length;
-    return new Map([
-      ["active", activeCount],
-      ["inactive", inactiveCount],
-    ]);
+  const uniqueClassValues = useMemo(() => {
+    const classes = new Set<string>();
+    data.forEach((student) => {
+      if (student.classes?.class_code) {
+        classes.add(student.classes.class_code);
+      }
+    });
+    return Array.from(classes).sort();
   }, [data]);
 
+  const uniqueMajorValues = useMemo(() => {
+    const majors = new Set<string>();
+    data.forEach((student) => {
+      if (student.classes?.major_id) {
+        majors.add(student.classes.major_id.toString());
+      }
+    });
+    return Array.from(majors).sort();
+  }, [data]);
+
+  // Get counts for each status
+  // const statusCounts = useMemo(() => {
+  //   const activeCount = data.filter((student) => student.isActive).length;
+  //   const inactiveCount = data.filter((student) => !student.isActive).length;
+  //   return new Map([
+  //     ["active", activeCount],
+  //     ["inactive", inactiveCount],
+  //   ]);
+  // }, [data]);
+
   const selectedStatuses = useMemo(() => {
-    const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
+    const filterValue = table.getColumn("isActive")?.getFilterValue() as string[];
     return filterValue ?? [];
-  }, [table.getColumn("isActivated")?.getFilterValue()]);
+  }, [table.getColumn("isActive")?.getFilterValue()]);
+
+  const selectedClasses = useMemo(() => {
+    const filterValue = table.getColumn("classCode")?.getFilterValue() as string[];
+    return filterValue ?? [];
+  }, [table.getColumn("classCode")?.getFilterValue()]);
+
+  const selectedMajors = useMemo(() => {
+    const filterValue = table.getColumn("majorId")?.getFilterValue() as string[];
+    return filterValue ?? [];
+  }, [table.getColumn("majorId")?.getFilterValue()]);
 
   const handleStatusChange = (checked: boolean, value: string) => {
-    const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
+    const filterValue = table.getColumn("isActive")?.getFilterValue() as string[];
     const newFilterValue = filterValue ? [...filterValue] : [];
 
     if (checked) {
@@ -285,20 +343,54 @@ export default function StudentTable({ students }: StudentDatabaseProps) {
       }
     }
 
-    table.getColumn("isActivated")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+    table.getColumn("isActive")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+  };
+
+  const handleClassChange = (checked: boolean, value: string) => {
+    const filterValue = table.getColumn("classCode")?.getFilterValue() as string[];
+    const newFilterValue = filterValue ? [...filterValue] : [];
+
+    if (checked) {
+      newFilterValue.push(value);
+    } else {
+      const index = newFilterValue.indexOf(value);
+      if (index > -1) {
+        newFilterValue.splice(index, 1);
+      }
+    }
+
+    table.getColumn("classCode")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+  };
+
+  const handleMajorChange = (checked: boolean, value: string) => {
+    const filterValue = table.getColumn("majorId")?.getFilterValue() as string[];
+    const newFilterValue = filterValue ? [...filterValue] : [];
+
+    if (checked) {
+      newFilterValue.push(value);
+    } else {
+      const index = newFilterValue.indexOf(value);
+      if (index > -1) {
+        newFilterValue.splice(index, 1);
+      }
+    }
+
+    table.getColumn("majorId")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
   };
 
   const globalFilterValue = useMemo(() => {
-    return (table.getColumn("name")?.getFilterValue() ?? "") as string;
-  }, [table.getColumn("name")?.getFilterValue()]);
+    return (table.getColumn("firstName")?.getFilterValue() ?? "") as string;
+  }, [table.getColumn("firstName")?.getFilterValue()]);
 
   const hasActiveFilters = useMemo(() => {
-    return globalFilterValue || selectedStatuses.length > 0;
-  }, [globalFilterValue, selectedStatuses.length]);
+    return globalFilterValue || selectedStatuses.length > 0 || selectedClasses.length > 0 || selectedMajors.length > 0;
+  }, [globalFilterValue, selectedStatuses.length, selectedClasses.length, selectedMajors.length]);
 
   const clearAllFilters = () => {
-    table.getColumn("name")?.setFilterValue("");
-    table.getColumn("isActivated")?.setFilterValue(undefined);
+    table.getColumn("firstName")?.setFilterValue("");
+    table.getColumn("isActive")?.setFilterValue(undefined);
+    table.getColumn("classCode")?.setFilterValue(undefined);
+    table.getColumn("majorId")?.setFilterValue(undefined);
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -334,11 +426,76 @@ export default function StudentTable({ students }: StudentDatabaseProps) {
                           checked={selectedStatuses.includes(value)}
                           onCheckedChange={(checked: boolean) => handleStatusChange(checked, value)}
                         />
-                        <Label htmlFor={`status-${value}`} className="flex-1 text-sm font-normal">
-                          <div className="flex items-center justify-between">
-                            <span className="capitalize">{value}</span>
-                            <span className="text-xs text-muted-foreground">{statusCounts.get(value)}</span>
-                          </div>
+                        <Label htmlFor={`status-${value}`} className="flex-1 text-sm font-normal capitalize">
+                          {value}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Class Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Class
+                  {selectedClasses.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {selectedClasses.length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-3" align="start">
+                <div className="space-y-3">
+                  <div className="text-sm font-medium">Filter by class</div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {uniqueClassValues.map((value) => (
+                      <div key={value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`class-${value}`}
+                          checked={selectedClasses.includes(value)}
+                          onCheckedChange={(checked: boolean) => handleClassChange(checked, value)}
+                        />
+                        <Label htmlFor={`class-${value}`} className="flex-1 text-sm font-normal">
+                          {value}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Major Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Major
+                  {selectedMajors.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                      {selectedMajors.length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="start">
+                <div className="space-y-3">
+                  <div className="text-sm font-medium">Filter by major</div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {uniqueMajorValues.map((value) => (
+                      <div key={value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`major-${value}`}
+                          checked={selectedMajors.includes(value)}
+                          onCheckedChange={(checked: boolean) => handleMajorChange(checked, value)}
+                        />
+                        <Label htmlFor={`major-${value}`} className="flex-1 text-sm font-normal">
+                          {getMajorNameById(value)}
                         </Label>
                       </div>
                     ))}

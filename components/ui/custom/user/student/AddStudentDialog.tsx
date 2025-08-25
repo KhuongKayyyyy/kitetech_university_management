@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { departmentData, majorData } from "@/app/api/fakedata";
+import { ClassModel } from "@/app/api/model/ClassModel";
+import { Student } from "@/app/api/model/StudentModel";
+import { classService } from "@/app/api/services/classService";
+import { studentService } from "@/app/api/services/studentService";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -13,7 +16,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,45 +23,74 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 const startYear = 2021;
 
 interface AddStudentDialogProps {
   open: boolean;
   onClose: () => void;
+  onStudentAdded: () => void;
 }
 
-export default function AddStudentDialog({ open, onClose }: AddStudentDialogProps) {
+export default function AddStudentDialog({ open, onClose, onStudentAdded }: AddStudentDialogProps) {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [birthday, setBirthday] = useState<Date>();
-  const [location, setLocation] = useState("");
-  const [departmentId, setDepartmentId] = useState<number>(5);
-  const [majorId, setMajorId] = useState<number>(4);
-  const [currentStudentCount, setCurrentStudentCount] = useState(972);
-  const [currentClassCount, setCurrentClassCount] = useState(2);
+  const [gender, setGender] = useState<number>(0);
   const [selectedClassCode, setSelectedClassCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [classes, setClasses] = useState<ClassModel[]>([]);
 
-  const generateStudentId = () => {
-    const yearSuffix = startYear.toString().slice(-2);
-    const nextNumber = (currentStudentCount + 1).toString().padStart(4, "0");
-    return `${departmentId}${yearSuffix}0${nextNumber}`;
-  };
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const classes = await classService.getClasses();
+      setClasses(classes);
+    };
+    fetchClasses();
+  }, []);
 
-  const generateClassCode = () => {
-    return `${startYear.toString().slice(2)}${departmentId.toString().padStart(2, "0")}${majorId.toString().padStart(2, "0")}0${currentClassCount.toString().padStart(2, "0")}`;
-  };
+  const handleSave = async () => {
+    console.log({ name, email, phone, address, birthday, gender, selectedClassCode });
+    if (!name || !email || !phone || !address || !birthday || !selectedClassCode) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
 
-  const handleSave = () => {
-    const id = generateStudentId();
-    const classCode = generateClassCode();
-    console.log({ id, name, birthday, location, departmentId, majorId, classCode });
-  };
+    setIsLoading(true);
+    try {
+      const studentData = {
+        full_name: name,
+        email,
+        phone,
+        address,
+        birth_date: format(birthday, "yyyy-MM-dd"),
+        gender,
+        class_id: parseInt(selectedClassCode),
+      };
+      console.log(studentData);
 
-  const getClassOptions = () => {
-    const year = startYear.toString().slice(2);
-    const dep = departmentId.toString().padStart(2, "0");
-    const maj = majorId.toString().padStart(2, "0");
-    return [1, 2].map((n) => `${year}${dep}${maj}${n.toString().padStart(2, "0")}`);
+      await studentService.addStudent(studentData);
+      toast.success("Student added successfully");
+      onStudentAdded();
+      onClose();
+
+      // Reset form
+      setName("");
+      setEmail("");
+      setPhone("");
+      setAddress("");
+      setBirthday(undefined);
+      setGender(0);
+      setSelectedClassCode("");
+    } catch (error) {
+      console.error("Error adding student:", error);
+      toast.error("Failed to add student");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -76,6 +107,33 @@ export default function AddStudentDialog({ open, onClose }: AddStudentDialogProp
               Name
             </Label>
             <Input id="name" className="col-span-3" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="email" className="text-right">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              className="col-span-3"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="phone" className="text-right">
+              Phone
+            </Label>
+            <Input id="phone" className="col-span-3" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="address" className="text-right">
+              Address
+            </Label>
+            <Input id="address" className="col-span-3" value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
@@ -97,63 +155,32 @@ export default function AddStudentDialog({ open, onClose }: AddStudentDialogProp
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="location" className="text-right">
-              Location
-            </Label>
-            <Input
-              id="location"
-              className="col-span-3"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Department</Label>
+            <Label className="text-right">Gender</Label>
             <select
-              value={departmentId}
-              onChange={(e) => setDepartmentId(Number(e.target.value))}
+              value={gender}
+              onChange={(e) => setGender(Number(e.target.value))}
               className="col-span-3 rounded border p-2"
             >
-              {departmentData.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
+              <option value={0}>Female</option>
+              <option value={1}>Male</option>
+              <option value={2}>Other</option>
             </select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Major</Label>
-            <select
-              value={majorId}
-              onChange={(e) => setMajorId(Number(e.target.value))}
-              className="col-span-3 rounded border p-2"
-            >
-              {(majorData[departmentId] || []).map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Student ID</Label>
-            <Input readOnly value={generateStudentId()} className="col-span-3" />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Class Code</Label>
             <select
               value={selectedClassCode}
-              onChange={(e) => setSelectedClassCode(e.target.value)}
+              onChange={(e) => {
+                setSelectedClassCode(e.target.value);
+                console.log(selectedClassCode);
+              }}
               className="col-span-3 rounded border p-2"
             >
               <option value="">Select a class</option>
-              {getClassOptions().map((code) => (
-                <option key={code} value={code}>
-                  {code}
+              {classes.map((classItem) => (
+                <option key={classItem.id} value={classItem.id}>
+                  {classItem.class_code}
                 </option>
               ))}
             </select>
@@ -162,10 +189,13 @@ export default function AddStudentDialog({ open, onClose }: AddStudentDialogProp
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="submit" onClick={handleSave}>
-              Save Student
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
             </Button>
           </DialogClose>
+          <Button type="button" onClick={handleSave} disabled={isLoading}>
+            {isLoading ? "Adding..." : "Add Student"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

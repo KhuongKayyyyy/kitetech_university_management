@@ -6,6 +6,7 @@ import { curriculumData, majorData } from "@/app/api/fakedata";
 import { ClassModel } from "@/app/api/model/ClassModel";
 import { classService } from "@/app/api/services/classService";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -15,11 +16,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { useAcademicYears } from "@/hooks/useAcademicYear";
 import { useMajors } from "@/hooks/useMajor";
-import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface AddClassDialogProps {
@@ -32,6 +34,9 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
   const { academicYears } = useAcademicYears();
   const { majors } = useMajors();
   const [loading, setLoading] = useState(false);
+  const [openMajor, setOpenMajor] = useState(false);
+  const [openAcademicYear, setOpenAcademicYear] = useState(false);
+  const [openCurriculum, setOpenCurriculum] = useState(false);
 
   const [formData, setFormData] = useState({
     majorId: "",
@@ -95,68 +100,149 @@ export default function AddClassDialog({ open, setOpen, onAddClass }: AddClassDi
               <Label htmlFor="majorId" className="text-right">
                 Major ID *
               </Label>
-              <Select
-                value={formData.majorId}
-                onValueChange={(value) => handleInputChange("majorId", value)}
-                required
-                disabled={loading}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select major" />
-                </SelectTrigger>
-                <SelectContent>
-                  {majors.map((major) => (
-                    <SelectItem key={major.id} value={major.id?.toString() || ""}>
-                      {major.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openMajor} onOpenChange={setOpenMajor}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openMajor}
+                    className="col-span-3 justify-between"
+                    disabled={loading}
+                  >
+                    {formData.majorId
+                      ? majors.find((major) => major.id?.toString() === formData.majorId)?.name
+                      : "Select major..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search major..." />
+                    <CommandList>
+                      <CommandEmpty>No major found.</CommandEmpty>
+                      <CommandGroup>
+                        {majors.map((major) => (
+                          <CommandItem
+                            key={major.id}
+                            value={major.name}
+                            onSelect={() => {
+                              handleInputChange("majorId", major.id?.toString() || "");
+                              setOpenMajor(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.majorId === major.id?.toString() ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            {major.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="academicYearId" className="text-right">
                 Academic Year *
               </Label>
-              <Select
-                value={formData.academicYearId}
-                onValueChange={(value) => handleInputChange("academicYearId", value)}
-                required
-                disabled={loading}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select academic year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {academicYears.map((academicYear) => (
-                    <SelectItem key={academicYear.id} value={academicYear.year?.toString() || ""}>
-                      {academicYear.year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openAcademicYear} onOpenChange={setOpenAcademicYear}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openAcademicYear}
+                    className="col-span-3 justify-between"
+                    disabled={loading}
+                  >
+                    {formData.academicYearId
+                      ? academicYears.find((year) => year.year?.toString() === formData.academicYearId)?.year
+                      : "Select academic year..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search academic year..." />
+                    <CommandList>
+                      <CommandEmpty>No academic year found.</CommandEmpty>
+                      <CommandGroup>
+                        {academicYears.map((academicYear) => (
+                          <CommandItem
+                            key={academicYear.id}
+                            value={academicYear.year?.toString()}
+                            onSelect={() => {
+                              handleInputChange("academicYearId", academicYear.year?.toString() || "");
+                              setOpenAcademicYear(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.academicYearId === academicYear.year?.toString() ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            {academicYear.year}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="curriculumId" className="text-right">
                 Curriculum *
               </Label>
-              <Select
-                value={formData.curriculumId}
-                onValueChange={(value) => handleInputChange("curriculumId", value)}
-                required
-                disabled={loading}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select curriculum" />
-                </SelectTrigger>
-                <SelectContent>
-                  {curriculumData.map((curriculum) => (
-                    <SelectItem key={curriculum.id} value={curriculum.id.toString()}>
-                      {curriculum.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openCurriculum} onOpenChange={setOpenCurriculum}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCurriculum}
+                    className="col-span-3 justify-between"
+                    disabled={loading}
+                  >
+                    {formData.curriculumId
+                      ? curriculumData.find((curriculum) => curriculum.id.toString() === formData.curriculumId)?.name
+                      : "Select curriculum..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search curriculum..." />
+                    <CommandList>
+                      <CommandEmpty>No curriculum found.</CommandEmpty>
+                      <CommandGroup>
+                        {curriculumData.map((curriculum) => (
+                          <CommandItem
+                            key={curriculum.id}
+                            value={curriculum.name}
+                            onSelect={() => {
+                              handleInputChange("curriculumId", curriculum.id.toString());
+                              setOpenCurriculum(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                formData.curriculumId === curriculum.id.toString() ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                            {curriculum.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">

@@ -115,24 +115,6 @@ const page = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          {/* Year Selector */}
-          {/* <div className="flex items-center gap-2">
-            <label htmlFor="year-picker" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-              Academic Year:
-            </label>
-            <select
-              id="year-picker"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white"
-            >
-              <option value="2023">2023-2024</option>
-              <option value="2024">2024-2025</option>
-              <option value="2025">2025-2026</option>
-              <option value="2026">2026-2027</option>
-            </select>
-          </div> */}
-
           {/* Add Class Button */}
           <Button onClick={handleAddClass} className="flex items-center gap-2 bg-primary hover:bg-primary/90">
             <Plus className="w-4 h-4" />

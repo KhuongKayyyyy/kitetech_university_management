@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   ColumnDef,
@@ -29,7 +30,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, Edit, Loader2, MoreHorizontal, TrashIcon } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Edit, Filter, Loader2, MoreHorizontal, TrashIcon, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface ClassTableProps {
@@ -185,10 +186,38 @@ export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }
   const [rowSelection, setRowSelection] = React.useState({});
   const [isDeleting, setIsDeleting] = React.useState(false);
 
+  // Filter states
+  const [departmentFilter, setDepartmentFilter] = React.useState<string>("");
+  const [majorFilter, setMajorFilter] = React.useState<string>("");
+
   const classColumns = React.useMemo(() => createClassColumns(onClassDelete), [onClassDelete]);
 
+  // Get unique departments and majors for filter options
+  const departments = React.useMemo(() => {
+    const uniqueDepartments = Array.from(new Set(classes.map((cls) => cls.major?.faculty?.name).filter(Boolean)));
+    return uniqueDepartments.sort();
+  }, [classes]);
+
+  const majors = React.useMemo(() => {
+    const filteredClasses = departmentFilter
+      ? classes.filter((cls) => cls.major?.faculty?.name === departmentFilter)
+      : classes;
+
+    const uniqueMajors = Array.from(new Set(filteredClasses.map((cls) => cls.major?.name).filter(Boolean)));
+    return uniqueMajors.sort();
+  }, [classes, departmentFilter]);
+
+  // Filter the data based on department and major filters
+  const filteredClasses = React.useMemo(() => {
+    return classes.filter((cls) => {
+      const matchesDepartment = !departmentFilter || cls.major?.faculty?.name === departmentFilter;
+      const matchesMajor = !majorFilter || cls.major?.name === majorFilter;
+      return matchesDepartment && matchesMajor;
+    });
+  }, [classes, departmentFilter, majorFilter]);
+
   const table = useReactTable({
-    data: classes,
+    data: filteredClasses,
     columns: classColumns,
     state: {
       sorting,
@@ -234,6 +263,13 @@ export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }
     }
   };
 
+  const handleClearFilters = () => {
+    setDepartmentFilter("");
+    setMajorFilter("");
+  };
+
+  const hasActiveFilters = departmentFilter || majorFilter;
+
   return (
     <div className="w-full flex flex-col">
       <div className="flex items-center py-4 gap-4">
@@ -241,7 +277,7 @@ export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="shadow-md">
-                Filters <ChevronDown className="ml-2 h-4 w-4" />
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -260,9 +296,50 @@ export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" className="shadow-md" onClick={onAddClass}>
-            + Add Class
-          </Button>
+
+          {/* Department Filter */}
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="w-[200px] shadow-md">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <SelectValue placeholder="Filter by Department" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((department) => (
+                <SelectItem key={department} value={department || "unknown"}>
+                  {department}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Major Filter */}
+          <Select value={majorFilter} onValueChange={setMajorFilter}>
+            <SelectTrigger className="w-[200px] shadow-md">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <SelectValue placeholder="Filter by Major" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Majors</SelectItem>
+              {majors.map((major) => (
+                <SelectItem key={major} value={major || "unknown"}>
+                  {major}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={handleClearFilters} className="shadow-md">
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+          )}
           {isAnyRowSelected && (
             <Button
               variant="destructive"
@@ -277,6 +354,23 @@ export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }
           )}
         </div>
       </div>
+
+      {/* Filter summary */}
+      {hasActiveFilters && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center gap-2 text-sm text-blue-700">
+            <Filter className="h-4 w-4" />
+            <span>Active filters:</span>
+            {departmentFilter && (
+              <span className="px-2 py-1 bg-blue-100 rounded-md">Department: {departmentFilter}</span>
+            )}
+            {majorFilter && <span className="px-2 py-1 bg-blue-100 rounded-md">Major: {majorFilter}</span>}
+            <span className="text-blue-600">
+              ({filteredClasses.length} of {classes.length} classes shown)
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-x-auto">
         <div className="rounded-md border">
@@ -304,7 +398,7 @@ export function ClassTable({ classes, onClassUpdate, onClassDelete, onAddClass }
               ) : (
                 <TableRow>
                   <TableCell colSpan={classColumns.length} className="h-24 text-center">
-                    No classes found.
+                    {hasActiveFilters ? "No classes match the selected filters." : "No classes found."}
                   </TableCell>
                 </TableRow>
               )}

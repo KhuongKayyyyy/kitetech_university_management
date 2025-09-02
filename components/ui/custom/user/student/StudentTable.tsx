@@ -3,7 +3,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { departmentData, students } from "@/app/api/fakedata";
-import { Student } from "@/app/api/model/model";
+import { Student } from "@/app/api/model/StudentModel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +39,7 @@ import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/p
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, getDepartmentNameById, getMajorNameById } from "@/lib/utils";
+import { cn, getMajorNameById } from "@/lib/utils";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -66,6 +66,7 @@ import {
   CircleAlert,
   CircleX,
   Columns3,
+  Download,
   Edit,
   Eye,
   Filter,
@@ -76,6 +77,7 @@ import {
   Trash,
   UserPlus,
 } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 import StudentDetailDialog from "./StudentDetailDialog";
 
@@ -87,10 +89,10 @@ const multiColumnFilterFn: FilterFn<Student> = (row, filterValue) => {
   return searchableRowContent.includes(searchTerm);
 };
 
-const statusFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
+const genderFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true;
-  const status = row.getValue(columnId) as boolean;
-  return filterValue.includes(status ? "active" : "inactive");
+  const gender = row.original.gender;
+  return filterValue.includes(gender?.toString() || "");
 };
 
 const classFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
@@ -101,7 +103,7 @@ const classFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) 
 
 const majorFilterFn: FilterFn<Student> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true;
-  const majorId = row.original.classes?.major_id?.toString() || "";
+  const majorId = row.original.classes?.major?.id?.toString() || "";
   return filterValue.includes(majorId);
 };
 
@@ -130,11 +132,11 @@ const columns: ColumnDef<Student>[] = [
   },
   {
     header: "Student",
-    accessorKey: "firstName",
+    accessorKey: "full_name",
     cell: ({ row }) => (
       <div className="space-y-1">
         <div className="font-medium text-foreground">{row.original.full_name}</div>
-        <div className="text-sm text-muted-foreground">{row.original.id}</div>
+        <div className="text-sm text-muted-foreground">ID: {row.original.id}</div>
       </div>
     ),
     size: 200,
@@ -153,16 +155,17 @@ const columns: ColumnDef<Student>[] = [
     size: 250,
   },
   {
-    header: "Academic Info",
+    header: "Address",
+    accessorKey: "address",
+    cell: ({ row }) => <div className="font-medium text-foreground">{row.original.address}</div>,
+    size: 200,
+  },
+  {
+    header: "Major",
     accessorKey: "majorId",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">
-          {getMajorNameById(row.original.classes?.major_id?.toString() || "")}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {getDepartmentNameById(row.original.classes?.major_id || 0)} • {row.original.classes?.class_code || ""}
-        </div>
+        <div className="text-sm text-muted-foreground">{row.original.classes?.major?.name}</div>
       </div>
     ),
     size: 220,
@@ -177,7 +180,7 @@ const columns: ColumnDef<Student>[] = [
   },
   {
     header: "Birthday",
-    accessorKey: "dateOfBirth",
+    accessorKey: "birth_date",
     cell: ({ row }) => {
       const birthDate = row.original.birth_date;
       const formattedDate = birthDate ? new Date(birthDate).toLocaleDateString() : "";
@@ -186,25 +189,28 @@ const columns: ColumnDef<Student>[] = [
     size: 120,
   },
   {
-    header: "Status",
-    accessorKey: "isActive",
+    header: "Gender",
+    accessorKey: "gender",
     cell: ({ row }) => {
-      const isActive = row.getValue("isActive") as boolean;
+      const gender = row.original.gender;
+      const genderText = gender === 1 ? "Male" : gender === 0 ? "Female" : "Other";
       return (
         <Badge
-          variant={isActive ? "default" : "secondary"}
+          variant="outline"
           className={cn(
-            isActive
-              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-100 dark:bg-gray-800/50 dark:text-gray-400",
+            gender === 1
+              ? "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+              : gender === 0
+                ? "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/20 dark:text-pink-400 dark:border-pink-800"
+                : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700",
           )}
         >
-          {isActive ? "Active" : "Inactive"}
+          {genderText}
         </Badge>
       );
     },
     size: 100,
-    filterFn: statusFilterFn,
+    filterFn: genderFilterFn,
   },
   {
     id: "actions",
@@ -229,11 +235,12 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
     pageSize: 10,
   });
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: "firstName",
+      id: "full_name",
       desc: false,
     },
   ]);
@@ -258,6 +265,7 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
     setData(updatedData);
     table.resetRowSelection();
     onStudentUpdated?.();
+    toast.success(`${selectedRows.length} student${selectedRows.length === 1 ? "" : "s"} deleted successfully`);
   };
 
   const table = useReactTable({
@@ -281,9 +289,15 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
     },
   });
 
-  const uniqueStatusValues = useMemo(() => {
-    return ["active", "inactive"];
-  }, []);
+  const uniqueGenderValues = useMemo(() => {
+    const genders = new Set<string>();
+    data.forEach((student) => {
+      if (student.gender !== undefined && student.gender !== null) {
+        genders.add(student.gender.toString());
+      }
+    });
+    return Array.from(genders).sort();
+  }, [data]);
 
   const uniqueClassValues = useMemo(() => {
     const classes = new Set<string>();
@@ -298,27 +312,17 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
   const uniqueMajorValues = useMemo(() => {
     const majors = new Set<string>();
     data.forEach((student) => {
-      if (student.classes?.major_id) {
-        majors.add(student.classes.major_id.toString());
+      if (student.classes?.major?.id) {
+        majors.add(student.classes.major.id.toString());
       }
     });
     return Array.from(majors).sort();
   }, [data]);
 
-  // Get counts for each status
-  // const statusCounts = useMemo(() => {
-  //   const activeCount = data.filter((student) => student.isActive).length;
-  //   const inactiveCount = data.filter((student) => !student.isActive).length;
-  //   return new Map([
-  //     ["active", activeCount],
-  //     ["inactive", inactiveCount],
-  //   ]);
-  // }, [data]);
-
-  const selectedStatuses = useMemo(() => {
-    const filterValue = table.getColumn("isActive")?.getFilterValue() as string[];
+  const selectedGenders = useMemo(() => {
+    const filterValue = table.getColumn("gender")?.getFilterValue() as string[];
     return filterValue ?? [];
-  }, [table.getColumn("isActive")?.getFilterValue()]);
+  }, [table.getColumn("gender")?.getFilterValue()]);
 
   const selectedClasses = useMemo(() => {
     const filterValue = table.getColumn("classCode")?.getFilterValue() as string[];
@@ -330,8 +334,8 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
     return filterValue ?? [];
   }, [table.getColumn("majorId")?.getFilterValue()]);
 
-  const handleStatusChange = (checked: boolean, value: string) => {
-    const filterValue = table.getColumn("isActive")?.getFilterValue() as string[];
+  const handleGenderChange = (checked: boolean, value: string) => {
+    const filterValue = table.getColumn("gender")?.getFilterValue() as string[];
     const newFilterValue = filterValue ? [...filterValue] : [];
 
     if (checked) {
@@ -343,7 +347,7 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
       }
     }
 
-    table.getColumn("isActive")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+    table.getColumn("gender")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
   };
 
   const handleClassChange = (checked: boolean, value: string) => {
@@ -379,16 +383,16 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
   };
 
   const globalFilterValue = useMemo(() => {
-    return (table.getColumn("firstName")?.getFilterValue() ?? "") as string;
-  }, [table.getColumn("firstName")?.getFilterValue()]);
+    return (table.getColumn("full_name")?.getFilterValue() ?? "") as string;
+  }, [table.getColumn("full_name")?.getFilterValue()]);
 
   const hasActiveFilters = useMemo(() => {
-    return globalFilterValue || selectedStatuses.length > 0 || selectedClasses.length > 0 || selectedMajors.length > 0;
-  }, [globalFilterValue, selectedStatuses.length, selectedClasses.length, selectedMajors.length]);
+    return globalFilterValue || selectedGenders.length > 0 || selectedClasses.length > 0 || selectedMajors.length > 0;
+  }, [globalFilterValue, selectedGenders.length, selectedClasses.length, selectedMajors.length]);
 
   const clearAllFilters = () => {
-    table.getColumn("firstName")?.setFilterValue("");
-    table.getColumn("isActive")?.setFilterValue(undefined);
+    table.getColumn("full_name")?.setFilterValue("");
+    table.getColumn("gender")?.setFilterValue(undefined);
     table.getColumn("classCode")?.setFilterValue(undefined);
     table.getColumn("majorId")?.setFilterValue(undefined);
     if (inputRef.current) {
@@ -396,38 +400,91 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
     }
   };
 
+  const buildCsvFromStudents = (items: Student[]) => {
+    const headers = ["id", "full_name", "email", "phone", "address", "birth_date", "gender", "class_code", "major_id"];
+    const escapeCsv = (value: unknown) => {
+      if (value === null || value === undefined) return "";
+      const str = String(value);
+      if (/[",\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}` + `"`;
+      }
+      return str;
+    };
+    const rows = items.map((s) => [
+      s.id,
+      s.full_name,
+      s.email,
+      s.phone,
+      s.address,
+      s.birth_date ? new Date(s.birth_date).toISOString().split("T")[0] : "",
+      s.gender,
+      s.classes?.class_code ?? "",
+      s.classes?.major?.id ?? "",
+    ]);
+    const lines = [headers, ...rows].map((r) => r.map(escapeCsv).join(","));
+    return lines.join("\n");
+  };
+
+  const handleConfirmExport = () => {
+    const selected = table.getSelectedRowModel().rows.map((r) => r.original as Student);
+    if (!selected.length) {
+      toast.error("No selected students to export");
+      return;
+    }
+    const csv = buildCsvFromStudents(selected);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fileName = `students_export_${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.csv`;
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+    toast.success(`Exported ${selected.length} student${selected.length === 1 ? "" : "s"}`);
+  };
+
+  const getGenderText = (gender: number | undefined) => {
+    if (gender === 1) return "Male";
+    if (gender === 0) return "Female";
+    return "Other";
+  };
+
   return (
     <div className="space-y-6 p-6">
+      <Toaster />
       {/* Filters and Actions */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            {/* Status Filter */}
+            {/* Gender Filter */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <Filter className="h-4 w-4" />
-                  Status
-                  {selectedStatuses.length > 0 && (
+                  Gender
+                  {selectedGenders.length > 0 && (
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                      {selectedStatuses.length}
+                      {selectedGenders.length}
                     </Badge>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-48 p-3" align="start">
                 <div className="space-y-3">
-                  <div className="text-sm font-medium">Filter by status</div>
+                  <div className="text-sm font-medium">Filter by gender</div>
                   <div className="space-y-2">
-                    {uniqueStatusValues.map((value) => (
+                    {uniqueGenderValues.map((value) => (
                       <div key={value} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`status-${value}`}
-                          checked={selectedStatuses.includes(value)}
-                          onCheckedChange={(checked: boolean) => handleStatusChange(checked, value)}
+                          id={`gender-${value}`}
+                          checked={selectedGenders.includes(value)}
+                          onCheckedChange={(checked: boolean) => handleGenderChange(checked, value)}
                         />
-                        <Label htmlFor={`status-${value}`} className="flex-1 text-sm font-normal capitalize">
-                          {value}
+                        <Label htmlFor={`gender-${value}`} className="flex-1 text-sm font-normal capitalize">
+                          {getGenderText(parseInt(value))}
                         </Label>
                       </div>
                     ))}
@@ -494,7 +551,7 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
                           checked={selectedMajors.includes(value)}
                           onCheckedChange={(checked: boolean) => handleMajorChange(checked, value)}
                         />
-                        <Label htmlFor={`major-${value}`} className="flex-1 text-sm font-normal">
+                        <Label htmlFor={`major-${value}`} className="flex-1 text-sm font-normal text-black">
                           {getMajorNameById(value)}
                         </Label>
                       </div>
@@ -544,6 +601,38 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{table.getSelectedRowModel().rows.length} selected</span>
+              <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <Download className="h-5 w-5" />
+                      Review Export
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You are about to export {table.getSelectedRowModel().rows.length} selected student
+                      {table.getSelectedRowModel().rows.length === 1 ? "" : "s"}. Review the list below.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="max-h-64 overflow-auto rounded-md border p-3 text-sm">
+                    {table.getSelectedRowModel().rows.map((r) => (
+                      <div key={String((r.original as Student).id)} className="flex items-center justify-between py-1">
+                        <span className="font-medium text-foreground">{(r.original as Student).full_name}</span>
+                        <span className="text-muted-foreground">{(r.original as Student).email}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmExport}>Confirm Export</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" className="gap-2">

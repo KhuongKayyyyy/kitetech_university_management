@@ -320,7 +320,7 @@ export default function CreateCurriculumDialog({
                   </Select>
                 </div>
               </div>
-              C
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="faculty">Faculty *</Label>
@@ -353,7 +353,7 @@ export default function CreateCurriculumDialog({
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="totalCredits">Total Credits</Label>
                 <Input
                   id="totalCredits"
@@ -362,7 +362,7 @@ export default function CreateCurriculumDialog({
                   value={formData.totalCredits}
                   onChange={(e) => handleTotalCreditsChange(parseInt(e.target.value) || 120)}
                 />
-              </div>
+              </div> */}
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -396,21 +396,19 @@ export default function CreateCurriculumDialog({
                     <Card
                       key={boardType.id}
                       onClick={() => !isCore && handleBoardTypeToggle(boardType.id)}
-                      className={`group relative transition-all duration-300 cursor-pointer border-2 ${
-                        isSelected
-                          ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
-                          : "border-border hover:border-primary/50 hover:shadow-md hover:bg-accent/20"
-                      } ${isCore ? "border-primary bg-primary/10 shadow-sm" : ""}`}
+                      className={`group relative transition-all duration-300 cursor-pointer border-2 ${isSelected
+                        ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                        : "border-border hover:border-primary/50 hover:shadow-md hover:bg-accent/20"
+                        } ${isCore ? "border-primary bg-primary/10 shadow-sm" : ""}`}
                     >
                       <CardHeader className="space-y-3 p-6">
                         <CardTitle className="flex items-center justify-between text-lg font-semibold">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`p-2 rounded-lg transition-colors ${
-                                isSelected || isCore
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-accent group-hover:bg-primary/10"
-                              }`}
+                              className={`p-2 rounded-lg transition-colors ${isSelected || isCore
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-accent group-hover:bg-primary/10"
+                                }`}
                             >
                               <IconComponent className="h-5 w-5" />
                             </div>

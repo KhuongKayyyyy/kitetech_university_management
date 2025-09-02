@@ -18,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useGradingFormulas } from "@/hooks/useGradingFormula";
-import { getDepartmentNameById } from "@/lib/utils";
+import { getMajorNameById } from "@/lib/utils";
+// import { getDepartmentNameById } from "@/lib/utils";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -129,7 +130,7 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
         cell: ({ row }) => (
           <div className="capitalize">
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-xs font-medium">
-              {getDepartmentNameById(row.original.faculty_id)}
+              {getMajorNameById(row.original.faculty_id.toString())}
             </span>
           </div>
         ),

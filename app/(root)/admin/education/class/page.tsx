@@ -116,7 +116,7 @@ const page = () => {
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Year Selector */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <label htmlFor="year-picker" className="text-sm font-medium text-gray-700 whitespace-nowrap">
               Academic Year:
             </label>
@@ -131,7 +131,7 @@ const page = () => {
               <option value="2025">2025-2026</option>
               <option value="2026">2026-2027</option>
             </select>
-          </div>
+          </div> */}
 
           {/* Add Class Button */}
           <Button onClick={handleAddClass} className="flex items-center gap-2 bg-primary hover:bg-primary/90">

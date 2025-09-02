@@ -9,6 +9,7 @@ import AddStudentDialog from "@/components/ui/custom/user/student/AddStudentDial
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
 import StudentTable from "@/components/ui/custom/user/student/StudentTable";
 import { ChevronLeft, ChevronRight, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 export default function StudentPage() {
   const [searchTerm, setSearchTerm] = useState("");

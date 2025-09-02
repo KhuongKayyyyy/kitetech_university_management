@@ -129,66 +129,7 @@ export default function GeneratedCurriBoard({ subjects }: GeneratedCurriBoardPro
           </div>
 
           {/* Enhanced Progress Indicator */}
-          <div className="mt-16 bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-lg rounded-3xl p-8 border border-white/30 shadow-2xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-primary bg-clip-text text-transparent mb-4">
-                Academic Progress
-              </h2>
-              <p className="text-gray-600">Track your journey through the curriculum</p>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="relative mb-8">
-              <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary via-blue-500 to-purple-500 rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${Math.min((sortedSemesters.length / 8) * 100, 100)}%` }}
-                ></div>
-              </div>
-              <div className="absolute top-6 left-0 right-0 flex justify-between text-sm text-gray-600">
-                <span>Start</span>
-                <span className="font-medium text-primary">{sortedSemesters.length}/8 Semesters</span>
-                <span>Graduation</span>
-              </div>
-            </div>
-
-            {/* Credit Distribution */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800">Credit Distribution</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Required Courses</span>
-                    <span className="font-medium text-red-600">
-                      {subjects.filter((s) => s.IsRequired).reduce((sum, s) => sum + s.TotalCredits, 0)} credits
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Elective Courses</span>
-                    <span className="font-medium text-blue-600">
-                      {subjects.filter((s) => !s.IsRequired).reduce((sum, s) => sum + s.TotalCredits, 0)} credits
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800">Course Types</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Total Subjects</span>
-                    <span className="font-medium text-primary">{subjects.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Avg Credits/Semester</span>
-                    <span className="font-medium text-green-600">
-                      {sortedSemesters.length > 0 ? Math.round(totalCredits / sortedSemesters.length) : 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { classService } from "@/app/api/services/classService";
 import { studentService } from "@/app/api/services/studentService";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogClose,
@@ -22,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Plus } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 const startYear = 2021;
@@ -43,6 +44,7 @@ export default function AddStudentDialog({ open, onClose, onStudentAdded }: AddS
   const [selectedClassCode, setSelectedClassCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [classes, setClasses] = useState<ClassModel[]>([]);
+  const [classComboOpen, setClassComboOpen] = useState(false);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -73,7 +75,7 @@ export default function AddStudentDialog({ open, onClose, onStudentAdded }: AddS
       console.log(studentData);
 
       await studentService.addStudent(studentData);
-      toast.success("Student added successfully");
+      toast.success(`Student ${name} added successfully`);
       onStudentAdded();
       onClose();
 
@@ -169,21 +171,49 @@ export default function AddStudentDialog({ open, onClose, onStudentAdded }: AddS
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right">Class Code</Label>
-            <select
-              value={selectedClassCode}
-              onChange={(e) => {
-                setSelectedClassCode(e.target.value);
-                console.log(selectedClassCode);
-              }}
-              className="col-span-3 rounded border p-2"
-            >
-              <option value="">Select a class</option>
-              {classes.map((classItem) => (
-                <option key={classItem.id} value={classItem.id}>
-                  {classItem.class_code}
-                </option>
-              ))}
-            </select>
+            <Popover open={classComboOpen} onOpenChange={setClassComboOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={classComboOpen}
+                  className="col-span-3 justify-between"
+                >
+                  {selectedClassCode
+                    ? classes.find((classItem) => classItem.id?.toString() === selectedClassCode)?.class_code
+                    : "Select a class..."}
+                  <ChevronsUpDown className="opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="col-span-3 p-0">
+                <Command>
+                  <CommandInput placeholder="Search class..." className="h-9" />
+                  <CommandList>
+                    <CommandEmpty>No class found.</CommandEmpty>
+                    <CommandGroup>
+                      {classes.map((classItem) => (
+                        <CommandItem
+                          key={classItem.id}
+                          value={classItem.class_code}
+                          onSelect={() => {
+                            setSelectedClassCode(classItem.id?.toString() || "");
+                            setClassComboOpen(false);
+                          }}
+                        >
+                          {classItem.class_code}
+                          <Check
+                            className={cn(
+                              "ml-auto",
+                              selectedClassCode === classItem.id?.toString() ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

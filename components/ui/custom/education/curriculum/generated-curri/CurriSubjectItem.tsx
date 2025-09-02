@@ -107,18 +107,7 @@ export default function CurriSubjectItem({ subject }: CurriSubjectItemProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Clock className="w-4 h-4 text-gray-400 group-hover:text-primary/60 transition-colors duration-300" />
-                    <div className="absolute inset-0 bg-primary/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500 block font-medium uppercase tracking-wide">Hours</span>
-                    <span className="font-bold text-gray-700 text-lg group-hover:text-gray-900 transition-colors duration-300">
-                      {subject.LectureHours + subject.PracticeHours}
-                    </span>
-                  </div>
-                </div>
+
               </div>
 
               {/* Additional Info Row */}

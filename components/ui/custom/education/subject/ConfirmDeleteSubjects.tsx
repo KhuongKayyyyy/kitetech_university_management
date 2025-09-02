@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getDepartmentNameById } from "@/lib/utils";
+import { getMajorNameById } from "@/lib/utils";
 import { AlertTriangle, BookOpen, TrashIcon } from "lucide-react";
 
 interface ConfirmDeleteSubjectsProps {
@@ -91,7 +91,7 @@ export default function ConfirmDeleteSubjects({ open, onOpenChange, subjects, on
                         <h5 className="font-medium text-gray-900 truncate">{subject.name}</h5>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="secondary" className="text-xs">
-                            {getDepartmentNameById(subject.faculty_id)}
+                            {getMajorNameById(subject.faculty_id.toString())}
                           </Badge>
                           <span className="text-xs text-gray-500">
                             {subject.credits} credit{subject.credits !== 1 ? "s" : ""}

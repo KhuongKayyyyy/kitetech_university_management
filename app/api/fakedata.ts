@@ -1,12 +1,7 @@
-import {
-  Calculator,
-  DraftingCompass,
-  LampWallDown,
-  ScanEyeIcon,
-  TextSearchIcon,
-} from "lucide-react";
-import { FacultyModel, Student, Teacher, SubjectModel } from "./model/model";
+import { Calculator, DraftingCompass, LampWallDown, ScanEyeIcon, TextSearchIcon } from "lucide-react";
+
 import { GradingFormulaModel } from "./model/GradingFormulaModel";
+import { FacultyModel, Student, SubjectModel, Teacher } from "./model/model";
 
 export const teachers: Teacher[] = [
   {
@@ -311,7 +306,6 @@ export const teachers: Teacher[] = [
     teacherEmail: "james.evans@university.edu",
   },
 ];
-
 
 export const students: Student[] = [
   {
@@ -1097,7 +1091,6 @@ export const students: Student[] = [
   },
 ];
 
-
 export const genders = [
   { id: 1, name: "Male" },
   { id: 2, name: "Female" },
@@ -1152,8 +1145,7 @@ export const departmentData: FacultyModel[] = [
         id: 102,
         name: "Marketing",
         departmentId: 1,
-        description:
-          "Exploration of consumer behavior, branding, and advertising.",
+        description: "Exploration of consumer behavior, branding, and advertising.",
       },
       {
         id: 103,
@@ -1197,8 +1189,7 @@ export const departmentData: FacultyModel[] = [
         id: 204,
         name: "Literature",
         departmentId: 2,
-        description:
-          "Analysis of written works from various cultures and periods.",
+        description: "Analysis of written works from various cultures and periods.",
       },
     ],
     icon: "DraftingCompass",
@@ -1224,8 +1215,7 @@ export const departmentData: FacultyModel[] = [
         id: 303,
         name: "Physics",
         departmentId: 3,
-        description:
-          "Exploring the fundamental laws of nature and the universe.",
+        description: "Exploring the fundamental laws of nature and the universe.",
       },
       {
         id: 304,
@@ -1263,8 +1253,7 @@ export const departmentData: FacultyModel[] = [
         id: 404,
         name: "Constitutional Law",
         departmentId: 4,
-        description:
-          "Interpretation and application of constitutional principles.",
+        description: "Interpretation and application of constitutional principles.",
       },
     ],
     icon: "LampWallDown",
@@ -1284,22 +1273,19 @@ export const departmentData: FacultyModel[] = [
         id: 502,
         name: "AI",
         departmentId: 5,
-        description:
-          "Design and development of intelligent systems and algorithms.",
+        description: "Design and development of intelligent systems and algorithms.",
       },
       {
         id: 503,
         name: "Cybersecurity",
         departmentId: 5,
-        description:
-          "Protection of digital systems and data from cyber threats.",
+        description: "Protection of digital systems and data from cyber threats.",
       },
       {
         id: 504,
         name: "Computer Science",
         departmentId: 5,
-        description:
-          "Core principles of computing, software, and data structures.",
+        description: "Core principles of computing, software, and data structures.",
       },
     ],
     icon: "TextSearchIcon",
@@ -1319,22 +1305,19 @@ export const departmentData: FacultyModel[] = [
         id: 602,
         name: "Nursing",
         departmentId: 6,
-        description:
-          "Healthcare practices focusing on patient care and support.",
+        description: "Healthcare practices focusing on patient care and support.",
       },
       {
         id: 603,
         name: "Pharmacy",
         departmentId: 6,
-        description:
-          "Study of drugs, their uses, and effects on the human body.",
+        description: "Study of drugs, their uses, and effects on the human body.",
       },
       {
         id: 604,
         name: "Public Health",
         departmentId: 6,
-        description:
-          "Promotion of community health through prevention and education.",
+        description: "Promotion of community health through prevention and education.",
       },
     ],
     icon: "Calculator",
@@ -1360,8 +1343,7 @@ export const departmentData: FacultyModel[] = [
         id: 703,
         name: "Civil Engineering",
         departmentId: 7,
-        description:
-          "Construction and maintenance of infrastructure and buildings.",
+        description: "Construction and maintenance of infrastructure and buildings.",
       },
       {
         id: 704,
@@ -1419,8 +1401,7 @@ export const departmentData: FacultyModel[] = [
         id: 902,
         name: "Sociology",
         departmentId: 9,
-        description:
-          "Examination of society, social structures, and relationships.",
+        description: "Examination of society, social structures, and relationships.",
       },
       {
         id: 903,
@@ -1446,8 +1427,7 @@ export const departmentData: FacultyModel[] = [
         id: 1001,
         name: "Environmental Science",
         departmentId: 10,
-        description:
-          "Investigation of environmental systems and sustainability.",
+        description: "Investigation of environmental systems and sustainability.",
       },
       {
         id: 1002,
@@ -1548,7 +1528,7 @@ export const subjects: SubjectModel[] = [
     credits: 3,
   },
   {
-    id: "2", 
+    id: "2",
     subjectId: "102",
     name: "Marketing Strategies",
     description: "Study of consumer behavior and branding techniques.",
@@ -1623,8 +1603,7 @@ export const subjects: SubjectModel[] = [
     id: "10",
     subjectId: "302",
     name: "Organic Chemistry",
-    description:
-      "Understanding the structure and reactions of organic compounds.",
+    description: "Understanding the structure and reactions of organic compounds.",
     majorId: "302",
     faculty_id: 3,
     credits: 4,
@@ -1678,8 +1657,7 @@ export const subjects: SubjectModel[] = [
     id: "16",
     subjectId: "404",
     name: "Constitutional Law",
-    description:
-      "Analysis of constitutional principles and their applications.",
+    description: "Analysis of constitutional principles and their applications.",
     majorId: "404",
     faculty_id: 4,
     credits: 4,
@@ -1722,7 +1700,7 @@ export const subjects: SubjectModel[] = [
   },
 ];
 
-export const PESubjects  :SubjectModel[] = [
+export const PESubjects: SubjectModel[] = [
   {
     id: "101",
     subjectId: "1001",
@@ -1733,7 +1711,7 @@ export const PESubjects  :SubjectModel[] = [
     credits: 2,
   },
   {
-    id: "102", 
+    id: "102",
     subjectId: "1002",
     name: "Swimming",
     description: "Swimming techniques and water safety.",
@@ -1743,7 +1721,7 @@ export const PESubjects  :SubjectModel[] = [
   },
   {
     id: "103",
-    subjectId: "1003", 
+    subjectId: "1003",
     name: "Volleyball",
     description: "Fundamentals of volleyball gameplay.",
     majorId: "601",
@@ -1857,7 +1835,7 @@ export const PESubjects  :SubjectModel[] = [
     majorId: "601",
     faculty_id: 6,
     credits: 2,
-  }
+  },
 ];
 
 export const philosophySubjects: SubjectModel[] = [
@@ -1871,7 +1849,7 @@ export const philosophySubjects: SubjectModel[] = [
     credits: 3,
   },
   {
-    id: "202", 
+    id: "202",
     subjectId: "2002",
     name: "Ethics and Moral Philosophy",
     description: "Ethical theories, moral reasoning and contemporary issues.",
@@ -1950,7 +1928,7 @@ export const philosophySubjects: SubjectModel[] = [
     majorId: "401",
     faculty_id: 4,
     credits: 3,
-  }
+  },
 ];
 
 export const englishSubjects: SubjectModel[] = [
@@ -1964,7 +1942,7 @@ export const englishSubjects: SubjectModel[] = [
     credits: 3,
   },
   {
-    id: "302", 
+    id: "302",
     subjectId: "3002",
     name: "Intermediate English",
     description: "Advanced grammar structures, academic writing and reading comprehension.",
@@ -1974,7 +1952,7 @@ export const englishSubjects: SubjectModel[] = [
   },
   {
     id: "303",
-    subjectId: "3003", 
+    subjectId: "3003",
     name: "Upper Intermediate English",
     description: "Complex language structures, academic essays and critical analysis.",
     majorId: "503",
@@ -1998,7 +1976,7 @@ export const englishSubjects: SubjectModel[] = [
     majorId: "503",
     faculty_id: 5,
     credits: 3,
-  }
+  },
 ];
 
 export const skillSubjects: SubjectModel[] = [
@@ -2013,7 +1991,7 @@ export const skillSubjects: SubjectModel[] = [
   },
   {
     id: "402",
-    subjectId: "4002", 
+    subjectId: "4002",
     name: "Public Speaking",
     description: "Master presentation skills and confident communication techniques.",
     majorId: "602",
@@ -2091,9 +2069,8 @@ export const skillSubjects: SubjectModel[] = [
     majorId: "602",
     faculty_id: 6,
     credits: 2,
-  }
+  },
 ];
-
 
 export const formulaSubjects: GradingFormulaModel[] = [
   {
@@ -2104,7 +2081,7 @@ export const formulaSubjects: GradingFormulaModel[] = [
     participation: 10,
     midtermTest: 20,
     midtermReport: 30,
-    final: 40
+    final: 40,
   },
   {
     id: 2,
@@ -2114,7 +2091,7 @@ export const formulaSubjects: GradingFormulaModel[] = [
     participation: 5,
     midtermTest: 15,
     midtermReport: 20,
-    final: 60
+    final: 60,
   },
   {
     id: 3,
@@ -2124,7 +2101,7 @@ export const formulaSubjects: GradingFormulaModel[] = [
     participation: 25,
     midtermTest: 25,
     midtermReport: 25,
-    final: 25
+    final: 25,
   },
   {
     id: 4,
@@ -2134,7 +2111,7 @@ export const formulaSubjects: GradingFormulaModel[] = [
     participation: 30,
     midtermTest: 20,
     midtermReport: 20,
-    final: 30
+    final: 30,
   },
   {
     id: 5,
@@ -2144,10 +2121,9 @@ export const formulaSubjects: GradingFormulaModel[] = [
     participation: 10,
     midtermTest: 15,
     midtermReport: 50,
-    final: 25
-  }
-]
-
+    final: 25,
+  },
+];
 
 export const curriculumData = [
   {
@@ -2156,9 +2132,9 @@ export const curriculumData = [
     academicYear: "2025",
     department: "Khoa Công nghệ thông tin",
     major: "Khoa học máy tính",
-    totalCredits: 120,
-    totalCourses: 40,
-    status: "active"
+    totalCredits: 104,
+    totalCourses: 31,
+    status: "active",
   },
   {
     id: 2,
@@ -2168,7 +2144,7 @@ export const curriculumData = [
     major: "Mạng máy tính",
     totalCredits: 125,
     totalCourses: 42,
-    status: "active"
+    status: "active",
   },
   {
     id: 3,
@@ -2178,7 +2154,7 @@ export const curriculumData = [
     major: "An toàn thông tin",
     totalCredits: 130,
     totalCourses: 45,
-    status: "inactive"
+    status: "inactive",
   },
   {
     id: 4,
@@ -2188,7 +2164,7 @@ export const curriculumData = [
     major: "Kỹ thuật phần mềm",
     totalCredits: 128,
     totalCourses: 43,
-    status: "draft"
+    status: "draft",
   },
   {
     id: 5,
@@ -2198,7 +2174,7 @@ export const curriculumData = [
     major: "Trí tuệ nhân tạo",
     totalCredits: 135,
     totalCourses: 46,
-    status: "active"
+    status: "active",
   },
   {
     id: 6,
@@ -2208,7 +2184,7 @@ export const curriculumData = [
     major: "Kinh tế học",
     totalCredits: 110,
     totalCourses: 38,
-    status: "active"
+    status: "active",
   },
   {
     id: 7,
@@ -2218,7 +2194,7 @@ export const curriculumData = [
     major: "Quản trị kinh doanh",
     totalCredits: 115,
     totalCourses: 40,
-    status: "inactive"
+    status: "inactive",
   },
   {
     id: 8,
@@ -2228,6 +2204,6 @@ export const curriculumData = [
     major: "Tài chính ngân hàng",
     totalCredits: 118,
     totalCourses: 41,
-    status: "draft"
-  }
-]
+    status: "draft",
+  },
+];

@@ -13,8 +13,8 @@ import { toast, Toaster } from "sonner";
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter();
-  const [username, setUsername] = useState("52100973");
-  const [password, setPassword] = useState("52100973");
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("matkhau123");
   const handleLogin = async () => {
     try {
       const { userInfo } = await authService.login({ username, password });
@@ -60,12 +60,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 />
               </div>
               <div className="grid gap-3">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a href="#" className="ml-auto text-sm underline-offset-2 hover:underline">
-                    Forgot your password?
-                  </a>
-                </div>
                 <Input
                   id="password"
                   type="password"

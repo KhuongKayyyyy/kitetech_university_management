@@ -30,7 +30,7 @@ export function SubjectDetailDialog({
   subject: SubjectModel;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onSubmit?: (updatedSubject: SubjectModel) => Promise<void>;
+  onSubmit?: (updatedSubject: SubjectModel) => void;
 }) {
   const { departments } = useDepartments();
   const { gradingFormulas } = useGradingFormulas();
@@ -78,7 +78,7 @@ export function SubjectDetailDialog({
     );
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!isFormValid()) {
       return; // Prevent submission if form is not valid
     }
@@ -94,7 +94,7 @@ export function SubjectDetailDialog({
         gradingFormulaId: editedSubject.gradingFormulaId || 1, // Default to formula ID 1 if none selected
       };
 
-      await onSubmit?.(updatedSubject);
+      onSubmit?.(updatedSubject);
       onOpenChange?.(false);
     } catch (error) {
       console.error("Error updating subject:", error);

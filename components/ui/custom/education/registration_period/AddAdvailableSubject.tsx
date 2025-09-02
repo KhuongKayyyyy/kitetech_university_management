@@ -45,7 +45,7 @@ export default function AddAdvailableSubject({
 
     const term = searchTerm.toLowerCase();
     return subjects.filter(
-      (subject) => subject.name.toLowerCase().includes(term) || subject.subjectId.toLowerCase().includes(term),
+      (subject) => subject.name.toLowerCase().includes(term) || subject.id.toLowerCase().includes(term),
     );
   }, [searchTerm]);
 
@@ -169,7 +169,7 @@ export default function AddAdvailableSubject({
                           <div>
                             <p className="text-sm font-medium leading-none">{subject.name}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {subject.subjectId} - {subject.credits} credits
+                              {subject.id} - {subject.credits} credits
                             </p>
                             {subject.description && (
                               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{subject.description}</p>

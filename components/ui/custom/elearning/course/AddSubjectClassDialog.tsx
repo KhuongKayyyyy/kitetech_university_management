@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
-import { AvailableSubject } from "@/app/api/model/AvailableSubject";
-import { MOCK_SEMESTER_WEEKS } from "@/app/api/model/SemesterWeekModel";
 import { MOCK_TIME_SHEETS } from "@/app/api/model/TimeSheet";
+import { teacherService } from "@/app/api/services/teacherService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +17,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubjects } from "@/hooks/useSubject";
-import { BookOpen, Calendar, CalendarDays, Clock, Save, X } from "lucide-react";
+import { addDays, endOfWeek, format, isWithinInterval, startOfWeek } from "date-fns";
+import { BookOpen, Calendar, CalendarDays, Check, ChevronsUpDown, Clock, Save, X } from "lucide-react";
 import { toast } from "sonner";
+
+interface Teacher {
+  id: number;
+  full_name?: string;
+  email: string;
+}
 
 interface AddSubjectClassDialogProps {
   isOpen?: boolean;
@@ -31,14 +38,22 @@ interface AddSubjectClassDialogProps {
 }
 
 interface SubjectClassFormData {
-  subject_id: number;
+  subject_id: string;
   class_name: string;
   description: string;
-  semester_week_ids: number[];
+  begin_date: string;
+  end_date: string;
   max_students: number;
   instructor: string;
   location: string;
   schedule_time_sheets: number[];
+}
+
+interface GeneratedWeek {
+  week_number: number;
+  start_date: string;
+  end_date: string;
+  is_selected: boolean;
 }
 
 const DAYS_OF_WEEK = [
@@ -58,17 +73,37 @@ export default function AddSubjectClassDialog({
   trigger,
 }: AddSubjectClassDialogProps) {
   const { subjects } = useSubjects();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [formData, setFormData] = useState<SubjectClassFormData>({
-    subject_id: 0,
+    subject_id: "",
     class_name: "",
     description: "",
-    semester_week_ids: [],
+    begin_date: "",
+    end_date: "",
     max_students: 30,
     instructor: "",
     location: "",
     schedule_time_sheets: [],
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [subjectOpen, setSubjectOpen] = useState(false);
+  const [instructorOpen, setInstructorOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [selectedWeeks, setSelectedWeeks] = useState<GeneratedWeek[]>([]);
+
+  // Load teachers on component mount
+  React.useEffect(() => {
+    const loadTeachers = async () => {
+      try {
+        const teachersData = await teacherService.getTeachers();
+        setTeachers(teachersData || []);
+      } catch (error) {
+        console.error("Failed to load teachers:", error);
+        toast.error("Failed to load teachers");
+      }
+    };
+    loadTeachers();
+  }, []);
 
   const handleInputChange = (field: keyof SubjectClassFormData, value: string | number | number[]) => {
     setFormData((prev) => ({
@@ -77,13 +112,67 @@ export default function AddSubjectClassDialog({
     }));
   };
 
-  const handleWeekSelection = (weekId: number, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      semester_week_ids: checked
-        ? [...prev.semester_week_ids, weekId]
-        : prev.semester_week_ids.filter((id) => id !== weekId),
-    }));
+  // Generate study weeks based on date range and selected schedule
+  const generateStudyWeeks = useMemo(() => {
+    if (!formData.begin_date || !formData.end_date || formData.schedule_time_sheets.length === 0) {
+      return [];
+    }
+
+    const beginDate = new Date(formData.begin_date);
+    const endDate = new Date(formData.end_date);
+    const weeks: GeneratedWeek[] = [];
+
+    // Get unique days from selected time sheets
+    const selectedDays = formData.schedule_time_sheets
+      .map((id) => MOCK_TIME_SHEETS.find((sheet) => sheet.id === id)?.date)
+      .filter(Boolean)
+      .map((day) => day!.toLowerCase());
+
+    let currentDate = new Date(beginDate);
+    let weekNumber = 1;
+
+    while (currentDate <= endDate) {
+      const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
+      const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 }); // Sunday
+
+      // Check if this week has any of the selected days
+      const hasSelectedDays = selectedDays.some((day) => {
+        const dayIndex = DAYS_OF_WEEK.findIndex((d) => d.value === day);
+        if (dayIndex === -1) return false;
+
+        const dayDate = addDays(weekStart, dayIndex);
+        return isWithinInterval(dayDate, { start: beginDate, end: endDate });
+      });
+
+      if (hasSelectedDays) {
+        weeks.push({
+          week_number: weekNumber,
+          start_date: format(weekStart, "yyyy-MM-dd"),
+          end_date: format(weekEnd, "yyyy-MM-dd"),
+          is_selected: true,
+        });
+        weekNumber++;
+      }
+
+      currentDate = addDays(weekStart, 7);
+    }
+
+    return weeks;
+  }, [formData.begin_date, formData.end_date, formData.schedule_time_sheets]);
+
+  // Sync generated weeks with selectedWeeks state
+  React.useEffect(() => {
+    if (generateStudyWeeks.length > 0) {
+      setSelectedWeeks(generateStudyWeeks);
+    } else {
+      setSelectedWeeks([]);
+    }
+  }, [generateStudyWeeks]);
+
+  const handleWeekSelection = (weekIndex: number, checked: boolean) => {
+    setSelectedWeeks((prev) =>
+      prev.map((week, index) => (index === weekIndex ? { ...week, is_selected: checked } : week)),
+    );
   };
 
   const handleTimeSheetSelection = (timeSheetId: number, checked: boolean) => {
@@ -99,7 +188,7 @@ export default function AddSubjectClassDialog({
     e.preventDefault();
 
     // Basic validation
-    if (!formData.subject_id) {
+    if (!formData.subject_id || formData.subject_id === "") {
       toast.error("Subject selection is required.");
       return;
     }
@@ -109,13 +198,24 @@ export default function AddSubjectClassDialog({
       return;
     }
 
-    if (formData.semester_week_ids.length === 0) {
-      toast.error("Please select at least one semester week.");
+    if (!formData.begin_date || !formData.end_date) {
+      toast.error("Please select begin and end dates.");
+      return;
+    }
+
+    if (generateStudyWeeks.length === 0) {
+      toast.error("No study weeks generated. Please check your date range and schedule selection.");
+      return;
+    }
+
+    const selectedWeeksCount = selectedWeeks.filter((week) => week.is_selected).length;
+    if (selectedWeeksCount === 0) {
+      toast.error("Please select at least one study week.");
       return;
     }
 
     if (!formData.instructor.trim()) {
-      toast.error("Instructor name is required.");
+      toast.error("Instructor selection is required.");
       return;
     }
 
@@ -134,15 +234,17 @@ export default function AddSubjectClassDialog({
 
       // Reset form on success
       setFormData({
-        subject_id: 0,
+        subject_id: "",
         class_name: "",
         description: "",
-        semester_week_ids: [],
+        begin_date: "",
+        end_date: "",
         max_students: 30,
         instructor: "",
         location: "",
         schedule_time_sheets: [],
       });
+      setSelectedWeeks([]);
 
       onOpenChange?.(false);
       toast.success("Subject class created successfully!");
@@ -155,20 +257,25 @@ export default function AddSubjectClassDialog({
 
   const handleCancel = () => {
     setFormData({
-      subject_id: 0,
+      subject_id: "",
       class_name: "",
       description: "",
-      semester_week_ids: [],
+      begin_date: "",
+      end_date: "",
       max_students: 30,
       instructor: "",
       location: "",
       schedule_time_sheets: [],
     });
+    setSelectedWeeks([]);
     onOpenChange?.(false);
   };
 
   const getSelectedSubject = () => {
-    return subjects.find((subject) => subject.id.toString() === formData.subject_id.toString());
+    return subjects.find((subject) => subject.id === formData.subject_id);
+  };
+  const getSelectedInstructor = () => {
+    return teachers.find((teacher) => teacher?.id?.toString() === formData.instructor);
   };
 
   const getSelectedTimeSheets = () => {
@@ -192,21 +299,48 @@ export default function AddSubjectClassDialog({
             {/* Subject Selection */}
             <div className="space-y-2">
               <Label htmlFor="subject_id">Subject *</Label>
-              <Select
-                value={formData.subject_id.toString()}
-                onValueChange={(value: string) => handleInputChange("subject_id", parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id.toString()}>
-                      {subject.name} ({subject.id})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={subjectOpen} onOpenChange={setSubjectOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={subjectOpen}
+                    className="w-full justify-between"
+                  >
+                    {formData.subject_id
+                      ? subjects.find((subject) => subject.id === formData.subject_id)?.name
+                      : "Select subject..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search subjects..." />
+                    <CommandList>
+                      <CommandEmpty>No subject found.</CommandEmpty>
+                      <CommandGroup>
+                        {subjects.map((subject) => (
+                          <CommandItem
+                            key={subject.id}
+                            value={`${subject.name} ${subject.id}`}
+                            onSelect={() => {
+                              handleInputChange("subject_id", subject.id);
+                              setSubjectOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                formData.subject_id === subject.id ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            {subject.name} ({subject.id})
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Class Name */}
@@ -221,17 +355,77 @@ export default function AddSubjectClassDialog({
               />
             </div>
 
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="begin_date">Begin Date *</Label>
+                <Input
+                  id="begin_date"
+                  type="date"
+                  value={formData.begin_date}
+                  onChange={(e) => handleInputChange("begin_date", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_date">End Date *</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={formData.end_date}
+                  onChange={(e) => handleInputChange("end_date", e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
             {/* Class Details */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="instructor">Instructor *</Label>
-                <Input
-                  id="instructor"
-                  placeholder="Instructor name"
-                  value={formData.instructor}
-                  onChange={(e) => handleInputChange("instructor", e.target.value)}
-                  required
-                />
+                <Popover open={instructorOpen} onOpenChange={setInstructorOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={instructorOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.instructor
+                        ? teachers.find((teacher) => teacher?.id?.toString() === formData.instructor)?.full_name ||
+                          teachers.find((teacher) => teacher?.id?.toString() === formData.instructor)?.email
+                        : "Select instructor..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search instructors..." />
+                      <CommandList>
+                        <CommandEmpty>No instructor found.</CommandEmpty>
+                        <CommandGroup>
+                          {teachers.map((teacher) => (
+                            <CommandItem
+                              key={teacher.id}
+                              value={`${teacher.full_name || teacher.email} ${teacher.id}`}
+                              onSelect={() => {
+                                handleInputChange("instructor", teacher.id?.toString() || "");
+                                setInstructorOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  formData.instructor === teacher.id?.toString() ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              {teacher.full_name || teacher.email} ({teacher.id})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="max_students">Max Students</Label>
@@ -247,59 +441,114 @@ export default function AddSubjectClassDialog({
 
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  placeholder="Room/Building"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange("location", e.target.value)}
-                />
+                <Label htmlFor="location">Location *</Label>
+                <Popover open={locationOpen} onOpenChange={setLocationOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={locationOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.location || "Select location..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search locations..." />
+                      <CommandList>
+                        <CommandEmpty>No location found.</CommandEmpty>
+                        <CommandGroup>
+                          {[
+                            "A1",
+                            "A2",
+                            "A3",
+                            "A4",
+                            "A5",
+                            "B1",
+                            "B2",
+                            "B3",
+                            "B4",
+                            "B5",
+                            "C1",
+                            "C2",
+                            "C3",
+                            "C4",
+                            "C5",
+                            "D1",
+                            "D2",
+                            "D3",
+                            "D4",
+                            "D5",
+                          ].map((location) => (
+                            <CommandItem
+                              key={location}
+                              value={location}
+                              onSelect={() => {
+                                handleInputChange("location", location);
+                                setLocationOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  formData.location === location ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              Room {location}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
-            {/* Semester Weeks Selection - MOVED TO TOP */}
-            <div className="space-y-3">
-              <Label className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Active Semester Weeks *
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Select the weeks when this class will be active during the semester
-              </p>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="max-h-48 overflow-y-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {MOCK_SEMESTER_WEEKS.sort((a, b) => (a.week_number || 0) - (b.week_number || 0)) // Sort by week_number
-                        .map((week) => (
-                          <div key={week.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
+            {/* Generated Study Weeks */}
+            {generateStudyWeeks.length > 0 && (
+              <div className="space-y-3">
+                <Label className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  Generated Study Weeks *
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Study weeks generated based on your date range and schedule selection
+                </p>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="max-h-48 overflow-y-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {generateStudyWeeks.map((week, index) => (
+                          <div key={index} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
                             <Checkbox
-                              id={`week-${week.id}`}
-                              checked={week.id !== undefined && formData.semester_week_ids.includes(week.id)}
-                              onCheckedChange={(checked) =>
-                                week.id !== undefined && handleWeekSelection(week.id, checked as boolean)
-                              }
+                              id={`week-${index}`}
+                              checked={week.is_selected}
+                              onCheckedChange={(checked) => handleWeekSelection(index, checked as boolean)}
                             />
-                            <Label htmlFor={`week-${week.id}`} className="text-xs font-normal cursor-pointer flex-1">
+                            <Label htmlFor={`week-${index}`} className="text-xs font-normal cursor-pointer flex-1">
                               <div className="font-medium">Week {week.week_number}</div>
                               <div className="text-gray-500">
-                                {week.start_date} - {week.end_date}
+                                {format(new Date(week.start_date), "MMM dd")} -{" "}
+                                {format(new Date(week.end_date), "MMM dd, yyyy")}
                               </div>
                             </Label>
                           </div>
                         ))}
-                    </div>
-                  </div>
-                  {formData.semester_week_ids.length > 0 && (
-                    <div className="mt-3 pt-3 border-t">
-                      <div className="text-xs text-blue-600 font-medium">
-                        ✓ {formData.semester_week_ids.length} week(s) selected
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                    {selectedWeeks.filter((week) => week.is_selected).length > 0 && (
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="text-xs text-blue-600 font-medium">
+                          ✓ {selectedWeeks.filter((week) => week.is_selected).length} week(s) selected
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Timetable Schedule Selection - MOVED AFTER SEMESTER WEEKS */}
             <div className="space-y-4">

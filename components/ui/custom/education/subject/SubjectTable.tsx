@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { SubjectModel } from "@/app/api/model/model";
+import { gradingFormulaService } from "@/app/api/services/gradingFormulaService";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -17,7 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useGradingFormulas } from "@/hooks/useGradingFormula";
 import { getMajorNameById } from "@/lib/utils";
 // import { getDepartmentNameById } from "@/lib/utils";
 import {
@@ -41,8 +41,8 @@ import { SubjectDetailDialog } from "./SubjectDetailDialog";
 
 interface SubjectTableProps {
   subjects: SubjectModel[];
-  onUpdate?: (updatedSubject: SubjectModel) => Promise<void>;
-  onDelete?: (subjectIds: string[]) => Promise<void>;
+  onUpdate?: (updatedSubject: SubjectModel) => void;
+  onDelete?: (subjectIds: string[]) => void;
 }
 
 export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps) {
@@ -51,7 +51,22 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
-  const { gradingFormulas } = useGradingFormulas();
+  const [gradingFormulas, setGradingFormulas] = React.useState<any[]>([]);
+
+  // Fetch grading formulas on component mount
+  React.useEffect(() => {
+    const fetchGradingFormulas = async () => {
+      try {
+        const formulas = await gradingFormulaService.getGradingFormulas();
+        setGradingFormulas(formulas);
+      } catch (error) {
+        console.error("Failed to fetch grading formulas:", error);
+        toast.error("Failed to load grading formulas");
+      }
+    };
+
+    fetchGradingFormulas();
+  }, []);
 
   // Create columns with access to the onUpdate function
   const subjectColumns: ColumnDef<SubjectModel>[] = React.useMemo(
@@ -209,7 +224,7 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
           const [openDialog, setOpenDialog] = React.useState(false);
 
           return (
-            <>
+            <React.Fragment>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100">
@@ -235,7 +250,7 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
                 onOpenChange={setOpenDialog}
                 onSubmit={onUpdate}
               />
-            </>
+            </React.Fragment>
           );
         },
       },
@@ -271,12 +286,12 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
   }, [table, rowSelection]);
 
   // Handle delete confirmation
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     if (!onDelete) return;
 
     try {
       const selectedIds = selectedSubjects.map((subject) => subject.id);
-      await onDelete(selectedIds);
+      onDelete(selectedIds);
       setRowSelection({});
       setShowDeleteConfirm(false);
     } catch (error) {
@@ -286,7 +301,7 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
   };
 
   return (
-    <>
+    <React.Fragment>
       <div className="w-full flex flex-col bg-white rounded-lg shadow-sm border">
         <div className="flex items-center py-4 px-6 gap-4 border-b bg-gray-50/50">
           <Input
@@ -456,6 +471,6 @@ export function SubjectTable({ subjects, onUpdate, onDelete }: SubjectTableProps
         subjects={selectedSubjects}
         onConfirm={handleDeleteConfirm}
       />
-    </>
+    </React.Fragment>
   );
 }

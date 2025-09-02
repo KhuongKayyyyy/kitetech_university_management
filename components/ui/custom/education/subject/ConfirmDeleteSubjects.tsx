@@ -18,16 +18,16 @@ interface ConfirmDeleteSubjectsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   subjects: SubjectModel[];
-  onConfirm: () => Promise<void>;
+  onConfirm: () => void;
 }
 
 export default function ConfirmDeleteSubjects({ open, onOpenChange, subjects, onConfirm }: ConfirmDeleteSubjectsProps) {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     setIsDeleting(true);
     try {
-      await onConfirm();
+      onConfirm();
       onOpenChange(false);
     } catch (error) {
       console.error("Delete failed:", error);

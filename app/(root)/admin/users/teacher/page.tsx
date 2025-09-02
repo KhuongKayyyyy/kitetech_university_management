@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Teacher } from "@/app/api/model/TeacherModel";
 import { teacherService } from "@/app/api/services/teacherService";
 import { Button } from "@/components/ui/button";
+import CreateNewTeacherDialog from "@/components/ui/custom/user/teacher/CreateNewTeacherDialog";
 import TeacherItem from "@/components/ui/custom/user/teacher/TeacherItem";
 import TeacherTable from "@/components/ui/custom/user/teacher/TeacherTable";
 import { ChevronLeft, ChevronRight, Grid, List, Plus, Search, Users } from "lucide-react";
@@ -60,6 +61,19 @@ export default function TeacherPage() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  // Handle teacher creation
+  const handleTeacherCreated = async () => {
+    try {
+      setLoading(true);
+      const teachersData = await teacherService.getTeachers();
+      setTeachers(teachersData);
+    } catch (error) {
+      console.error("Failed to refresh teachers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -218,6 +232,13 @@ export default function TeacherPage() {
           <TeacherTable teachers={filteredTeachers} />
         </div>
       )}
+
+      {/* Create Teacher Dialog */}
+      <CreateNewTeacherDialog
+        isOpen={openAddTeacherDialog}
+        setIsOpen={setOpenAddTeacherDialog}
+        onTeacherCreated={handleTeacherCreated}
+      />
     </div>
   );
 }

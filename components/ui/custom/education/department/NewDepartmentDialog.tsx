@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FacultyModel } from "@/app/api/model/model";
+import { Teacher } from "@/app/api/model/TeacherModel";
+import { teacherService } from "@/app/api/services/teacherService";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +17,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 import { MajorInDepartTable } from "../major/MajorInDepartTable";
 
@@ -32,12 +37,41 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
     dean: "",
     majors: [],
   });
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [isLoadingTeachers, setIsLoadingTeachers] = useState(false);
+  const [openCombobox, setOpenCombobox] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      fetchTeachers();
+    }
+  }, [open]);
+
+  const fetchTeachers = async () => {
+    setIsLoadingTeachers(true);
+    try {
+      const teachersData = await teacherService.getTeachers();
+      setTeachers(teachersData || []);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+      setTeachers([]);
+    } finally {
+      setIsLoadingTeachers(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setNewDepartment((prev) => ({
       ...prev,
       [id]: value,
+    }));
+  };
+
+  const handleDeanChange = (value: string) => {
+    setNewDepartment((prev) => ({
+      ...prev,
+      dean: value,
     }));
   };
 
@@ -48,6 +82,7 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
       id: 0,
       name: "",
       contact_info: "",
+      dean: "",
       majors: [],
     });
   };
@@ -89,13 +124,51 @@ export function NewDepartmentDialog({ open, setOpen, onAdd }: NewDepartmentDialo
             <Label htmlFor="dean" className="text-right">
               Dean
             </Label>
-            <Input
-              id="dean"
-              value={newDepartment.dean || ""}
-              onChange={handleInputChange}
-              placeholder="Enter dean name"
-              className="col-span-3"
-            />
+            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCombobox}
+                  className="col-span-3 justify-between"
+                >
+                  {newDepartment.dean
+                    ? teachers.find((teacher) => teacher.full_name === newDepartment.dean)?.full_name
+                    : isLoadingTeachers
+                      ? "Loading teachers..."
+                      : "Select a dean..."}
+                  <ChevronsUpDown className="opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="col-span-3 p-0">
+                <Command>
+                  <CommandInput placeholder="Search teachers..." className="h-9" />
+                  <CommandList>
+                    <CommandEmpty>No teacher found.</CommandEmpty>
+                    <CommandGroup>
+                      {teachers.map((teacher) => (
+                        <CommandItem
+                          key={teacher.id}
+                          value={teacher.full_name || ""}
+                          onSelect={(currentValue) => {
+                            handleDeanChange(currentValue === newDepartment.dean ? "" : currentValue);
+                            setOpenCombobox(false);
+                          }}
+                        >
+                          {teacher.full_name}
+                          <Check
+                            className={cn(
+                              "ml-auto",
+                              newDepartment.dean === teacher.full_name ? "opacity-100" : "opacity-0",
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         <DialogFooter>

@@ -4,6 +4,17 @@ import * as React from "react";
 
 import { FacultyModel } from "@/app/api/model/model";
 import { departmentService } from "@/app/api/services/departmentService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -31,11 +42,12 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, Filter, MoreHorizontal, Search, TrashIcon } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Download, Filter, MoreHorizontal, Search, TrashIcon } from "lucide-react";
 import { toast, Toaster } from "sonner";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../hover-card";
 import ConfirmDeleteDepartments from "./ConfirmDeleteDepartments";
+import ConfirmExportDepart from "./ConfirmExportDepart";
 import { DepartmentDialog } from "./DepartmentDialog";
 import { NewDepartmentDialog } from "./NewDepartmentDialog";
 
@@ -207,6 +219,8 @@ export function DepartmentTable({ departments: initialDepartments }: { departmen
   const [rowSelection, setRowSelection] = React.useState({});
   const [openConfirmDelete, setOpenConfirmDelete] = React.useState(false);
   const [selectedDepartments, setSelectedDepartments] = React.useState<FacultyModel[]>([]);
+  const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
+  const [exportAllDialogOpen, setExportAllDialogOpen] = React.useState(false);
 
   const [openDialog, setOpenDialog] = React.useState(false);
   const [selectedDepartment, setSelectedDepartment] = React.useState<FacultyModel | null>(null);
@@ -237,6 +251,50 @@ export function DepartmentTable({ departments: initialDepartments }: { departmen
     const deletedIds = new Set(deleted.map((d) => d.id));
     setDepartments(departments.filter((d) => !deletedIds.has(d.id)));
     setRowSelection({});
+  };
+
+  const buildCsvFromDepartments = (items: FacultyModel[]) => {
+    const headers = ["id", "name", "code", "contact_info", "dean", "majors_count", "majors_list"];
+    const escapeCsv = (value: unknown) => {
+      if (value === null || value === undefined) return "";
+      const str = String(value);
+      if (/[",\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+    const rows = items.map((d) => [
+      d.id,
+      d.name,
+      d.code || "",
+      d.contact_info || "",
+      d.dean || "",
+      d.majors?.length || 0,
+      d.majors?.map((m) => m.name).join("; ") || "",
+    ]);
+    const lines = [headers, ...rows].map((r) => r.map(escapeCsv).join(","));
+    return lines.join("\n");
+  };
+
+  const handleConfirmExport = () => {
+    const selected = table.getSelectedRowModel().rows.map((r) => r.original as FacultyModel);
+    if (!selected.length) {
+      toast.error("No selected departments to export");
+      return;
+    }
+    const csv = buildCsvFromDepartments(selected);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fileName = `departments_export_${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.csv`;
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+    toast.success(`Exported ${selected.length} department${selected.length === 1 ? "" : "s"}`);
   };
 
   return (
@@ -278,20 +336,94 @@ export function DepartmentTable({ departments: initialDepartments }: { departmen
 
             <NewDepartmentDialog open={openDialog} setOpen={setOpenDialog} />
 
+            {/* Export All Button */}
+            <AlertDialog open={exportAllDialogOpen} onOpenChange={setExportAllDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export All
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Export All Departments
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You are about to export all {departments.length} departments. Review the list below.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <ConfirmExportDepart departments={departments} />
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      const csv = buildCsvFromDepartments(departments);
+                      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      const ts = new Date();
+                      const pad = (n: number) => String(n).padStart(2, "0");
+                      const fileName = `departments_export_all_${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.csv`;
+                      a.href = url;
+                      a.download = fileName;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      setExportAllDialogOpen(false);
+                      toast.success(`Exported all ${departments.length} departments`);
+                    }}
+                  >
+                    Confirm Export All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             {isAnyRowSelected && (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="shadow-sm animate-in slide-in-from-right-2 text-white"
-                onClick={() => {
-                  const selectedDepartments = table.getSelectedRowModel().rows.map((row) => row.original);
-                  setSelectedDepartments(selectedDepartments);
-                  setOpenConfirmDelete(true);
-                }}
-              >
-                <TrashIcon className="mr-2 h-4 w-4" />
-                Delete ({Object.keys(rowSelection).length})
-              </Button>
+              <>
+                <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Export ({Object.keys(rowSelection).length})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <Download className="h-5 w-5" />
+                        Review Export
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You are about to export {table.getSelectedRowModel().rows.length} selected department
+                        {table.getSelectedRowModel().rows.length === 1 ? "" : "s"}. Review the list below.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <ConfirmExportDepart
+                      departments={table.getSelectedRowModel().rows.map((r) => r.original as FacultyModel)}
+                    />
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleConfirmExport}>Confirm Export</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="shadow-sm animate-in slide-in-from-right-2 text-white"
+                  onClick={() => {
+                    const selectedDepartments = table.getSelectedRowModel().rows.map((row) => row.original);
+                    setSelectedDepartments(selectedDepartments);
+                    setOpenConfirmDelete(true);
+                  }}
+                >
+                  <TrashIcon className="mr-2 h-4 w-4" />
+                  Delete ({Object.keys(rowSelection).length})
+                </Button>
+              </>
             )}
           </div>
         </div>

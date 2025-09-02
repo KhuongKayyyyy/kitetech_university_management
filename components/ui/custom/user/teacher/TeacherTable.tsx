@@ -3,7 +3,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { departmentData, teachers } from "@/app/api/fakedata";
-import { Teacher } from "@/app/api/model/model";
+import { Teacher } from "@/app/api/model/TeacherModel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +39,7 @@ import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/p
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, getDepartmentNameById, getMajorNameById } from "@/lib/utils";
+import { cn, getMajorNameById } from "@/lib/utils";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -66,6 +66,7 @@ import {
   CircleAlert,
   CircleX,
   Columns3,
+  Download,
   Edit,
   Eye,
   Filter,
@@ -76,6 +77,9 @@ import {
   Trash,
   UserPlus,
 } from "lucide-react";
+import { toast } from "sonner";
+
+import ConfirmExportTeacherData from "./ConfirmExportTeacherData";
 
 // Custom filter function for multi-column searching
 const multiColumnFilterFn: FilterFn<Teacher> = (row, columnId, filterValue) => {
@@ -92,8 +96,8 @@ const statusFilterFn: FilterFn<Teacher> = (row, columnId, filterValue: string[])
 
 const departmentFilterFn: FilterFn<Teacher> = (row, columnId, filterValue: string[]) => {
   if (!filterValue?.length) return true;
-  const department = row.original.department;
-  return filterValue.includes(department || "");
+  const department = row.original.faculty_id;
+  return filterValue.includes(department?.toString() || "");
 };
 
 const columns: ColumnDef<Teacher>[] = [
@@ -124,7 +128,7 @@ const columns: ColumnDef<Teacher>[] = [
     accessorKey: "name",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.full_name}</div>
+        <div className="font-medium text-foreground">{`${row.original.full_name}`}</div>
         <div className="text-sm text-muted-foreground">{row.original.id}</div>
       </div>
     ),
@@ -145,10 +149,12 @@ const columns: ColumnDef<Teacher>[] = [
   },
   {
     header: "Academic Info",
-    accessorKey: "departmentId",
+    accessorKey: "department_id",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <div className="font-medium text-foreground">{row.original.department}</div>
+        <div className="font-medium text-foreground">
+          {departmentData.find((d) => d.id === row.original.faculty_id)?.name || "Unknown Department"}
+        </div>
         <div className="text-sm text-muted-foreground">Teacher</div>
       </div>
     ),
@@ -157,7 +163,7 @@ const columns: ColumnDef<Teacher>[] = [
   },
   {
     header: "Birthday",
-    accessorKey: "birth_date",
+    accessorKey: "date_of_birth",
     cell: ({ row }) => {
       const birthDate = row.original.birth_date;
       if (!birthDate) return <div className="text-muted-foreground">-</div>;
@@ -172,6 +178,7 @@ const columns: ColumnDef<Teacher>[] = [
     },
     size: 120,
   },
+
   {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
@@ -194,6 +201,7 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
     pageSize: 10,
   });
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [sorting, setSorting] = useState<SortingState>([
@@ -250,12 +258,17 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
   }, []);
 
   const uniqueDepartmentValues = useMemo(() => {
-    const departments = Array.from(new Set(data.map((teacher) => teacher.department).filter(Boolean)));
-    return departments.sort();
+    const departmentIds = Array.from(new Set(data.map((teacher) => teacher.faculty_id).filter(Boolean)));
+    return departmentIds
+      .map((id) => ({
+        id: id?.toString(),
+        name: departmentData.find((d) => d.id === id)?.name || "Unknown Department",
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [data]);
 
   const handleStatusChange = (checked: boolean, value: string) => {
-    const filterValue = table.getColumn("isActivated")?.getFilterValue() as string[];
+    const filterValue = table.getColumn("is_active")?.getFilterValue() as string[];
     const newFilterValue = filterValue ? [...filterValue] : [];
 
     if (checked) {
@@ -267,11 +280,11 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
       }
     }
 
-    table.getColumn("isActivated")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+    table.getColumn("is_active")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
   };
 
   const handleDepartmentChange = (checked: boolean, value: string) => {
-    const filterValue = table.getColumn("departmentId")?.getFilterValue() as string[];
+    const filterValue = table.getColumn("department_id")?.getFilterValue() as string[];
     const newFilterValue = filterValue ? [...filterValue] : [];
 
     if (checked) {
@@ -283,7 +296,7 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
       }
     }
 
-    table.getColumn("departmentId")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
+    table.getColumn("department_id")?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
   };
 
   const globalFilterValue = useMemo(() => {
@@ -292,11 +305,67 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
 
   const clearAllFilters = () => {
     table.getColumn("name")?.setFilterValue("");
-    table.getColumn("isActivated")?.setFilterValue(undefined);
-    table.getColumn("departmentId")?.setFilterValue(undefined);
+    table.getColumn("is_active")?.setFilterValue(undefined);
+    table.getColumn("department_id")?.setFilterValue(undefined);
     if (inputRef.current) {
       inputRef.current.focus();
     }
+  };
+
+  const buildCsvFromTeachers = (items: Teacher[]) => {
+    const headers = [
+      "id",
+      "full_name",
+      "email",
+      "phone",
+      "address",
+      "birth_date",
+      "gender",
+      "faculty_id",
+      "faculty_name",
+    ];
+    const escapeCsv = (value: unknown) => {
+      if (value === null || value === undefined) return "";
+      const str = String(value);
+      if (/[",\n]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}` + `"`;
+      }
+      return str;
+    };
+    const rows = items.map((t) => [
+      t.id,
+      t.full_name,
+      t.email,
+      t.phone,
+      t.address,
+      t.birth_date ? new Date(t.birth_date).toISOString().split("T")[0] : "",
+      t.gender,
+      t.faculty_id ?? "",
+      departmentData.find((d) => d.id === t.faculty_id)?.name ?? "",
+    ]);
+    const lines = [headers, ...rows].map((r) => r.map(escapeCsv).join(","));
+    return lines.join("\n");
+  };
+
+  const handleConfirmExport = () => {
+    const selected = table.getSelectedRowModel().rows.map((r) => r.original as Teacher);
+    if (!selected.length) {
+      toast.error("No selected teachers to export");
+      return;
+    }
+    const csv = buildCsvFromTeachers(selected);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fileName = `teachers_export_${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.csv`;
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+    toast.success(`Exported ${selected.length} teacher${selected.length === 1 ? "" : "s"}`);
   };
 
   return (
@@ -321,9 +390,9 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
                 <Button variant="outline" className="gap-2 border-dashed">
                   <ListFilter className="h-4 w-4" />
                   Department
-                  {table.getColumn("departmentId")?.getFilterValue() && (
+                  {!!table.getColumn("department_id")?.getFilterValue() && (
                     <Badge variant="secondary" className="ml-1 px-1">
-                      {(table.getColumn("departmentId")?.getFilterValue() as string[])?.length}
+                      {(table.getColumn("department_id")?.getFilterValue() as string[])?.length}
                     </Badge>
                   )}
                 </Button>
@@ -333,23 +402,24 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
                   <div className="font-medium text-sm">Filter by Department</div>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {uniqueDepartmentValues.map((department) => (
-                      <label key={department} className="flex items-center gap-2 cursor-pointer">
+                      <label key={department.id} className="flex items-center gap-2 cursor-pointer">
                         <Checkbox
                           checked={
-                            (table.getColumn("departmentId")?.getFilterValue() as string[])?.includes(department) ??
-                            false
+                            (table.getColumn("department_id")?.getFilterValue() as string[])?.includes(
+                              department.id ?? "",
+                            ) ?? false
                           }
-                          onCheckedChange={(checked) => handleDepartmentChange(!!checked, department)}
+                          onCheckedChange={(checked) => handleDepartmentChange(!!checked, department.id ?? "")}
                         />
-                        <span className="text-sm">{department}</span>
+                        <span className="text-sm">{department.name}</span>
                       </label>
                     ))}
                   </div>
-                  {table.getColumn("departmentId")?.getFilterValue() && (
+                  {!!table.getColumn("department_id")?.getFilterValue() && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => table.getColumn("departmentId")?.setFilterValue(undefined)}
+                      onClick={() => table.getColumn("department_id")?.setFilterValue(undefined)}
                       className="w-full"
                     >
                       Clear
@@ -360,9 +430,9 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
             </Popover>
 
             {/* Clear All Filters */}
-            {(globalFilterValue ||
-              table.getColumn("isActivated")?.getFilterValue() ||
-              table.getColumn("departmentId")?.getFilterValue()) && (
+            {(!!globalFilterValue ||
+              !!table.getColumn("is_active")?.getFilterValue() ||
+              !!table.getColumn("department_id")?.getFilterValue()) && (
               <Button variant="ghost" onClick={clearAllFilters} className="gap-2">
                 <CircleX className="h-4 w-4" />
                 Clear filters
@@ -401,6 +471,33 @@ export default function TeacherTable({ teachers: teachersProps }: TeacherTablePr
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{table.getSelectedRowModel().rows.length} selected</span>
+              <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <Download className="h-5 w-5" />
+                      Review Export
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You are about to export {table.getSelectedRowModel().rows.length} selected teacher
+                      {table.getSelectedRowModel().rows.length === 1 ? "" : "s"}. Review the list below.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <ConfirmExportTeacherData
+                    teachers={table.getSelectedRowModel().rows.map((r) => r.original as Teacher)}
+                  />
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmExport}>Confirm Export</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" className="gap-2">

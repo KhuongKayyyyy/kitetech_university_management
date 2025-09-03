@@ -401,7 +401,7 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
   };
 
   const buildCsvFromStudents = (items: Student[]) => {
-    const headers = ["id", "full_name", "email", "phone", "address", "birth_date", "gender", "class_code", "major_id"];
+    const headers = ["Student", "Contact", "Address", "Major", "Class", "Birthday", "Gender"];
     const escapeCsv = (value: unknown) => {
       if (value === null || value === undefined) return "";
       const str = String(value);
@@ -411,27 +411,29 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
       return str;
     };
     const rows = items.map((s) => [
-      s.id,
-      s.full_name,
-      s.email,
-      s.phone,
-      s.address,
-      s.birth_date ? new Date(s.birth_date).toISOString().split("T")[0] : "",
-      s.gender,
-      s.classes?.class_code ?? "",
-      s.classes?.major?.id ?? "",
+      `${s.full_name} (ID: ${s.id})`, // Student column
+      `${s.email} ${s.phone}`, // Contact column
+      s.address, // Address column
+      s.classes?.major?.name || "", // Major column
+      s.classes?.class_code || "", // Class column
+      s.birth_date ? new Date(s.birth_date).toLocaleDateString() : "", // Birthday column
+      getGenderText(s.gender), // Gender column
     ]);
     const lines = [headers, ...rows].map((r) => r.map(escapeCsv).join(","));
     return lines.join("\n");
   };
 
-  const handleConfirmExport = () => {
-    const selected = table.getSelectedRowModel().rows.map((r) => r.original as Student);
-    if (!selected.length) {
-      toast.error("No selected students to export");
+  const handleConfirmExport = (exportAll = false) => {
+    const studentsToExport = exportAll
+      ? table.getFilteredRowModel().rows.map((r) => r.original as Student)
+      : table.getSelectedRowModel().rows.map((r) => r.original as Student);
+
+    if (!studentsToExport.length) {
+      toast.error(exportAll ? "No students to export" : "No selected students to export");
       return;
     }
-    const csv = buildCsvFromStudents(selected);
+
+    const csv = buildCsvFromStudents(studentsToExport);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -443,7 +445,7 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
     a.click();
     URL.revokeObjectURL(url);
     setExportDialogOpen(false);
-    toast.success(`Exported ${selected.length} student${selected.length === 1 ? "" : "s"}`);
+    toast.success(`Exported ${studentsToExport.length} student${studentsToExport.length === 1 ? "" : "s"}`);
   };
 
   const getGenderText = (gender: number | undefined) => {
@@ -597,15 +599,110 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
             )}
           </div>
 
+          {/* Export Actions */}
+          <div className="flex items-center gap-2">
+            <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export All
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-4xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <Download className="h-5 w-5" />
+                    Review Export
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You are about to export {table.getFilteredRowModel().rows.length} student
+                    {table.getFilteredRowModel().rows.length === 1 ? "" : "s"}. Review the list below.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="max-h-64 overflow-auto rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="h-8 text-xs">Student</TableHead>
+                        <TableHead className="h-8 text-xs">Contact</TableHead>
+                        <TableHead className="h-8 text-xs">Address</TableHead>
+                        <TableHead className="h-8 text-xs">Major</TableHead>
+                        <TableHead className="h-8 text-xs">Class</TableHead>
+                        <TableHead className="h-8 text-xs">Birthday</TableHead>
+                        <TableHead className="h-8 text-xs">Gender</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {table.getFilteredRowModel().rows.map((r) => {
+                        const student = r.original as Student;
+                        return (
+                          <TableRow key={String(student.id)} className="hover:bg-muted/50">
+                            <TableCell className="py-2">
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground text-xs">{student.full_name}</div>
+                                <div className="text-xs text-muted-foreground">ID: {student.id}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <div className="space-y-1">
+                                <div className="font-medium text-foreground text-xs">{student.email}</div>
+                                <div className="text-xs text-muted-foreground">{student.phone}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <div className="font-medium text-foreground text-xs">{student.address}</div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <div className="text-xs text-muted-foreground">{student.classes?.major?.name || ""}</div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <div className="font-medium text-foreground text-xs">
+                                {student.classes?.class_code || ""}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <div className="font-medium text-foreground text-xs">
+                                {student.birth_date ? new Date(student.birth_date).toLocaleDateString() : ""}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-2">
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-xs",
+                                  student.gender === 1
+                                    ? "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+                                    : student.gender === 0
+                                      ? "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/20 dark:text-pink-400 dark:border-pink-800"
+                                      : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700",
+                                )}
+                              >
+                                {getGenderText(student.gender)}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleConfirmExport(true)}>Confirm Export</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
           {/* Bulk Actions */}
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{table.getSelectedRowModel().rows.length} selected</span>
-              <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+              <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2">
                     <Download className="h-4 w-4" />
-                    Export
+                    Export Selected
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -619,17 +716,78 @@ export default function StudentTable({ students, onStudentUpdated }: StudentData
                       {table.getSelectedRowModel().rows.length === 1 ? "" : "s"}. Review the list below.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <div className="max-h-64 overflow-auto rounded-md border p-3 text-sm">
-                    {table.getSelectedRowModel().rows.map((r) => (
-                      <div key={String((r.original as Student).id)} className="flex items-center justify-between py-1">
-                        <span className="font-medium text-foreground">{(r.original as Student).full_name}</span>
-                        <span className="text-muted-foreground">{(r.original as Student).email}</span>
-                      </div>
-                    ))}
+                  <div className="max-h-64 overflow-auto rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="h-8 text-xs">Student</TableHead>
+                          <TableHead className="h-8 text-xs">Contact</TableHead>
+                          <TableHead className="h-8 text-xs">Address</TableHead>
+                          <TableHead className="h-8 text-xs">Major</TableHead>
+                          <TableHead className="h-8 text-xs">Class</TableHead>
+                          <TableHead className="h-8 text-xs">Birthday</TableHead>
+                          <TableHead className="h-8 text-xs">Gender</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {table.getSelectedRowModel().rows.map((r) => {
+                          const student = r.original as Student;
+                          return (
+                            <TableRow key={String(student.id)} className="hover:bg-muted/50">
+                              <TableCell className="py-2">
+                                <div className="space-y-1">
+                                  <div className="font-medium text-foreground text-xs">{student.full_name}</div>
+                                  <div className="text-xs text-muted-foreground">ID: {student.id}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <div className="space-y-1">
+                                  <div className="font-medium text-foreground text-xs">{student.email}</div>
+                                  <div className="text-xs text-muted-foreground">{student.phone}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <div className="font-medium text-foreground text-xs">{student.address}</div>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <div className="text-xs text-muted-foreground">
+                                  {student.classes?.major?.name || ""}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <div className="font-medium text-foreground text-xs">
+                                  {student.classes?.class_code || ""}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <div className="font-medium text-foreground text-xs">
+                                  {student.birth_date ? new Date(student.birth_date).toLocaleDateString() : ""}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-xs",
+                                    student.gender === 1
+                                      ? "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+                                      : student.gender === 0
+                                        ? "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/20 dark:text-pink-400 dark:border-pink-800"
+                                        : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700",
+                                  )}
+                                >
+                                  {getGenderText(student.gender)}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
                   </div>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmExport}>Confirm Export</AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleConfirmExport(false)}>Confirm Export</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

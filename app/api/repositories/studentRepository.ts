@@ -34,8 +34,16 @@ export const studentRepository = {
   deleteStudent: (id: number) => {
     return axiosClient.delete(API_CONFIG.DELETE_STUDENT(id.toString()));
   },
-
-
   getStudent: (id: number) =>
     axiosClient.get(API_CONFIG.GET_STUDENT(id.toString())),
+
+  importStudent: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post(API_CONFIG.IMPORT_STUDENT, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };

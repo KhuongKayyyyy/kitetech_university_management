@@ -8,8 +8,27 @@ import { Button } from "@/components/ui/button";
 import AddStudentDialog from "@/components/ui/custom/user/student/AddStudentDialog";
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
 import StudentTable from "@/components/ui/custom/user/student/StudentTable";
-import { ChevronLeft, ChevronRight, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { API_CONFIG } from "@/constants/api_config";
+import { ChevronLeft, ChevronRight, Download, GraduationCap, Grid, List, Plus, Search, Upload } from "lucide-react";
 import { toast, Toaster } from "sonner";
+
+import PreviewImportStudent from "./PreviewImportStudent";
+
+interface StudentImportData {
+  id?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  gender: string;
+  birthDate: string;
+  class: string;
+  status: "valid" | "warning" | "error";
+  errors?: string[];
+  warnings?: string[];
+  rowNumber: number;
+}
 
 export default function StudentPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,6 +37,10 @@ export default function StudentPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importData, setImportData] = useState<StudentImportData[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
   const itemsPerPage = 9; // 3x4 grid for cards
 
   // Fetch students data
@@ -65,6 +88,129 @@ export default function StudentPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const downloadResponse = await fetch(API_CONFIG.DOWNLOAD_STUDENT_TEMPLATE);
+      if (!downloadResponse.ok) {
+        throw new Error("Failed to download template");
+      }
+
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "students_template.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error("Failed to download template");
+    }
+  };
+
+  // Validation will be handled by PreviewImportStudent after parsing the file
+
+  const handleImportStudent = async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".xlsx,.xls,.csv";
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          setImportLoading(true);
+          toast.info("Processing file...");
+
+          // Save file to localStorage as base64
+          const reader = new FileReader();
+          reader.onload = () => {
+            const fileData = {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: reader.result as string,
+            };
+            localStorage.setItem("studentImportFile", JSON.stringify(fileData));
+            setSelectedImportFile(file);
+            setShowImportPreview(true);
+            toast.success("File processed successfully");
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Failed to process file");
+        } finally {
+          setImportLoading(false);
+        }
+      }
+    };
+    fileInput.click();
+  };
+
+  const handleConfirmImport = async (validData: StudentImportData[]) => {
+    try {
+      setImportLoading(true);
+      toast.info("Importing students...");
+
+      const fileDataStr = localStorage.getItem("studentImportFile");
+      if (!fileDataStr) {
+        toast.error("No file found. Please select a file again.");
+        return;
+      }
+
+      const fileData = JSON.parse(fileDataStr);
+
+      const fetchResponse = await fetch(fileData.data);
+      const blob = await fetchResponse.blob();
+      const file = new File([blob], fileData.name, { type: fileData.type });
+
+      const importResponse = await studentService.importStudent(file);
+
+      const { success, message, data } = importResponse;
+
+      if (success) {
+        const { successCount, errorCount, errors } = data;
+
+        if (errorCount > 0) {
+          toast.warning(`Imported ${successCount} students successfully. ${errorCount} failed.`);
+          // Show error details if needed
+          if (errors && errors.length > 0) {
+            console.error("Import errors:", errors);
+            // You could show a detailed error dialog here if needed
+          }
+        } else {
+          toast.success(`Successfully imported ${successCount} students`);
+        }
+
+        // Refresh the students list after successful import
+        await handleStudentAdded();
+      } else {
+        toast.error(message || "Failed to import students");
+      }
+
+      setShowImportPreview(false);
+      setImportData([]);
+      setSelectedImportFile(null);
+
+      // Clear localStorage
+      localStorage.removeItem("studentImportFile");
+    } catch (error) {
+      console.error("Error importing students:", error);
+      toast.error("Failed to import students");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowImportPreview(false);
+    setImportData([]);
+    setSelectedImportFile(null);
+
+    // Clear localStorage
+    localStorage.removeItem("studentImportFile");
+  };
+
   const handleStudentAdded = async () => {
     try {
       const data = await studentService.getStudents();
@@ -73,6 +219,20 @@ export default function StudentPage() {
       console.error("Failed to refresh students:", error);
     }
   };
+
+  const importDialog = (
+    <>
+      {selectedImportFile && (
+        <PreviewImportStudent
+          open={showImportPreview}
+          file={selectedImportFile}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+          isLoading={importLoading}
+        />
+      )}
+    </>
+  );
 
   if (loading) {
     return (
@@ -89,6 +249,8 @@ export default function StudentPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {importDialog}
+      <Toaster />
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
@@ -100,14 +262,34 @@ export default function StudentPage() {
             <p className="text-gray-600 mt-1">Manage student profiles, enrollment, and academic information</p>
           </div>
 
-          {/* Add Student Button */}
-          <Button
-            onClick={() => setOpenAddStudentDialog(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4" />
-            Add Student
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Download Import Template Button */}
+            <Button variant="outline" className="flex items-center gap-2" onClick={() => handleDownloadTemplate()}>
+              <Download className="w-4 h-4" />
+              Download Template
+            </Button>
+
+            {/* Import Button */}
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => handleImportStudent()}
+              disabled={importLoading}
+            >
+              <Upload className="w-4 h-4" />
+              {importLoading ? "Processing..." : "Import"}
+            </Button>
+
+            {/* Add Student Button */}
+            <Button
+              onClick={() => setOpenAddStudentDialog(true)}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+            >
+              <Plus className="w-4 h-4" />
+              Add Student
+            </Button>
+          </div>
         </div>
       </div>
 

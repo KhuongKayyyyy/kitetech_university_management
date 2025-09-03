@@ -52,6 +52,16 @@ export const studentService = {
       throw error;
     }
   },
+
+  importStudent: async (file: File) => {
+    try {
+      const response = await studentRepository.importStudent(file);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to import student");
+      throw error;
+    }
+  },
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

@@ -8,11 +8,17 @@ import { AddNewCurriculumDialog } from "@/components/ui/custom/education/curricu
 import CurriculumItem from "@/components/ui/custom/education/curriculum/CurriculumItem";
 import { CurriculumTable } from "@/components/ui/custom/education/curriculum/CurriculumTable";
 import { BookOpen, Grid, List, Plus, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [openAddDialog, setOpenAddDialog] = useState(false);
+
+  const handleAddCurriculum = () => {
+    router.push("/admin/education/curriculum_v2/create");
+  };
 
   // Filter curriculums based on search term
   const filteredCurriculums = useMemo(() => {
@@ -41,10 +47,7 @@ const Page = () => {
           </div>
 
           {/* Add Curriculum Button */}
-          <Button
-            onClick={() => setOpenAddDialog(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-          >
+          <Button onClick={handleAddCurriculum} className="flex items-center gap-2 bg-primary hover:bg-primary/90">
             <Plus className="w-4 h-4" />
             Add Curriculum
           </Button>

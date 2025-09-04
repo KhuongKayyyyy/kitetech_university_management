@@ -2,10 +2,9 @@
 
 import React, { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import ClassDetailSectionMap from "@/components/ui/custom/education/class/ClassDetailSectionMap";
 import CurriculumSection from "@/components/ui/custom/education/class/sections/CurriculumSection";
-import PerformanceSection from "@/components/ui/custom/education/class/sections/PerformanceSection";
+// import PerformanceSection from "@/components/ui/custom/education/class/sections/PerformanceSection";
 import StudentSection from "@/components/ui/custom/education/class/sections/StudentSection";
 import { Calendar, GraduationCap, Plus } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
@@ -19,7 +18,7 @@ export default function page() {
   // Refs for sections
   const studentSectionRef = useRef<HTMLDivElement>(null);
   const curriculumSectionRef = useRef<HTMLDivElement>(null);
-  const performanceSectionRef = useRef<HTMLDivElement>(null);
+  // const performanceSectionRef = useRef<HTMLDivElement>(null);
 
   // Handle section change with auto-scroll
   const handleSectionChange = (sectionId: string) => {
@@ -34,9 +33,9 @@ export default function page() {
       case "curriculum":
         targetRef = curriculumSectionRef;
         break;
-      case "performance":
-        targetRef = performanceSectionRef;
-        break;
+      // case "performance":
+      //   targetRef = performanceSectionRef;
+      //   break;
       default:
         targetRef = studentSectionRef;
     }
@@ -93,11 +92,11 @@ export default function page() {
       )}
 
       {/* Performance Section */}
-      {activeSection === "performance" && (
+      {/* {activeSection === "performance" && (
         <div ref={performanceSectionRef}>
           <PerformanceSection classId={id as string} />
         </div>
-      )}
+      )} */}
     </div>
   );
 }

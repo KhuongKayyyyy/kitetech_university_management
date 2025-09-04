@@ -46,4 +46,8 @@ export const studentRepository = {
       },
     });
   },
+
+  getStudentByClassId: (class_id: string) => {
+    return axiosClient.get(API_CONFIG.GET_STUDENT_BY_CLASS_ID(class_id));
+  },
 };

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { students } from "@/app/api/fakedata";
+import { Student } from "@/app/api/model/StudentModel";
+import { studentService } from "@/app/api/services/studentService";
 import { Button } from "@/components/ui/button";
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
 import StudentTable from "@/components/ui/custom/user/student/StudentTable";
@@ -12,14 +13,85 @@ interface StudentSectionProps {
   classId: string;
 }
 
+// Skeleton components
+const StudentCardSkeleton = () => (
+  <div className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+    <div className="flex items-center gap-4 mb-4">
+      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+      <div className="flex-1">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    </div>
+    <div className="space-y-2">
+      <div className="h-3 bg-gray-200 rounded w-full"></div>
+      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+    </div>
+  </div>
+);
+
+const StudentTableSkeleton = () => (
+  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
+    <div className="p-4 border-b border-gray-200">
+      <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+    </div>
+    <div className="divide-y divide-gray-200">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="p-4 flex items-center gap-4">
+          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+          <div className="flex-1 grid grid-cols-4 gap-4">
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const ControlsSkeleton = () => (
+  <div className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
+    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+      <div className="relative flex-1 max-w-md">
+        <div className="h-10 bg-gray-200 rounded-lg"></div>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="h-4 bg-gray-200 rounded w-24"></div>
+        <div className="h-8 bg-gray-200 rounded w-20"></div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function StudentSection({ classId }: StudentSectionProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("table");
   const [currentPage, setCurrentPage] = useState(1);
+  const [classStudents, setClassStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 9; // 3x4 grid for cards
 
-  // Take only first 50 students
-  const classStudents = students.slice(0, 50);
+  // Fetch students by class ID
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const students = await studentService.getStudentByClassId(classId);
+        setClassStudents(students || []);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        setClassStudents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (classId) {
+      fetchStudents();
+    }
+  }, [classId]);
 
   // Filter students based on search term
   const filteredStudents = useMemo(() => {
@@ -30,10 +102,10 @@ export default function StudentSection({ classId }: StudentSectionProps) {
     const searchLower = searchTerm.toLowerCase();
     return classStudents.filter(
       (student) =>
-        student.name.toLowerCase().includes(searchLower) ||
-        student.studentEmail.toLowerCase().includes(searchLower) ||
-        student.studentId.toLowerCase().includes(searchLower) ||
-        student.location.toLowerCase().includes(searchLower),
+        student.full_name?.toLowerCase().includes(searchLower) ||
+        student.email?.toLowerCase().includes(searchLower) ||
+        student.phone?.toLowerCase().includes(searchLower) ||
+        student.address?.toLowerCase().includes(searchLower),
     );
   }, [searchTerm, classStudents]);
 
@@ -48,47 +120,26 @@ export default function StudentSection({ classId }: StudentSectionProps) {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <ControlsSkeleton />
+        {viewMode === "cards" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <StudentCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <StudentTableSkeleton />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Section Header */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
-              <p className="text-gray-600">Manage and monitor class enrollment</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
-              {classStudents.length} Total Students
-            </span>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-gray-900">{classStudents.length}</div>
-            <div className="text-sm text-gray-600">Total Enrolled</div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-600">{Math.floor(classStudents.length * 0.85)}</div>
-            <div className="text-sm text-gray-600">Active Students</div>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-yellow-600">{Math.floor(classStudents.length * 0.12)}</div>
-            <div className="text-sm text-gray-600">At Risk</div>
-          </div>
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-600">8.2</div>
-            <div className="text-sm text-gray-600">Avg. Grade</div>
-          </div>
-        </div>
-      </div>
 
       {/* Controls Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -130,10 +181,10 @@ export default function StudentSection({ classId }: StudentSectionProps) {
                 <List className="w-4 h-4" />
               </Button>
             </div>
-            <Button variant="outline" size="sm">
+            {/* <Button variant="outline" size="sm">
               <Plus className="w-4 h-4" />
               Add Student
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

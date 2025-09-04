@@ -130,7 +130,7 @@ export default function CurriculumItem({ curriculum, onEdit, onDelete }: Curricu
                   Department
                 </p>
                 <p className="text-sm font-semibold text-purple-900 truncate group-hover:text-purple-800 transition-colors">
-                  {curriculum.department}
+                  {curriculum.departmentId}
                 </p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function CurriculumItem({ curriculum, onEdit, onDelete }: Curricu
                   Major
                 </p>
                 <p className="text-sm font-semibold text-green-900 truncate group-hover:text-green-800 transition-colors">
-                  {curriculum.major}
+                  {curriculum.majorId}
                 </p>
               </div>
             </div>

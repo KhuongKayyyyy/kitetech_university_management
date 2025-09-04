@@ -24,12 +24,12 @@ const sections = [
     icon: BookOpen,
     description: "Course content and subjects",
   },
-  {
-    id: "performance",
-    label: "Performance",
-    icon: TrendingUp,
-    description: "Class analytics and progress",
-  },
+  // {
+  //   id: "performance",
+  //   label: "Performance",
+  //   icon: TrendingUp,
+  //   description: "Class analytics and progress",
+  // },
 ];
 
 export default function ClassDetailSectionMap({ activeSection, onSectionChange }: ClassDetailSectionMapProps) {

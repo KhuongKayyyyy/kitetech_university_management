@@ -9,6 +9,7 @@ import AddStudentDialog from "@/components/ui/custom/user/student/AddStudentDial
 import StudentItem from "@/components/ui/custom/user/student/StudentItem";
 import StudentTable from "@/components/ui/custom/user/student/StudentTable";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { API_CONFIG } from "@/constants/api_config";
 import { ChevronLeft, ChevronRight, Download, GraduationCap, Grid, List, Plus, Search, Upload } from "lucide-react";
 import { toast, Toaster } from "sonner";
@@ -234,13 +235,109 @@ export default function StudentPage() {
     </>
   );
 
+  const SkeletonCardLoader = () => (
+    <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="flex items-start gap-4">
+        <Skeleton className="w-12 h-12 rounded-full" />
+        <div className="flex-1">
+          <Skeleton className="h-5 w-32 mb-2" />
+          <Skeleton className="h-4 w-48 mb-1" />
+          <Skeleton className="h-4 w-36 mb-1" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+      </div>
+      <div className="mt-4 flex justify-between items-center">
+        <Skeleton className="h-4 w-20" />
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-8 rounded" />
+          <Skeleton className="h-8 w-8 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const SkeletonTableLoader = () => (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+      </div>
+      <div className="divide-y divide-gray-200">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1">
+              <Skeleton className="w-10 h-10 rounded-full" />
+              <div className="flex-1 grid grid-cols-5 gap-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-8 rounded" />
+              <Skeleton className="h-8 w-8 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading students...</p>
+        <Toaster />
+        {/* Header Section Skeleton */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="w-6 h-6" />
+                <Skeleton className="h-8 w-48" />
+              </div>
+              <Skeleton className="h-5 w-80" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-10 w-36" />
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
+        </div>
+
+        {/* Controls Section Skeleton */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+            <Skeleton className="h-10 w-72" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-8 w-20" />
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <SkeletonCardLoader key={i} />
+          ))}
+        </div>
+
+        {/* Pagination Skeleton */}
+        <div className="flex items-center justify-between mt-8">
+          <Skeleton className="h-5 w-48" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-20" />
+            <div className="flex gap-1">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="w-8 h-8" />
+              ))}
+            </div>
+            <Skeleton className="h-8 w-16" />
           </div>
         </div>
       </div>
@@ -409,9 +506,7 @@ export default function StudentPage() {
           )}
         </>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <StudentTable students={filteredStudents} onStudentUpdated={handleStudentAdded} />
-        </div>
+        <SkeletonTableLoader />
       )}
       <AddStudentDialog
         open={openAddStudentDialog}

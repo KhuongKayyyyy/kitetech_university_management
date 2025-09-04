@@ -15,7 +15,7 @@ export default function CurriculumSection({ classId }: CurriculumSectionProps) {
   return (
     <div className="space-y-6">
       {/* Section Header */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      {/* <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -33,7 +33,6 @@ export default function CurriculumSection({ classId }: CurriculumSectionProps) {
           </div>
         </div>
 
-        {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-2xl font-bold text-gray-900">{FakeCurriclumnData.length}</div>
@@ -54,14 +53,10 @@ export default function CurriculumSection({ classId }: CurriculumSectionProps) {
             <div className="text-sm text-gray-600">Completion Rate</div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Curriculum Board */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Subject Organization</h3>
-          <p className="text-gray-600 text-sm">Drag and drop to reorganize curriculum structure</p>
-        </div>
         <GeneratedCurriBoard subjects={FakeCurriclumnData as CurriculumnSubjectModel[]} />
       </div>
     </div>

@@ -5,6 +5,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { AcademicYearModel } from "@/app/api/model/AcademicYearModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +16,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, Dumbbell, Globe, GraduationCap, Lightbulb, Save, School, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  BookOpen,
+  Check,
+  ChevronsUpDown,
+  Dumbbell,
+  Globe,
+  GraduationCap,
+  Lightbulb,
+  Save,
+  School,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export interface CurriculumBoardType {
@@ -153,6 +166,11 @@ export default function CreateCurriculumDialog({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Combobox open states
+  const [academicYearOpen, setAcademicYearOpen] = useState(false);
+  const [facultyOpen, setFacultyOpen] = useState(false);
+  const [majorOpen, setMajorOpen] = useState(false);
+
   // Filter majors based on selected faculty - memoize with stable reference
   const filteredMajors = useMemo(() => {
     return majors.filter((major) => major.facultyId === formData.facultyId);
@@ -169,6 +187,7 @@ export default function CreateCurriculumDialog({
 
   const handleAcademicYearChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, academicYear: value }));
+    setAcademicYearOpen(false);
   }, []);
 
   const handleTotalCreditsChange = useCallback((value: number) => {
@@ -181,10 +200,12 @@ export default function CreateCurriculumDialog({
       facultyId: value,
       majorId: "", // Reset major when faculty changes
     }));
+    setFacultyOpen(false);
   }, []);
 
   const handleMajorChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, majorId: value }));
+    setMajorOpen(false);
   }, []);
 
   const handleBoardTypeToggle = useCallback((boardTypeId: string) => {
@@ -274,6 +295,11 @@ export default function CreateCurriculumDialog({
     onOpenChange(false);
   }, [onOpenChange]);
 
+  // Get display values for comboboxes
+  const selectedAcademicYear = academicYears.find((year) => year.year.toString() === formData.academicYear);
+  const selectedFaculty = faculties.find((faculty) => faculty.id === formData.facultyId);
+  const selectedMajor = filteredMajors.find((major) => major.id === formData.majorId);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -306,51 +332,132 @@ export default function CreateCurriculumDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="academicYear">Academic Year *</Label>
-                  <Select value={formData.academicYear} onValueChange={handleAcademicYearChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an academic year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {academicYears.map((year) => (
-                        <SelectItem key={year.id} value={year.year.toString()}>
-                          {year.start_date?.substring(0, 4)} - {year.end_date?.substring(0, 4)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={academicYearOpen} onOpenChange={setAcademicYearOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={academicYearOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedAcademicYear
+                          ? `${selectedAcademicYear.start_date?.substring(0, 4)} - ${selectedAcademicYear.end_date?.substring(0, 4)}`
+                          : "Select an academic year"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search academic year..." />
+                        <CommandList>
+                          <CommandEmpty>No academic year found.</CommandEmpty>
+                          <CommandGroup>
+                            {academicYears.map((year) => (
+                              <CommandItem
+                                key={year.id}
+                                value={`${year.start_date?.substring(0, 4)} - ${year.end_date?.substring(0, 4)}`}
+                                onSelect={() => handleAcademicYearChange(year.year.toString())}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.academicYear === year.year.toString() ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {year.start_date?.substring(0, 4)} - {year.end_date?.substring(0, 4)}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="faculty">Faculty *</Label>
-                  <Select value={formData.facultyId} onValueChange={handleFacultyChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a faculty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {faculties.map((faculty) => (
-                        <SelectItem key={faculty.id} value={faculty.id}>
-                          {faculty.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={facultyOpen} onOpenChange={setFacultyOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={facultyOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedFaculty ? selectedFaculty.name : "Select a faculty"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search faculty..." />
+                        <CommandList>
+                          <CommandEmpty>No faculty found.</CommandEmpty>
+                          <CommandGroup>
+                            {faculties.map((faculty) => (
+                              <CommandItem
+                                key={faculty.id}
+                                value={faculty.name}
+                                onSelect={() => handleFacultyChange(faculty.id)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.facultyId === faculty.id ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {faculty.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="major">Major *</Label>
-                  <Select value={formData.majorId} onValueChange={handleMajorChange} disabled={!formData.facultyId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a major" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredMajors.map((major) => (
-                        <SelectItem key={major.id} value={major.id}>
-                          {major.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={majorOpen} onOpenChange={setMajorOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={majorOpen}
+                        className="w-full justify-between"
+                        disabled={!formData.facultyId}
+                      >
+                        {selectedMajor ? selectedMajor.name : "Select a major"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search major..." />
+                        <CommandList>
+                          <CommandEmpty>No major found.</CommandEmpty>
+                          <CommandGroup>
+                            {filteredMajors.map((major) => (
+                              <CommandItem
+                                key={major.id}
+                                value={major.name}
+                                onSelect={() => handleMajorChange(major.id)}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    formData.majorId === major.id ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                {major.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               {/* <div className="space-y-2">
@@ -396,19 +503,21 @@ export default function CreateCurriculumDialog({
                     <Card
                       key={boardType.id}
                       onClick={() => !isCore && handleBoardTypeToggle(boardType.id)}
-                      className={`group relative transition-all duration-300 cursor-pointer border-2 ${isSelected
-                        ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
-                        : "border-border hover:border-primary/50 hover:shadow-md hover:bg-accent/20"
-                        } ${isCore ? "border-primary bg-primary/10 shadow-sm" : ""}`}
+                      className={`group relative transition-all duration-300 cursor-pointer border-2 ${
+                        isSelected
+                          ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
+                          : "border-border hover:border-primary/50 hover:shadow-md hover:bg-accent/20"
+                      } ${isCore ? "border-primary bg-primary/10 shadow-sm" : ""}`}
                     >
                       <CardHeader className="space-y-3 p-6">
                         <CardTitle className="flex items-center justify-between text-lg font-semibold">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`p-2 rounded-lg transition-colors ${isSelected || isCore
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-accent group-hover:bg-primary/10"
-                                }`}
+                              className={`p-2 rounded-lg transition-colors ${
+                                isSelected || isCore
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-accent group-hover:bg-primary/10"
+                              }`}
                             >
                               <IconComponent className="h-5 w-5" />
                             </div>

@@ -52,6 +52,26 @@ export const teacherService = {
       throw error;
     }
   },
+
+  importTeacher: async (file: File) => {
+    try {
+      const response = await teacherRepository.importTeacher(file);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to import teacher");
+      throw error;
+    }
+  },
+
+  downloadTeacherTemplate: async () => {
+    try {
+      const response = await teacherRepository.downloadTeacherTemplate();
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to download teacher template");
+      throw error;
+    }
+  },  
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

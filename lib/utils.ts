@@ -2,6 +2,8 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { majorService } from "@/app/api/services/majorService";
 import { MajorModel } from "@/app/api/model/model";
+import { departmentData } from "@/app/api/fakedata";
+import { departmentService } from "@/app/api/services/departmentService";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -43,4 +45,18 @@ export function getMajorNameByIdSync(majorId: string, majors: MajorModel[]): str
 // Clear cache function for when data needs to be refreshed
 export function clearMajorsCache(): void {
   majorsCache = null;
+}
+
+// export async function getDepartmentNameById(departmentId: number): Promise<string | undefined> {
+//   const departments = await departmentService.getDepartments();
+//   const department = departments.find((d) => d.id === departmentId);
+//   return department?.name;
+// }
+
+
+export function getDepartmentNameById(
+  departmentId: number
+): string | undefined {
+  const department = departmentData.find((dept) => dept.id === departmentId);
+  return department?.name;
 }

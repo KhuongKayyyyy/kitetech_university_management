@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialog";
 import ClassItem from "@/components/ui/custom/education/class/ClassItem";
 import { ClassTable } from "@/components/ui/custom/education/class/ClassTable";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, ChevronLeft, ChevronRight, Grid, List, Plus, Search } from "lucide-react";
 
 const page = () => {
@@ -98,8 +99,86 @@ const page = () => {
   if (loading) {
     return (
       <div className="px-6 bg-primary-foreground py-6 min-h-screen">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-gray-600">Loading classes...</div>
+        {/* Header Section Skeleton */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+          <div>
+            <Skeleton className="h-9 w-64 mb-2" />
+            <Skeleton className="h-5 w-80" />
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+
+        {/* Controls Section Skeleton */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+            <Skeleton className="h-10 w-80" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-8 w-20" />
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section Skeleton */}
+        {viewMode === "cards" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {Array.from({ length: itemsPerPage }).map((_, index) => (
+              <div key={index} className="bg-white rounded-xl border border-gray-200 p-6">
+                <Skeleton className="h-6 w-24 mb-4" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4 mb-4" />
+                <div className="flex gap-2 mb-4">
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-5 bg-white rounded-xl border border-gray-200">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 pb-4 border-b">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="flex items-center gap-4 py-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pagination Skeleton */}
+        <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3">
+          <Skeleton className="h-5 w-48" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+          </div>
         </div>
       </div>
     );

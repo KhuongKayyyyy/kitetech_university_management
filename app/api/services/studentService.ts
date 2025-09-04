@@ -62,6 +62,16 @@ export const studentService = {
       throw error;
     }
   },
+
+  getStudentByClassId: async (class_id: string) => {
+    try {
+      const response = await studentRepository.getStudentByClassId(class_id);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to fetch students by class id");
+      throw error;
+    }
+  },
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

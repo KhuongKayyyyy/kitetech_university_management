@@ -42,4 +42,18 @@ export const teacherRepository = {
 
   getTeacher: (id: number) =>
     axiosClient.get(API_CONFIG.GET_TEACHER(id.toString())),
+
+  importTeacher: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post(API_CONFIG.IMPORT_TEACHER, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  downloadTeacherTemplate: () => {
+    return axiosClient.get(API_CONFIG.DOWNLOAD_TEACHER_TEMPLATE);
+  },
 };

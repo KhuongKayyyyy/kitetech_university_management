@@ -76,6 +76,7 @@ export const API_CONFIG = {
   DELETE_STUDENT: (id: string) => `/api/students/${id}`,
   DOWNLOAD_STUDENT_TEMPLATE: "/api/students/excel/template",
   IMPORT_STUDENT: "/api/students/excel/import",
+  GET_STUDENT_BY_CLASS_ID: (class_id: string) => `/api/students/class/${class_id}`,
 
 
   // Teacher
@@ -84,4 +85,6 @@ export const API_CONFIG = {
   ADD_TEACHER: "/api/teachers",
   UPDATE_TEACHER: (id: string) => `/api/teachers/${id}`,
   DELETE_TEACHER: (id: string) => `/api/teachers/${id}`,
+  DOWNLOAD_TEACHER_TEMPLATE: "/api/teachers/excel/template",
+  IMPORT_TEACHER: "/api/teachers/excel/import",
 };

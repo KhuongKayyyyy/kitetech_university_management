@@ -30,4 +30,14 @@ export const classRepository = {
 
   getClass: (id: number) =>
     axiosClient.get(API_CONFIG.GET_CLASS(id.toString())),
+
+  downloadClassTemplate: () => axiosClient.get(API_CONFIG.DOWNLOAD_CLASS_TEMPLATE),
+  importClass: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post(API_CONFIG.IMPORT_CLASS, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  
 };

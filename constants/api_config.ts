@@ -74,6 +74,8 @@ export const API_CONFIG = {
   ADD_CLASS: "/api/classes",
   UPDATE_CLASS: (id: string) => `/api/classes/${id}`,
   DELETE_CLASS: (id: string) => `/api/classes/${id}`,
+  DOWNLOAD_CLASS_TEMPLATE: "/api/classes/excel/template",
+  IMPORT_CLASS: "/api/classes/excel/import",
 
   //Student
   GET_STUDENTS: "/api/students",

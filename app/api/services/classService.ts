@@ -52,6 +52,26 @@ export const classService = {
       throw error;
     }
   },
+
+  downloadClassTemplate: async () => {
+    try {
+      const response = await classRepository.downloadClassTemplate();
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to download class template");
+      throw error;
+    }
+  },
+
+  importClass: async (file: File) => {
+    try {
+      const response = await classRepository.importClass(file);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to import class");
+      throw error;
+    }
+  },
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

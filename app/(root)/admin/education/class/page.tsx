@@ -9,7 +9,10 @@ import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialo
 import ClassItem from "@/components/ui/custom/education/class/ClassItem";
 import { ClassTable } from "@/components/ui/custom/education/class/ClassTable";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, ChevronLeft, ChevronRight, Grid, List, Plus, Search } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Download, Grid, List, Plus, Search, Upload } from "lucide-react";
+import { toast } from "sonner";
+
+import PreviewImportClass from "./PreviewImportClass";
 
 const page = () => {
   const [classes, setClasses] = useState<ClassModel[]>([]);
@@ -19,6 +22,9 @@ const page = () => {
   const [selectedYear, setSelectedYear] = useState("2024");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9); // Default 3x3 grid for cards
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
 
   // Fetch classes from service
   useEffect(() => {
@@ -91,6 +97,154 @@ const page = () => {
 
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(parseInt(value));
+  };
+
+  const handleDownloadTemplateClass = async () => {
+    try {
+      const response = await classService.downloadClassTemplate();
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "classes_template.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error("Failed to download template");
+    }
+  };
+
+  const handleImportClass = async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".xlsx,.xls,.csv";
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          setImportLoading(true);
+          toast.info("Processing file...");
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const fileData = {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: reader.result as string,
+            };
+            localStorage.setItem("classImportFile", JSON.stringify(fileData));
+            setSelectedImportFile(file);
+            setShowImportPreview(true);
+            toast.success("File processed successfully");
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Failed to process file");
+        } finally {
+          setImportLoading(false);
+        }
+      }
+    };
+    fileInput.click();
+  };
+
+  interface ClassImportData {
+    id?: string;
+    description: string;
+    major: string;
+    status: "valid" | "warning" | "error";
+    errors?: string[];
+    warnings?: string[];
+    rowNumber: number;
+  }
+
+  const handleConfirmImport = async (validData: ClassImportData[]) => {
+    try {
+      setImportLoading(true);
+      toast.info("Importing classes...");
+
+      const fileDataStr = localStorage.getItem("classImportFile");
+      if (!fileDataStr) {
+        toast.error("No file found. Please select a file again.");
+        return;
+      }
+
+      const fileData = JSON.parse(fileDataStr);
+
+      const fetchResponse = await fetch(fileData.data);
+      const blob = await fetchResponse.blob();
+      const file = new File([blob], fileData.name, { type: fileData.type });
+
+      const importResponse = await classService.importClass(file);
+
+      console.log("Import response:", importResponse);
+
+      // Handle the response structure - the API response should have the correct format
+      const responseData = importResponse;
+
+      // Check if response has the expected structure
+      if (!responseData || typeof responseData !== "object") {
+        console.error("Invalid response structure:", responseData);
+        toast.error("Invalid response from server");
+        return;
+      }
+
+      const { success, message, data } = responseData;
+
+      if (success) {
+        if (!data || typeof data !== "object") {
+          console.error("Invalid data structure:", data);
+          toast.error("Invalid data structure from server");
+          return;
+        }
+
+        const { successCount, errorCount, errors } = data;
+
+        if (errorCount > 0) {
+          toast.warning(`Imported ${successCount} classes successfully. ${errorCount} failed.`);
+          // Show error details if needed
+          if (errors && errors.length > 0) {
+            const errorMessages = errors.map((error: any) => `Row ${error.row}: ${error.message}`).join("\n");
+            console.warn("Import errors:", errorMessages);
+          }
+        } else {
+          toast.success(`Successfully imported ${successCount} classes`);
+        }
+
+        // Refresh the classes list after successful import
+        try {
+          setLoading(true);
+          const classesData = await classService.getClasses();
+          setClasses(classesData);
+          setCurrentPage(1);
+        } catch (error) {
+          console.error("Error refreshing classes:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        toast.error(message || "Failed to import classes");
+      }
+
+      setShowImportPreview(false);
+      setSelectedImportFile(null);
+
+      // Clear localStorage
+      localStorage.removeItem("classImportFile");
+    } catch (error) {
+      console.error("Error importing classes:", error);
+      toast.error("Failed to import classes");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowImportPreview(false);
+    setSelectedImportFile(null);
+    localStorage.removeItem("classImportFile");
   };
 
   //   add class dialog
@@ -195,6 +349,22 @@ const page = () => {
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Add Class Button */}
+
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => handleDownloadTemplateClass()}>
+            <Download className="w-4 h-4" />
+            Download Template
+          </Button>
+
+          {/* Import Button */}
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => handleImportClass()}
+            disabled={importLoading}
+          >
+            <Upload className="w-4 h-4" />
+            {importLoading ? "Processing..." : "Import"}
+          </Button>
           <Button onClick={handleAddClass} className="flex items-center gap-2 bg-primary hover:bg-primary/90">
             <Plus className="w-4 h-4" />
             Add Class
@@ -338,6 +508,17 @@ const page = () => {
       )}
 
       <AddClassDialog open={open} setOpen={setOpen} onAddClass={handleClassAdded} />
+
+      {/* Import Preview Dialog */}
+      {selectedImportFile && (
+        <PreviewImportClass
+          open={showImportPreview}
+          file={selectedImportFile}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+          isLoading={importLoading}
+        />
+      )}
     </div>
   );
 };

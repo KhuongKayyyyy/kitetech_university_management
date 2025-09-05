@@ -25,4 +25,15 @@ export const majorRepository = {
 
   deleteMajor: (majorId: string) =>
     axiosClient.delete(API_CONFIG.DELETE_MAJOR(majorId)),
+
+  downloadMajorTemplate: () => axiosClient.get(API_CONFIG.DOWNLOAD_MAJOR_TEMPLATE),
+  importMajor: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post(API_CONFIG.IMPORT_MAJOR, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };

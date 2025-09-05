@@ -2,14 +2,16 @@
 
 import React, { useMemo, useState } from "react";
 
+import PreviewImportSubject from "@/app/(root)/admin/education/subject/PreviewImportSubject";
 import { SubjectModel } from "@/app/api/model/model";
+import { subjectService } from "@/app/api/services/subjectService";
 import { Button } from "@/components/ui/button";
 import { AddSubjectDialog } from "@/components/ui/custom/education/subject/AddSubjectDialog";
 import SubjectItem from "@/components/ui/custom/education/subject/SubjectItem";
 import { SubjectTable } from "@/components/ui/custom/education/subject/SubjectTable";
 import { useDepartments } from "@/hooks/useDeparment";
 import { useSubjects } from "@/hooks/useSubject";
-import { BookOpen, Grid, List, Plus, Search } from "lucide-react";
+import { BookOpen, Download, Grid, List, Plus, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 // Skeleton Components
@@ -89,6 +91,9 @@ export default function SubjectsSection() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [openAddSubjectDialog, setOpenAddSubjectDialog] = useState(false);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
 
   const { departments } = useDepartments();
   const { subjects, loading, error, addSubject, updateSubject, deleteSubjects } = useSubjects();
@@ -182,6 +187,148 @@ export default function SubjectsSection() {
     setSelectedDepartment("all");
   };
 
+  const handleDownloadTemplateSubject = async () => {
+    try {
+      const response = await subjectService.downloadSubjectTemplate();
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "subject_template.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error("Failed to download template");
+    }
+  };
+
+  const handleImportSubject = async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".xlsx,.xls,.csv";
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          setImportLoading(true);
+          toast.info("Processing file...");
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const fileData = {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: reader.result as string,
+            };
+            localStorage.setItem("subjectImportFile", JSON.stringify(fileData));
+            setSelectedImportFile(file);
+            setShowImportPreview(true);
+            toast.success("File processed successfully");
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Failed to process file");
+        } finally {
+          setImportLoading(false);
+        }
+      }
+    };
+    fileInput.click();
+  };
+
+  interface SubjectImportData {
+    id?: string;
+    name: string;
+    credits: string;
+    description: string;
+    faculty: string;
+    grading_formula: string;
+    status: "valid" | "warning" | "error";
+    errors?: string[];
+    warnings?: string[];
+    rowNumber: number;
+  }
+
+  const handleConfirmImport = async (validData: SubjectImportData[]) => {
+    try {
+      setImportLoading(true);
+      toast.info("Importing subjects...");
+
+      const fileDataStr = localStorage.getItem("subjectImportFile");
+      if (!fileDataStr) {
+        toast.error("No file found. Please select a file again.");
+        return;
+      }
+
+      const fileData = JSON.parse(fileDataStr);
+
+      const fetchResponse = await fetch(fileData.data);
+      const blob = await fetchResponse.blob();
+      const file = new File([blob], fileData.name, { type: fileData.type });
+
+      const importResponse = await subjectService.importSubject(file);
+
+      console.log("Import response:", importResponse);
+
+      // Handle the response structure - the API response should have the correct format
+      const responseData = importResponse;
+
+      // Check if response has the expected structure
+      if (!responseData || typeof responseData !== "object") {
+        console.error("Invalid response structure:", responseData);
+        toast.error("Invalid response from server");
+        return;
+      }
+
+      const { success, message, data } = responseData;
+
+      if (success) {
+        if (!data || typeof data !== "object") {
+          console.error("Invalid data structure:", data);
+          toast.error("Invalid data structure from server");
+          return;
+        }
+
+        const { successCount, errorCount, errors } = data;
+
+        if (errorCount > 0) {
+          toast.warning(`Imported ${successCount} subjects successfully. ${errorCount} failed.`);
+          // Show error details if needed
+          if (errors && errors.length > 0) {
+            const errorMessages = errors.map((error: any) => `Row ${error.row}: ${error.message}`).join("\n");
+            console.warn("Import errors:", errorMessages);
+          }
+        } else {
+          toast.success(`Successfully imported ${successCount} subjects`);
+        }
+
+        // Refresh the subjects list after successful import
+        window.location.reload(); // Simple refresh for now
+      } else {
+        toast.error(message || "Failed to import subjects");
+      }
+
+      setShowImportPreview(false);
+      setSelectedImportFile(null);
+
+      // Clear localStorage
+      localStorage.removeItem("subjectImportFile");
+    } catch (error) {
+      console.error("Error importing subjects:", error);
+      toast.error("Failed to import subjects");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowImportPreview(false);
+    setSelectedImportFile(null);
+    localStorage.removeItem("subjectImportFile");
+  };
+
   if (loading) {
     return <SubjectsSectionSkeleton />;
   }
@@ -205,13 +352,30 @@ export default function SubjectsSection() {
           </h2>
           <p className="text-gray-600 mt-1">Manage and organize academic subjects</p>
         </div>
-        <button
-          onClick={() => setOpenAddSubjectDialog(true)}
-          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Subject
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => handleDownloadTemplateSubject()}>
+            <Download className="w-4 h-4" />
+            Download Template
+          </Button>
+
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => handleImportSubject()}
+            disabled={importLoading}
+          >
+            <Upload className="w-4 h-4" />
+            {importLoading ? "Processing..." : "Import"}
+          </Button>
+
+          <Button
+            onClick={() => setOpenAddSubjectDialog(true)}
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          >
+            <Plus className="w-4 h-4" />
+            Add Subject
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter Section */}
@@ -321,6 +485,17 @@ export default function SubjectsSection() {
 
       {/* Add Subject Dialog */}
       <AddSubjectDialog open={openAddSubjectDialog} setOpen={setOpenAddSubjectDialog} onSubmit={handleAddSubject} />
+
+      {/* Import Preview Dialog */}
+      {selectedImportFile && (
+        <PreviewImportSubject
+          open={showImportPreview}
+          file={selectedImportFile}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+          isLoading={importLoading}
+        />
+      )}
     </>
   );
 }

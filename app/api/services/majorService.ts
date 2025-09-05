@@ -45,6 +45,26 @@ export const majorService = {
       throw error;
     }
   },
+
+  downloadMajorTemplate: async () => {
+    try {
+      const response = await majorRepository.downloadMajorTemplate();
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to download major template");
+      throw error;
+    }
+  },
+
+  importMajor: async (file: File) => {
+    try {
+      const response = await majorRepository.importMajor(file);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to import major");
+      throw error;
+    }
+  },
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

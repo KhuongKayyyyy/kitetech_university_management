@@ -37,5 +37,14 @@ export const subjectRepository = {
     const response = await axios.delete(API_CONFIG.DELETE_SUBJECT(id));
     return response.data;
   },
+
+  downloadSubjectTemplate: () => axios.get(API_CONFIG.DOWNLOAD_SUBJECT_TEMPLATE),
+  importSubject: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axios.post(API_CONFIG.IMPORT_SUBJECT, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
   
 };

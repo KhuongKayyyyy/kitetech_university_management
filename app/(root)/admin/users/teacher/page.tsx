@@ -174,9 +174,27 @@ export default function TeacherPage() {
 
       const importResponse = await teacherService.importTeacher(file);
 
-      const { success, message, data } = importResponse;
+      console.log("Import response:", importResponse);
+
+      // Handle the response structure - the API response should have the correct format
+      const responseData = importResponse;
+
+      // Check if response has the expected structure
+      if (!responseData || typeof responseData !== "object") {
+        console.error("Invalid response structure:", responseData);
+        toast.error("Invalid response from server");
+        return;
+      }
+
+      const { success, message, data } = responseData;
 
       if (success) {
+        if (!data || typeof data !== "object") {
+          console.error("Invalid data structure:", data);
+          toast.error("Invalid data structure from server");
+          return;
+        }
+
         const { successCount, errorCount, errors } = data;
 
         if (errorCount > 0) {

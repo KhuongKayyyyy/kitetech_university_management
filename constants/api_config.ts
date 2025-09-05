@@ -32,6 +32,9 @@ export const API_CONFIG = {
   ADD_DEPARTMENT: "/api/faculties",
   UPDATE_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
   DELETE_DEPARTMENT: (id: string) => `/api/faculties/${id}`,
+  DOWNLOAD_DEPARTMENT_TEMPLATE: "/api/faculties/excel/template",
+  IMPORT_DEPARTMENT: "/api/faculties/excel/import",
+  
 
   // Major
   GET_MAJORS: "/api/majors",
@@ -39,6 +42,8 @@ export const API_CONFIG = {
   ADD_MAJOR: "/api/majors",
   UPDATE_MAJOR: (id: string) => `/api/majors/${id}`,
   DELETE_MAJOR: (id: string) => `/api/majors/${id}`,
+  DOWNLOAD_MAJOR_TEMPLATE: "/api/majors/excel/template",
+  IMPORT_MAJOR: "/api/majors/excel/import",
 
   // Grading Formula
   GET_GRADING_FORMULAS: "/api/grading-formulas",
@@ -60,6 +65,8 @@ export const API_CONFIG = {
   ADD_SUBJECT: "/api/subjects",
   UPDATE_SUBJECT: (id: string) => `/api/subjects/${id}`,
   DELETE_SUBJECT: (id: string) => `/api/subjects/${id}`,
+  DOWNLOAD_SUBJECT_TEMPLATE: "/api/subjects/excel/template",
+  IMPORT_SUBJECT: "/api/subjects/excel/import",
 
   // Class
   GET_CLASSES: "/api/classes",

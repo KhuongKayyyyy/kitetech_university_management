@@ -56,6 +56,8 @@ export const teacherService = {
   importTeacher: async (file: File) => {
     try {
       const response = await teacherRepository.importTeacher(file);
+      console.log("Raw API response:", response);
+      console.log("Response data:", response.data);
       return response.data;
     } catch (error: any) {
       handleServiceError(error, "Failed to import teacher");

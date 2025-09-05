@@ -35,4 +35,18 @@ export const departmentRepository = {
   deleteDepartment: (id: number) => {
     return axiosClient.delete(API_CONFIG.DELETE_DEPARTMENT(id.toString()));
   },
+
+  downloadDepartmentTemplate: () => {
+    return axiosClient.get(API_CONFIG.DOWNLOAD_DEPARTMENT_TEMPLATE);
+  },
+
+  importDepartment: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosClient.post(API_CONFIG.IMPORT_DEPARTMENT, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };

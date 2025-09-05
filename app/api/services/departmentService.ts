@@ -52,6 +52,27 @@ export const departmentService = {
       throw error;
     }
   },
+
+
+  downloadDepartmentTemplate: async () => {
+    try {
+      const response = await departmentRepository.downloadDepartmentTemplate();
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to download department template");
+      throw error;
+    }
+  },
+
+  importDepartment: async (file: File) => {
+    try {
+      const response = await departmentRepository.importDepartment(file);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to import department");
+      throw error;
+    }
+  },
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

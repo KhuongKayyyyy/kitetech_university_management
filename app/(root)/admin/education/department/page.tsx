@@ -9,8 +9,10 @@ import DepartmentItem from "@/components/ui/custom/education/department/Departme
 import { DepartmentTable } from "@/components/ui/custom/education/department/DepartmentTable";
 import { NewDepartmentDialog } from "@/components/ui/custom/education/department/NewDepartmentDialog";
 import { useDepartments } from "@/hooks/useDeparment";
-import { Building, Grid, List, Plus, Search, Trash2 } from "lucide-react";
+import { Building, Download, Grid, List, Plus, Search, Trash2, Upload } from "lucide-react";
 import { toast, Toaster } from "sonner";
+
+import PreviewImportDepartment from "./PreviewImportDepartment";
 
 const DepartmentPage = () => {
   const { departments, setDepartments, loading } = useDepartments();
@@ -21,6 +23,9 @@ const DepartmentPage = () => {
 
   const [openAddDepartment, setOpenAddDepartment] = useState(false);
   const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
 
   const filteredDepartments = departments.filter(
     (department) =>
@@ -71,6 +76,148 @@ const DepartmentPage = () => {
     setSelectedDepartments([]);
   };
 
+  const handleDownloadTemplateDepartment = async () => {
+    try {
+      const response = await departmentService.downloadDepartmentTemplate();
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "department_template.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error("Failed to download template");
+    }
+  };
+
+  const handleImportDepartment = async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".xlsx,.xls,.csv";
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          setImportLoading(true);
+          toast.info("Processing file...");
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const fileData = {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: reader.result as string,
+            };
+            localStorage.setItem("departmentImportFile", JSON.stringify(fileData));
+            setSelectedImportFile(file);
+            setShowImportPreview(true);
+            toast.success("File processed successfully");
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Failed to process file");
+        } finally {
+          setImportLoading(false);
+        }
+      }
+    };
+    fileInput.click();
+  };
+
+  interface DepartmentImportData {
+    id?: string;
+    name: string;
+    code: string;
+    dean: string;
+    contact_info: string;
+    status: "valid" | "warning" | "error";
+    errors?: string[];
+    warnings?: string[];
+    rowNumber: number;
+  }
+
+  const handleConfirmImport = async (validData: DepartmentImportData[]) => {
+    try {
+      setImportLoading(true);
+      toast.info("Importing departments...");
+
+      const fileDataStr = localStorage.getItem("departmentImportFile");
+      if (!fileDataStr) {
+        toast.error("No file found. Please select a file again.");
+        return;
+      }
+
+      const fileData = JSON.parse(fileDataStr);
+
+      const fetchResponse = await fetch(fileData.data);
+      const blob = await fetchResponse.blob();
+      const file = new File([blob], fileData.name, { type: fileData.type });
+
+      const importResponse = await departmentService.importDepartment(file);
+
+      console.log("Import response:", importResponse);
+
+      // Handle the response structure - the API response should have the correct format
+      const responseData = importResponse;
+
+      // Check if response has the expected structure
+      if (!responseData || typeof responseData !== "object") {
+        console.error("Invalid response structure:", responseData);
+        toast.error("Invalid response from server");
+        return;
+      }
+
+      const { success, message, data } = responseData;
+
+      if (success) {
+        if (!data || typeof data !== "object") {
+          console.error("Invalid data structure:", data);
+          toast.error("Invalid data structure from server");
+          return;
+        }
+
+        const { successCount, errorCount, errors } = data;
+
+        if (errorCount > 0) {
+          toast.warning(`Imported ${successCount} departments successfully. ${errorCount} failed.`);
+          // Show error details if needed
+          if (errors && errors.length > 0) {
+            const errorMessages = errors.map((error: any) => `Row ${error.row}: ${error.message}`).join("\n");
+            console.warn("Import errors:", errorMessages);
+          }
+        } else {
+          toast.success(`Successfully imported ${successCount} departments`);
+        }
+
+        // Refresh the departments list after successful import
+        const updatedDepartments = await departmentService.getDepartments();
+        setDepartments(updatedDepartments);
+      } else {
+        toast.error(message || "Failed to import departments");
+      }
+
+      setShowImportPreview(false);
+      setSelectedImportFile(null);
+
+      // Clear localStorage
+      localStorage.removeItem("departmentImportFile");
+    } catch (error) {
+      console.error("Error importing departments:", error);
+      toast.error("Failed to import departments");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowImportPreview(false);
+    setSelectedImportFile(null);
+    localStorage.removeItem("departmentImportFile");
+  };
+
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
       <Toaster></Toaster>
@@ -99,6 +246,26 @@ const DepartmentPage = () => {
               <option value="2026">2026-2027</option>
             </select>
           </div>
+
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => handleDownloadTemplateDepartment()}
+          >
+            <Download className="w-4 h-4" />
+            Download Template
+          </Button>
+
+          {/* Import Button */}
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => handleImportDepartment()}
+            disabled={importLoading}
+          >
+            <Upload className="w-4 h-4" />
+            {importLoading ? "Processing..." : "Import"}
+          </Button>
 
           {/* Add Department Button */}
           <Button
@@ -205,6 +372,17 @@ const DepartmentPage = () => {
       )}
 
       <NewDepartmentDialog open={openAddDepartment} setOpen={setOpenAddDepartment} onAdd={handleAddDepartment} />
+
+      {/* Import Preview Dialog */}
+      {selectedImportFile && (
+        <PreviewImportDepartment
+          open={showImportPreview}
+          file={selectedImportFile}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+          isLoading={importLoading}
+        />
+      )}
     </div>
   );
 };

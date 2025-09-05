@@ -10,8 +10,10 @@ import { MajorTable } from "@/components/ui/custom/education/major/MajorTable";
 import { NewMajorDialog } from "@/components/ui/custom/education/major/NewMajorDialog";
 import { useDepartments } from "@/hooks/useDeparment";
 import { useMajors } from "@/hooks/useMajor";
-import { Building, GraduationCap, Grid, List, Plus, Search } from "lucide-react";
+import { Building, Download, GraduationCap, Grid, List, Plus, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
+
+import PreviewImportMajor from "./PreviewImportMajor";
 
 // Skeleton Components
 const MajorCardSkeleton = () => (
@@ -98,6 +100,9 @@ const MajorPage = () => {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedYear, setSelectedYear] = useState("2024");
   const [openAddMajor, setOpenAddMajor] = useState(false);
+  const [showImportPreview, setShowImportPreview] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [selectedImportFile, setSelectedImportFile] = useState<File | null>(null);
 
   const handleAddMajor = async (newMajor: MajorModel) => {
     try {
@@ -183,6 +188,148 @@ const MajorPage = () => {
     return <MajorPageSkeleton />;
   }
 
+  const handleDownloadTemplateMajor = async () => {
+    try {
+      const response = await majorService.downloadMajorTemplate();
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "major_template.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      toast.error("Failed to download template");
+    }
+  };
+
+  const handleImportMajor = async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".xlsx,.xls,.csv";
+    fileInput.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          setImportLoading(true);
+          toast.info("Processing file...");
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const fileData = {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: reader.result as string,
+            };
+            localStorage.setItem("majorImportFile", JSON.stringify(fileData));
+            setSelectedImportFile(file);
+            setShowImportPreview(true);
+            toast.success("File processed successfully");
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Failed to process file");
+        } finally {
+          setImportLoading(false);
+        }
+      }
+    };
+    fileInput.click();
+  };
+
+  interface MajorImportData {
+    id?: string;
+    name: string;
+    code: string;
+    description: string;
+    faculty: string;
+    status: "valid" | "warning" | "error";
+    errors?: string[];
+    warnings?: string[];
+    rowNumber: number;
+  }
+
+  const handleConfirmImport = async (validData: MajorImportData[]) => {
+    try {
+      setImportLoading(true);
+      toast.info("Importing majors...");
+
+      const fileDataStr = localStorage.getItem("majorImportFile");
+      if (!fileDataStr) {
+        toast.error("No file found. Please select a file again.");
+        return;
+      }
+
+      const fileData = JSON.parse(fileDataStr);
+
+      const fetchResponse = await fetch(fileData.data);
+      const blob = await fetchResponse.blob();
+      const file = new File([blob], fileData.name, { type: fileData.type });
+
+      const importResponse = await majorService.importMajor(file);
+
+      console.log("Import response:", importResponse);
+
+      // Handle the response structure - the API response should have the correct format
+      const responseData = importResponse;
+
+      // Check if response has the expected structure
+      if (!responseData || typeof responseData !== "object") {
+        console.error("Invalid response structure:", responseData);
+        toast.error("Invalid response from server");
+        return;
+      }
+
+      const { success, message, data } = responseData;
+
+      if (success) {
+        if (!data || typeof data !== "object") {
+          console.error("Invalid data structure:", data);
+          toast.error("Invalid data structure from server");
+          return;
+        }
+
+        const { successCount, errorCount, errors } = data;
+
+        if (errorCount > 0) {
+          toast.warning(`Imported ${successCount} majors successfully. ${errorCount} failed.`);
+          // Show error details if needed
+          if (errors && errors.length > 0) {
+            const errorMessages = errors.map((error: any) => `Row ${error.row}: ${error.message}`).join("\n");
+            console.warn("Import errors:", errorMessages);
+          }
+        } else {
+          toast.success(`Successfully imported ${successCount} majors`);
+        }
+
+        // Refresh the majors list after successful import
+        const updatedMajors = await majorService.getMajors();
+        setMajors(updatedMajors);
+      } else {
+        toast.error(message || "Failed to import majors");
+      }
+
+      setShowImportPreview(false);
+      setSelectedImportFile(null);
+
+      // Clear localStorage
+      localStorage.removeItem("majorImportFile");
+    } catch (error) {
+      console.error("Error importing majors:", error);
+      toast.error("Failed to import majors");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowImportPreview(false);
+    setSelectedImportFile(null);
+    localStorage.removeItem("majorImportFile");
+  };
+
   return (
     <div className="px-6 bg-primary-foreground py-6 min-h-screen">
       {/* Header Section */}
@@ -212,6 +359,22 @@ const MajorPage = () => {
           </div>
 
           {/* Add Major Button */}
+
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => handleDownloadTemplateMajor()}>
+            <Download className="w-4 h-4" />
+            Download Template
+          </Button>
+
+          {/* Import Button */}
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => handleImportMajor()}
+            disabled={importLoading}
+          >
+            <Upload className="w-4 h-4" />
+            {importLoading ? "Processing..." : "Import"}
+          </Button>
           <Button
             onClick={() => setOpenAddMajor(true)}
             className="flex items-center gap-2 bg-primary hover:bg-primary/90"
@@ -324,6 +487,17 @@ const MajorPage = () => {
       )}
 
       <NewMajorDialog open={openAddMajor} setOpen={setOpenAddMajor} onAdd={handleAddMajor} />
+
+      {/* Import Preview Dialog */}
+      {selectedImportFile && (
+        <PreviewImportMajor
+          open={showImportPreview}
+          file={selectedImportFile}
+          onConfirm={handleConfirmImport}
+          onCancel={handleCancelImport}
+          isLoading={importLoading}
+        />
+      )}
     </div>
   );
 };

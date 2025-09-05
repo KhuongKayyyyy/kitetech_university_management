@@ -55,6 +55,26 @@ export const subjectService = {
       throw error;
     }
   },
+
+  downloadSubjectTemplate: async () => {
+    try {
+      const response = await subjectRepository.downloadSubjectTemplate();
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to download subject template");
+      throw error;
+    }
+  },
+
+  importSubject: async (file: File) => {
+    try {
+      const response = await subjectRepository.importSubject(file);
+      return response.data;
+    } catch (error: any) {
+      handleServiceError(error, "Failed to import subject");
+      throw error;
+    }
+  },
 };
 
 function handleServiceError(error: any, fallbackMessage: string) {

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
-import { MOCK_SEMESTERS } from "@/app/api/model/SemesterModel";
+import { SemesterModel } from "@/app/api/model/SemesterModel";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
+import { semesterService } from "@/app/api/services/semesterService";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +23,7 @@ import { APP_ROUTES } from "@/constants/AppRoutes";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import { CalendarDays, Clock, FileText, Hash } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface AddRegistrationPeriodProps {
   open: boolean;
@@ -44,6 +47,27 @@ export default function AddRegistrationPeriodDialog({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [semesters, setSemesters] = useState<SemesterModel[]>([]);
+  const [loadingSemesters, setLoadingSemesters] = useState(false);
+
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      if (open) {
+        setLoadingSemesters(true);
+        try {
+          const semestersData = await semesterService.getSemesters();
+          setSemesters(semestersData);
+        } catch (error) {
+          console.error("Error fetching semesters:", error);
+          toast.error("Failed to load semesters");
+        } finally {
+          setLoadingSemesters(false);
+        }
+      }
+    };
+
+    fetchSemesters();
+  }, [open]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -90,20 +114,51 @@ export default function AddRegistrationPeriodDialog({
     try {
       const newRegistrationPeriod: RegistrationPeriod = {
         id: 0,
-        semesterId: parseInt(formData.semesterId),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
+        semester_id: parseInt(formData.semesterId),
+        start_date: formData.startDate,
+        end_date: formData.endDate,
         status: formData.status,
-        description: formData.description || undefined,
+        description: formData.description || "",
+        created_at: "",
+        updated_at: "",
+        semester: {} as any,
+        courseRegistrationClasses: [],
+        courseRegistrationSubjects: [],
       };
 
-      onAddRegistrationPeriod(newRegistrationPeriod);
+      // Call the API to add the registration period
+      const createdRegistrationPeriod = await registrationPeriodService.addRegistrationPeriod(newRegistrationPeriod);
+
+      // Find the selected semester to populate the semester information
+      const selectedSemester = semesters.find((s) => s.id === parseInt(formData.semesterId));
+
+      // Create a complete registration period object with semester information
+      const completeRegistrationPeriod: RegistrationPeriod = {
+        ...createdRegistrationPeriod,
+        semester: selectedSemester || {
+          id: parseInt(formData.semesterId),
+          name: "Unknown Semester",
+          academic_year_id: 0,
+          created_at: "",
+          updated_at: "",
+        },
+      };
+
+      // Call the callback to update the parent component
+      onAddRegistrationPeriod(completeRegistrationPeriod);
+
+      // Show success message
+      toast.success("Registration period added successfully!");
+
+      // Navigate to the new registration period detail page
       router.push(
-        `${APP_ROUTES.REGISTRATION_PERIOD}/${newRegistrationPeriod.id}?name=${newRegistrationPeriod.description}`,
+        `${APP_ROUTES.REGISTRATION_PERIOD}/${createdRegistrationPeriod.id}?name=${createdRegistrationPeriod.description || "Registration Period"}`,
       );
+
       handleClose();
     } catch (error) {
       console.error("Error adding registration period:", error);
+      toast.error("Failed to add registration period. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -144,10 +199,10 @@ export default function AddRegistrationPeriodDialog({
               </Label>
               <Select value={formData.semesterId} onValueChange={(value) => handleInputChange("semesterId", value)}>
                 <SelectTrigger className={errors.semesterId ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select semester" />
+                  <SelectValue placeholder={loadingSemesters ? "Loading semesters..." : "Select semester"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_SEMESTERS.map((semester) => (
+                  {semesters.map((semester) => (
                     <SelectItem key={semester.id} value={semester.id.toString()}>
                       {semester.name}
                     </SelectItem>

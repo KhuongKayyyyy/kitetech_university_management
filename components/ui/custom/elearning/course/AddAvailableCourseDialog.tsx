@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 
-import { Course } from "@/app/api/model/Course";
 import { UserModel } from "@/app/api/model/UserModel";
-import { semesterService } from "@/app/api/services/semesterService";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
 import { userService } from "@/app/api/services/userService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,10 +32,10 @@ interface TeacherUser {
   role?: string;
 }
 
-interface AddSubjectClassDialogProps {
+interface AddAvailableCourseDialogProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onCourseAdd?: (subjectClass: Course) => Promise<void>;
+  onCourseAdd?: () => Promise<void>;
   trigger?: React.ReactNode;
   registrationPeriodId?: string;
 }
@@ -46,14 +45,13 @@ interface ScheduleFormData {
   schedule: string;
 }
 
-interface SubjectClassFormData {
+interface CourseFormData {
   subject_id: string;
-  semester: string;
   description: string;
   start_date: string;
   end_date: string;
+  max_student: number;
   location: string;
-  teacher_username: string;
   schedules: ScheduleFormData[];
 }
 
@@ -67,59 +65,44 @@ const DAYS_OF_WEEK = [
   { value: "Sunday", label: "Sunday" },
 ];
 
-// Removed hardcoded semester options - will use real data from API
-
-export default function AddCourseDialog({
+export default function AddAvailableCourseDialog({
   isOpen,
   onOpenChange,
   onCourseAdd,
   trigger,
   registrationPeriodId,
-}: AddSubjectClassDialogProps) {
+}: AddAvailableCourseDialogProps) {
   const { subjects } = useSubjects();
   const [teacherUsers, setTeacherUsers] = useState<TeacherUser[]>([]);
-  const [semesters, setSemesters] = useState<any[]>([]);
-  const [loadingSemesters, setLoadingSemesters] = useState(false);
-  const [formData, setFormData] = useState<SubjectClassFormData>({
+  const [formData, setFormData] = useState<CourseFormData>({
     subject_id: "",
-    semester: "",
     description: "",
     start_date: "",
     end_date: "",
+    max_student: 0,
     location: "",
-    teacher_username: "",
     schedules: [],
   });
   const [isSaving, setIsSaving] = useState(false);
   const [subjectOpen, setSubjectOpen] = useState(false);
-  const [teacherOpen, setTeacherOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const [semesterOpen, setSemesterOpen] = useState(false);
 
-  // Load users with teacher role and semesters on component mount
+  // Load users with teacher role on component mount
   React.useEffect(() => {
-    const loadData = async () => {
+    const loadTeacherUsers = async () => {
       try {
-        // Load teachers
         const usersData = await userService.getUsers();
         const teachers = usersData?.filter((user: UserModel) => user.role?.toLowerCase() === "teacher") || [];
         setTeacherUsers(teachers);
-
-        // Load semesters
-        setLoadingSemesters(true);
-        const semestersData = await semesterService.getSemesters();
-        setSemesters(semestersData || []);
       } catch (error) {
-        console.error("Failed to load data:", error);
-        toast.error("Failed to load data");
-      } finally {
-        setLoadingSemesters(false);
+        console.error("Failed to load teacher users:", error);
+        toast.error("Failed to load teachers");
       }
     };
-    loadData();
+    loadTeacherUsers();
   }, []);
 
-  const handleInputChange = (field: keyof SubjectClassFormData, value: string | number) => {
+  const handleInputChange = (field: keyof CourseFormData, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -156,23 +139,18 @@ export default function AddCourseDialog({
       return;
     }
 
-    if (!formData.semester.trim()) {
-      toast.error("Semester selection is required.");
-      return;
-    }
-
     if (!formData.start_date || !formData.end_date) {
       toast.error("Please select start and end dates.");
       return;
     }
 
-    if (!formData.teacher_username.trim()) {
-      toast.error("Teacher selection is required.");
+    if (!formData.location.trim()) {
+      toast.error("Location selection is required.");
       return;
     }
 
-    if (!formData.location.trim()) {
-      toast.error("Location selection is required.");
+    if (formData.max_student <= 0) {
+      toast.error("Maximum students must be greater than 0.");
       return;
     }
 
@@ -183,57 +161,39 @@ export default function AddCourseDialog({
 
     setIsSaving(true);
     try {
-      const submissionData: Course = {
+      const courseData = {
         subject_id: parseInt(formData.subject_id),
-        semester: formData.semester,
         description: formData.description,
-        schedules: formData.schedules.map((schedule) => ({
-          id: 0, // Will be assigned by the API
-          sections: schedule.sections,
-          schedule: schedule.schedule,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })),
+        schedules: formData.schedules,
         start_date: formData.start_date,
         end_date: formData.end_date,
+        max_student: formData.max_student,
         location: formData.location,
-        enrolled: 0, // Default value since field is removed
-        teacher_username: formData.teacher_username,
       };
 
-      // TODO: Implement API call to add subject to registration period
-      // For now, we'll just simulate the API call
       if (registrationPeriodId) {
-        console.log("Adding subject to registration period:", registrationPeriodId, submissionData);
-        // await registrationPeriodService.addAvailableSubject(registrationPeriodId, submissionData);
+        await registrationPeriodService.addAvailableCourse(registrationPeriodId, courseData);
+        toast.success("Course added successfully to registration period!");
       }
 
       // Call the callback if provided
-      await onCourseAdd?.(submissionData);
+      await onCourseAdd?.();
 
       // Reset form on success
       setFormData({
         subject_id: "",
-        semester: "",
         description: "",
         start_date: "",
         end_date: "",
+        max_student: 0,
         location: "",
-        teacher_username: "",
         schedules: [],
       });
 
       onOpenChange?.(false);
-
-      // Success toast with more details
-      const subject = getSelectedSubject();
-      const teacher = getSelectedTeacher();
-      toast.success(`Subject class "${subject?.name}" has been created successfully!`, {
-        description: `Teacher: ${getTeacherDisplayName(teacher || {})} | Location: ${formData.location} | Semester: ${formData.semester}`,
-      });
     } catch (error) {
-      console.error("Error creating subject class:", error);
-      toast.error("Failed to create subject class. Please try again.");
+      console.error("Error adding course:", error);
+      toast.error("Failed to add course. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -242,12 +202,11 @@ export default function AddCourseDialog({
   const handleCancel = () => {
     setFormData({
       subject_id: "",
-      semester: "",
       description: "",
       start_date: "",
       end_date: "",
+      max_student: 0,
       location: "",
-      teacher_username: "",
       schedules: [],
     });
     onOpenChange?.(false);
@@ -257,17 +216,9 @@ export default function AddCourseDialog({
     return subjects.find((subject) => subject.id === formData.subject_id);
   };
 
-  const getSelectedTeacher = () => {
-    return teacherUsers.find((teacher) => teacher.username === formData.teacher_username);
-  };
-
-  const getTeacherDisplayName = (teacher: TeacherUser) => {
-    return teacher.full_name || teacher.email || teacher.username || "";
-  };
-
   // Check if enough data is filled to show preview
   const shouldShowPreview = () => {
-    return formData.subject_id && formData.semester && formData.teacher_username && formData.location;
+    return formData.subject_id && formData.location && formData.max_student > 0;
   };
 
   return (
@@ -277,9 +228,9 @@ export default function AddCourseDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Create Course
+            Add Available Course
           </DialogTitle>
-          <DialogDescription>Create a new course with selected weeks and course details.</DialogDescription>
+          <DialogDescription>Add a new course to the registration period with course details.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -331,51 +282,6 @@ export default function AddCourseDialog({
               </Popover>
             </div>
 
-            {/* Semester Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="semester">Semester *</Label>
-              <Popover open={semesterOpen} onOpenChange={setSemesterOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={semesterOpen}
-                    className="w-full justify-between"
-                  >
-                    {formData.semester
-                      ? semesters.find((semester) => semester.name === formData.semester)?.name || formData.semester
-                      : "Select semester..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Search semesters..." />
-                    <CommandList>
-                      <CommandEmpty>{loadingSemesters ? "Loading semesters..." : "No semester found."}</CommandEmpty>
-                      <CommandGroup>
-                        {semesters.map((semester) => (
-                          <CommandItem
-                            key={semester.id}
-                            value={semester.name}
-                            onSelect={() => {
-                              handleInputChange("semester", semester.name);
-                              setSemesterOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${formData.semester === semester.name ? "opacity-100" : "opacity-0"}`}
-                            />
-                            {semester.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Date Range */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -400,53 +306,8 @@ export default function AddCourseDialog({
               </div>
             </div>
 
-            {/* Teacher and Location */}
+            {/* Location and Max Students */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="teacher_username">Teacher *</Label>
-                <Popover open={teacherOpen} onOpenChange={setTeacherOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={teacherOpen}
-                      className="w-full justify-between"
-                    >
-                      {formData.teacher_username
-                        ? getTeacherDisplayName(getSelectedTeacher() || { id: 0, email: "", username: "" })
-                        : "Select teacher..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search teachers..." />
-                      <CommandList>
-                        <CommandEmpty>No teacher found.</CommandEmpty>
-                        <CommandGroup>
-                          {teacherUsers.map((teacher) => (
-                            <CommandItem
-                              key={teacher.id}
-                              value={`${getTeacherDisplayName(teacher)}`}
-                              onSelect={() => {
-                                handleInputChange("teacher_username", teacher.username || "");
-                                setTeacherOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  formData.teacher_username === teacher.username ? "opacity-100" : "opacity-0"
-                                }`}
-                              />
-                              {getTeacherDisplayName(teacher)}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Location *</Label>
                 <Popover open={locationOpen} onOpenChange={setLocationOpen}>
@@ -511,6 +372,18 @@ export default function AddCourseDialog({
                   </PopoverContent>
                 </Popover>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="max_student">Maximum Students *</Label>
+                <Input
+                  id="max_student"
+                  type="number"
+                  min="1"
+                  value={formData.max_student}
+                  onChange={(e) => handleInputChange("max_student", parseInt(e.target.value) || 0)}
+                  placeholder="Maximum number of students"
+                  required
+                />
+              </div>
             </div>
 
             {/* Schedules Section */}
@@ -531,7 +404,7 @@ export default function AddCourseDialog({
                   Add Schedule
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground">Add the weekly schedules for this subject class</p>
+              <p className="text-sm text-muted-foreground">Add the weekly schedules for this course</p>
 
               {formData.schedules.length > 0 && (
                 <Card>
@@ -625,20 +498,20 @@ export default function AddCourseDialog({
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Class description and additional notes"
+                placeholder="Course description and additional notes"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 rows={3}
               />
             </div>
 
-            {/* Class Preview Section */}
+            {/* Course Preview Section */}
             {shouldShowPreview() && (
               <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-green-900">
                     <Info className="h-4 w-4" />
-                    Class Preview
+                    Course Preview
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -652,30 +525,21 @@ export default function AddCourseDialog({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-green-600" />
-                        <div>
-                          <div className="text-sm text-gray-600">Teacher</div>
-                          <div className="font-medium text-green-900">
-                            {getTeacherDisplayName(getSelectedTeacher() || {})}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-green-600" />
                         <div>
                           <div className="text-sm text-gray-600">Location</div>
                           <div className="font-medium text-green-900">Room {formData.location}</div>
                         </div>
                       </div>
-                    </div>
-                    <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-green-600" />
+                        <User className="h-4 w-4 text-green-600" />
                         <div>
-                          <div className="text-sm text-gray-600">Semester</div>
-                          <div className="font-medium text-green-900">{formData.semester}</div>
+                          <div className="text-sm text-gray-600">Max Students</div>
+                          <div className="font-medium text-green-900">{formData.max_student}</div>
                         </div>
                       </div>
+                    </div>
+                    <div className="space-y-3">
                       {formData.start_date && formData.end_date && (
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-green-600" />
@@ -753,7 +617,7 @@ export default function AddCourseDialog({
             </Button>
             <Button type="submit" disabled={isSaving}>
               <Save className="w-4 h-4 mr-2" />
-              {isSaving ? "Creating..." : "Create Class"}
+              {isSaving ? "Adding..." : "Add Course"}
             </Button>
           </DialogFooter>
         </form>

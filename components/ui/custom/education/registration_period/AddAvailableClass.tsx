@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { mockClasses } from "@/app/api/model/ClassModel";
+import { ClassModel } from "@/app/api/model/ClassModel";
+import { classService } from "@/app/api/services/classService";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,12 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useDepartments } from "@/hooks/useDeparment";
 import { useMajors } from "@/hooks/useMajor";
 import { GraduationCap, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 
 interface AddAvailableClassProps {
   onAddClasses?: (classIds: number[]) => void;
+  alreadyAddedClassIds?: number[];
 }
 
-export default function AddAvailableClass({ onAddClasses }: AddAvailableClassProps) {
+export default function AddAvailableClass({ onAddClasses, alreadyAddedClassIds = [] }: AddAvailableClassProps) {
   const { departments } = useDepartments();
   const { majors } = useMajors();
 
@@ -34,6 +37,27 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedMajor, setSelectedMajor] = useState<string>("all");
   const [selectedClasses, setSelectedClasses] = useState<number[]>([]);
+  const [classes, setClasses] = useState<ClassModel[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch classes when dialog opens
+  useEffect(() => {
+    const fetchClasses = async () => {
+      if (open) {
+        setLoading(true);
+        try {
+          const classesData = await classService.getClasses();
+          setClasses(classesData);
+        } catch (error) {
+          console.error("Error fetching classes:", error);
+          toast.error("Failed to load classes");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchClasses();
+  }, [open]);
 
   // Filter majors based on selected department
   const filteredMajors = useMemo(() => {
@@ -43,13 +67,16 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
 
   // Filter classes based on search term, department, and major
   const filteredClasses = useMemo(() => {
-    let filtered = mockClasses;
+    let filtered = classes;
+
+    // First, filter out classes that are already added to the registration period
+    filtered = filtered.filter((cls) => !alreadyAddedClassIds.includes(cls.id || 0));
 
     // Filter by search term (class name or code)
     if (searchTerm) {
       filtered = filtered.filter(
         (cls) =>
-          cls.class_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cls.class_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           cls.description?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
@@ -59,16 +86,16 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
       filtered = filtered.filter((cls) => cls.major_id === parseInt(selectedMajor));
     } else if (selectedDepartment !== "all") {
       // If department is selected but major is "all", filter by department
-      const departmentMajorIds = filteredMajors.map((major) => major.id);
-      filtered = filtered.filter((cls) => departmentMajorIds.includes(cls.major_id));
+      const departmentMajorIds = filteredMajors.map((major) => major.id).filter((id): id is number => id !== undefined);
+      filtered = filtered.filter((cls) => cls.major_id && departmentMajorIds.includes(cls.major_id));
     }
 
     return filtered;
-  }, [mockClasses, searchTerm, selectedMajor, selectedDepartment, filteredMajors]);
+  }, [classes, searchTerm, selectedMajor, selectedDepartment, filteredMajors, alreadyAddedClassIds]);
 
   // Group classes by department and major
   const groupedClasses = useMemo(() => {
-    const groups: Record<string, Record<string, typeof mockClasses>> = {};
+    const groups: Record<string, Record<string, ClassModel[]>> = {};
 
     filteredClasses.forEach((cls) => {
       const major = majors.find((m) => m.id === cls.major_id);
@@ -88,7 +115,9 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
     return groups;
   }, [filteredClasses, majors, departments]);
 
-  const handleClassSelection = (classId: number, checked: boolean) => {
+  const handleClassSelection = (classId: number | undefined, checked: boolean) => {
+    if (!classId) return;
+
     if (checked) {
       setSelectedClasses((prev) => [...prev, classId]);
     } else {
@@ -127,6 +156,12 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
           </DialogTitle>
           <DialogDescription>
             Select classes to make available for registration. Classes are organized by department and major.
+            {alreadyAddedClassIds.length > 0 && (
+              <span className="block mt-1 text-sm text-amber-600">
+                {alreadyAddedClassIds.length} class{alreadyAddedClassIds.length !== 1 ? "es" : ""} already added to this
+                registration period.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -190,8 +225,14 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
 
           {/* Classes List */}
           <div className="border rounded-lg max-h-[60vh] overflow-y-auto">
-            {Object.keys(groupedClasses).length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No classes found matching your criteria.</div>
+            {loading ? (
+              <div className="p-8 text-center text-muted-foreground">Loading classes...</div>
+            ) : Object.keys(groupedClasses).length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                {alreadyAddedClassIds.length > 0
+                  ? "All available classes have already been added to this registration period."
+                  : "No classes found matching your criteria."}
+              </div>
             ) : (
               <div className="space-y-4 p-4">
                 {Object.entries(groupedClasses).map(([departmentName, majorGroups]) => (
@@ -205,12 +246,12 @@ export default function AddAvailableClass({ onAddClasses }: AddAvailableClassPro
                             <div key={cls.id} className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded">
                               <Checkbox
                                 id={`class-${cls.id}`}
-                                checked={selectedClasses.includes(cls.id)}
+                                checked={selectedClasses.includes(cls.id || 0)}
                                 onCheckedChange={(checked) => handleClassSelection(cls.id, checked as boolean)}
                               />
                               <div className="flex-1">
                                 <Label htmlFor={`class-${cls.id}`} className="text-sm font-medium cursor-pointer">
-                                  {cls.class_code}
+                                  {cls.class_code || "N/A"}
                                 </Label>
                                 {cls.description && <p className="text-xs text-muted-foreground">{cls.description}</p>}
                               </div>

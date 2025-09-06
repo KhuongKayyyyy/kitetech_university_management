@@ -6,6 +6,7 @@ import { formulaSubjects, subjects } from "@/app/api/fakedata";
 import { SubjectModel } from "@/app/api/model/model";
 import { mockRegistrationPeriods } from "@/app/api/model/RegistrationPeriodModel";
 import { gradingFormulaService } from "@/app/api/services/gradingFormulaService";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
 import { subjectService } from "@/app/api/services/subjectService";
 import GradingFormulasSection from "@/components/ui/custom/education/subject/sections/GradingFormulasSection";
 import RegistrationPeriodsSection from "@/components/ui/custom/education/subject/sections/RegistrationPeriodsSection";
@@ -17,6 +18,7 @@ const SubjectPage = () => {
   const [activeTab, setActiveTab] = useState<"subjects" | "formulas" | "registration">("subjects");
   const [subjectsCount, setSubjectsCount] = useState(0);
   const [gradingFormulasCount, setGradingFormulasCount] = useState(0);
+  const [registrationPeriodsCount, setRegistrationPeriodsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,11 +33,16 @@ const SubjectPage = () => {
         // Fetch grading formulas count
         const gradingFormulasData = await gradingFormulaService.getGradingFormulas();
         setGradingFormulasCount(gradingFormulasData.length);
+
+        // Fetch registration periods count
+        const registrationPeriodsData = await registrationPeriodService.getRegistrationPeriods();
+        setRegistrationPeriodsCount(registrationPeriodsData.length);
       } catch (error) {
         console.error("Error fetching data counts:", error);
         // Fallback to mock data counts if service fails
         setSubjectsCount(subjects.length);
         setGradingFormulasCount(formulaSubjects.length);
+        setRegistrationPeriodsCount(mockRegistrationPeriods.length);
       } finally {
         setIsLoading(false);
       }
@@ -98,7 +105,7 @@ const SubjectPage = () => {
           >
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Registration Periods ({mockRegistrationPeriods.length})
+              Registration Periods ({isLoading ? "..." : registrationPeriodsCount})
             </div>
           </button>
         </div>

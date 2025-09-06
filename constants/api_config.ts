@@ -111,4 +111,17 @@ export const API_CONFIG = {
   ADD_STUDENTS_TO_COURSE: (course_id: string) => `/api/classrooms/${course_id}/members`,
   DOWNLOAD_STUDENTS_TO_COURSE_TEMPLATE: (course_id: string) => `/api/classrooms/${course_id}/students/excel/template`,
   IMPORT_STUDENTS_TO_COURSE: "/api/classrooms/excel/import",
+
+  // course registration
+  GET_COURSE_REGISTRATIONS: "/api/course-registration-management",
+  GET_COURSE_REGISTRATION: (id: string) => `/api/course-registration-management/${id}`,
+  ADD_COURSE_REGISTRATION: "/api/course-registration-management",
+  UPDATE_COURSE_REGISTRATION: (id: string) => `/api/course-registration-management/${id}`,
+  DELETE_COURSE_REGISTRATION: (id: string) => `/api/course-registration-management/${id}`,
+  DOWNLOAD_COURSE_REGISTRATION_TEMPLATE: "/api/course-registration-management/excel/template",
+  IMPORT_COURSE_REGISTRATION: "/api/course-registration-management/excel/import",
+  ADD_AVAILABLE_CLASS: (course_registration_id: string) => `/api/course-registration-management/${course_registration_id}/classes`,
+  REMOVE_AVAILABLE_CLASS: (course_registration_id: string) => `/api/course-registration-management/${course_registration_id}/classes`,
+  ADD_AVAILABLE_COURSE: (course_registration_id: string) => `/api/course-registration-management/${course_registration_id}/subjects`,  
+  REMOVE_AVAILABLE_COURSE: (course_registration_id: string) => `/api/course-registration-management/${course_registration_id}/subjects`,
 };

@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
 import { APP_ROUTES } from "@/constants/AppRoutes";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import { AlertCircle, Calendar, CheckCircle, Clock, Edit2, Trash2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+import ConfirmDeleteRegistrationPeriodDialog from "./ConfirmDeleteRegistrationPeriodDialog";
 
 interface RegisPeriodItemProps {
   period: RegistrationPeriod;
@@ -13,33 +17,36 @@ interface RegisPeriodItemProps {
 }
 
 export default function RegisPeriodItem({ period, onEdit, onDelete }: RegisPeriodItemProps) {
-  const getStatusColor = (status: RegisPeriodStatus) => {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case RegisPeriodStatus.Open:
+      case "Open":
         return "bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-200 shadow-emerald-100";
-      case RegisPeriodStatus.Closed:
+      case "Closed":
         return "bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 border-slate-200 shadow-slate-100";
-      case RegisPeriodStatus.Cancelled:
+      case "Cancelled":
         return "bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border-red-200 shadow-red-100";
       default:
         return "bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 border-slate-200 shadow-slate-100";
     }
   };
 
-  const getStatusIcon = (status: RegisPeriodStatus) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case RegisPeriodStatus.Open:
+      case "Open":
         return <CheckCircle className="h-4 w-4 drop-shadow-sm" />;
-      case RegisPeriodStatus.Closed:
+      case "Closed":
         return <XCircle className="h-4 w-4 drop-shadow-sm" />;
-      case RegisPeriodStatus.Cancelled:
+      case "Cancelled":
         return <AlertCircle className="h-4 w-4 drop-shadow-sm" />;
       default:
         return <Clock className="h-4 w-4 drop-shadow-sm" />;
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -61,7 +68,26 @@ export default function RegisPeriodItem({ period, onEdit, onDelete }: RegisPerio
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete?.(period);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await registrationPeriodService.deleteRegistrationPeriod(period.id);
+      onDelete?.(period);
+      toast.success("Registration period deleted successfully!");
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting registration period:", error);
+      toast.error("Failed to delete registration period. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
   };
 
   return (
@@ -75,13 +101,13 @@ export default function RegisPeriodItem({ period, onEdit, onDelete }: RegisPerio
             {/* Header with Status */}
             <div className="flex items-center gap-4">
               <div
-                className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-semibold border shadow-sm ${getStatusColor(period.status)}`}
+                className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-sm font-semibold border shadow-sm ${getStatusColor(period.status || "Unknown")}`}
               >
-                {getStatusIcon(period.status)}
-                <span className="tracking-wide">{period.status}</span>
+                {getStatusIcon(period.status || "Unknown")}
+                <span className="tracking-wide">{period.status || "Unknown"}</span>
               </div>
               <span className="text-sm text-slate-600 bg-gradient-to-r from-slate-100 to-gray-100 px-3 py-1.5 rounded-lg font-medium shadow-sm border border-slate-200/50">
-                Semester {period.semesterId}
+                {period.semester?.name || "N/A"}
               </span>
             </div>
 
@@ -97,12 +123,12 @@ export default function RegisPeriodItem({ period, onEdit, onDelete }: RegisPerio
               <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2.5 rounded-xl border border-blue-100 shadow-sm">
                 <Calendar className="h-4 w-4 text-blue-500 drop-shadow-sm" />
                 <span className="font-semibold text-blue-700">Start:</span>
-                <span className="font-medium text-gray-700">{formatDate(period.startDate)}</span>
+                <span className="font-medium text-gray-700">{formatDate(period.start_date)}</span>
               </div>
               <div className="flex items-center gap-3 bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-2.5 rounded-xl border border-orange-100 shadow-sm">
                 <Calendar className="h-4 w-4 text-orange-500 drop-shadow-sm" />
                 <span className="font-semibold text-orange-700">End:</span>
-                <span className="font-medium text-gray-700">{formatDate(period.endDate)}</span>
+                <span className="font-medium text-gray-700">{formatDate(period.end_date)}</span>
               </div>
             </div>
 
@@ -135,6 +161,14 @@ export default function RegisPeriodItem({ period, onEdit, onDelete }: RegisPerio
           </button>
         )}
       </div>
+
+      <ConfirmDeleteRegistrationPeriodDialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        registrationPeriod={period}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

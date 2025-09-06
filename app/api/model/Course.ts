@@ -9,7 +9,9 @@ export interface Schedule {
 }
 
 export interface Course {
+  id: number;
   subject_id: number;
+  subject_name: string;
   semester: string;
   description: string;
   schedules: Schedule[];
@@ -17,7 +19,7 @@ export interface Course {
   end_date: string;
   location: string;
   enrolled: number;
-  teacher_username: string;
+  max_student: number;
 }
 
 export interface CourseMember {
@@ -65,7 +67,9 @@ export interface CourseDetailModel {
 
 export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
   {
+    id: 1,
     subject_id: 1,
+    subject_name: "Introduction to Programming",
     semester: "HK1 2025-2026",
     description: "Fundamentals of programming using C language.",
     schedules: [
@@ -82,10 +86,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "C101",
     enrolled: 19,
-    teacher_username: "tran_thi_ngoc"
+    max_student: 30
   },
   {
+    id: 2,
     subject_id: 2,
+    subject_name: "Advanced Mathematics",
     semester: "HK1 2025-2026",
     description: "Advanced mathematics for computer science.",
     schedules: [
@@ -102,10 +108,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "B205",
     enrolled: 28,
-    teacher_username: "nguyen_van_duc"
+    max_student: 30
   },
   {
+    id: 3,
     subject_id: 3,
+    subject_name: "Data Structures and Algorithms",
     semester: "HK1 2025-2026",
     description: "Introduction to data structures and algorithms.",
     schedules: [
@@ -122,10 +130,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "A301",
     enrolled: 30,
-    teacher_username: "le_thi_mai"
+    max_student: 30
   },
   {
+    id: 4,
     subject_id: 4,
+    subject_name: "Database Systems",
     semester: "HK1 2025-2026",
     description: "Database management systems fundamentals.",
     schedules: [
@@ -142,10 +152,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "D102",
     enrolled: 18,
-    teacher_username: "pham_minh_tam"
+    max_student: 30
   },
   {
+    id: 5,
     subject_id: 5,
+    subject_name: "Object-Oriented Programming",
     semester: "HK1 2025-2026",
     description: "Object-oriented programming with Java.",
     schedules: [
@@ -162,10 +174,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "C203",
     enrolled: 42,
-    teacher_username: "vo_thi_lan"
+    max_student: 50
   },
   {
+    id: 6,
     subject_id: 6,
+    subject_name: "Computer Networks",
     semester: "HK1 2025-2026",
     description: "Computer networks and communications.",
     schedules: [
@@ -182,10 +196,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "B104",
     enrolled: 15,
-    teacher_username: "hoang_van_son"
+    max_student: 30
   },
   {
+    id: 7,
     subject_id: 7,
+    subject_name: "Software Engineering",
     semester: "HK1 2025-2026",
     description: "Software engineering principles and practices.",
     schedules: [
@@ -202,10 +218,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "A105",
     enrolled: 25,
-    teacher_username: "dao_thi_hong"
+    max_student: 30
   },
   {
+    id: 8,
     subject_id: 8,
+    subject_name: "Web Development",
     semester: "HK1 2025-2026",
     description: "Web development with modern frameworks.",
     schedules: [
@@ -222,10 +240,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "C304",
     enrolled: 48,
-    teacher_username: "bui_minh_khoa"
+    max_student: 50
   },
   {
+    id: 9,
     subject_id: 9,
+    subject_name: "Mobile Development",
     semester: "HK1 2025-2026",
     description: "Mobile application development.",
     schedules: [
@@ -242,10 +262,12 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "D201",
     enrolled: 19,
-    teacher_username: "ly_thi_thu"
+    max_student: 30
   },
   {
+    id: 10,
     subject_id: 10,
+    subject_name: "Artificial Intelligence",
     semester: "HK1 2025-2026",
     description: "Artificial intelligence and machine learning.",
     schedules: [
@@ -262,6 +284,6 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     end_date: "2025-12-30",
     location: "A402",
     enrolled: 27,
-    teacher_username: "ngo_van_hai"
+    max_student: 30
   }
 ];

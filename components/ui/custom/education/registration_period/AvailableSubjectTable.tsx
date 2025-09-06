@@ -30,6 +30,8 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
 
+import { ConfirmDeleteCoursesDialog } from "./ConfirmDeleteCoursesDialog";
+
 export const availableSubjectColumns: ColumnDef<Course>[] = [
   {
     id: "select",
@@ -61,13 +63,13 @@ export const availableSubjectColumns: ColumnDef<Course>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "subject_id",
+    accessorKey: "subject_name",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Subject ID <ArrowUpDown className="ml-2 h-4 w-4" />
+        Subject Name <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("subject_id")}</div>,
+    cell: ({ row }) => <div className="font-medium">{row.getValue("subject_name")}</div>,
   },
   {
     accessorKey: "description",
@@ -137,16 +139,16 @@ export const availableSubjectColumns: ColumnDef<Course>[] = [
         Enrolled <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("enrolled")}</div>,
-  },
-  {
-    accessorKey: "teacher_username",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Teacher <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("teacher_username")}</div>,
+    cell: ({ row }) => {
+      const enrolled = row.getValue("enrolled") as number;
+      const maxStudent = row.original.max_student;
+      return (
+        <div className="text-center">
+          <span className="font-medium">{enrolled}</span>
+          <span className="text-muted-foreground">/{maxStudent}</span>
+        </div>
+      );
+    },
   },
   {
     id: "actions",
@@ -164,8 +166,8 @@ export const availableSubjectColumns: ColumnDef<Course>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(availableSubject.subject_id.toString())}>
-              Copy Subject ID
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(availableSubject.subject_name)}>
+              Copy Subject Name
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Edit Subject</DropdownMenuItem>
@@ -183,6 +185,7 @@ interface AvailableSubjectTableProps {
   onViewRegistrations: (subject: Course) => void;
   onDeleteSubject: (subject: Course) => void;
   onAddSubject: (subject: Course) => void;
+  onDeleteSelectedCourses: (courseIds: number[]) => void;
 }
 
 export function AvailableSubjectTable({
@@ -191,11 +194,14 @@ export function AvailableSubjectTable({
   onViewRegistrations,
   onDeleteSubject,
   onAddSubject,
+  onDeleteSelectedCourses,
 }: AvailableSubjectTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const table = useReactTable({
     data: availableSubjects,
@@ -218,14 +224,51 @@ export function AvailableSubjectTable({
   });
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
+  const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const selectedCourseNames = selectedRows.map((row) => row.original.subject_name);
+
+  const handleDeleteSelected = () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+    if (selectedRows.length > 0) {
+      setShowDeleteDialog(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedCourseIds = selectedRows.map((row) => row.original.id);
+
+    console.log("Selected rows:", selectedRows);
+    console.log("Selected course IDs (using id - course registration subject ID):", selectedCourseIds);
+    console.log(
+      "Selected course data:",
+      selectedRows.map((row) => ({
+        id: row.original.id,
+        subject_id: row.original.subject_id,
+        subject_name: row.original.subject_name,
+      })),
+    );
+
+    setIsDeleting(true);
+    try {
+      await onDeleteSelectedCourses(selectedCourseIds);
+      setRowSelection({}); // Clear selection after deletion
+      setShowDeleteDialog(false);
+    } catch (error) {
+      // Error handling is done in the parent component
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col">
       <div className="flex items-center py-4 gap-4">
         <Input
           placeholder="Filter available subjects..."
-          value={(table.getColumn("subject_id")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("subject_id")?.setFilterValue(event.target.value)}
+          value={(table.getColumn("subject_name")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("subject_name")?.setFilterValue(event.target.value)}
           className="max-w-sm shadow-md"
         />
         <div className="flex items-center gap-2">
@@ -253,7 +296,7 @@ export function AvailableSubjectTable({
           </DropdownMenu>
 
           {isAnyRowSelected && (
-            <Button variant="destructive" size="sm" className="text-white shadow-md">
+            <Button variant="destructive" size="sm" className="text-white shadow-md" onClick={handleDeleteSelected}>
               <TrashIcon className="w-4 h-4 mr-2" /> Delete Selected
             </Button>
           )}
@@ -351,6 +394,15 @@ export function AvailableSubjectTable({
           </div>
         </div>
       </div>
+
+      <ConfirmDeleteCoursesDialog
+        isOpen={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        courseCount={selectedRows.length}
+        courseNames={selectedCourseNames}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

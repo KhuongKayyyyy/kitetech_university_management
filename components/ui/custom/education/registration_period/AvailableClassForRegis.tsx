@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -29,8 +30,16 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
 
-export const availableClassColumns: ColumnDef<ClassModel>[] = [
+import ConfirmRemoveClassDialog from "./ConfirmRemoveClassDialog";
+
+const createAvailableClassColumns = (
+  onEditClass?: (classItem: ClassModel) => void,
+  onViewDetails?: (classItem: ClassModel) => void,
+  onRegisterClass?: (classItem: ClassModel) => void,
+  onRemoveClass?: (classItem: ClassModel) => void,
+): ColumnDef<ClassModel>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -70,13 +79,13 @@ export const availableClassColumns: ColumnDef<ClassModel>[] = [
     cell: ({ row }) => <div className="text-center">{row.getValue("id")}</div>,
   },
   {
-    accessorKey: "classCode",
+    accessorKey: "class_code",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         Class Code <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="font-medium">{row.getValue("classCode")}</div>,
+    cell: ({ row }) => <div className="font-medium">{row.getValue("class_code")}</div>,
   },
   {
     accessorKey: "description",
@@ -88,31 +97,30 @@ export const availableClassColumns: ColumnDef<ClassModel>[] = [
     cell: ({ row }) => <div className="capitalize">{row.getValue("description")}</div>,
   },
   {
-    accessorKey: "majorId",
+    accessorKey: "major",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Major ID <ArrowUpDown className="ml-2 h-4 w-4" />
+        Major <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("majorId")}</div>,
+    cell: ({ row }) => {
+      const major = row.getValue("major") as any;
+      return (
+        <div className="text-center">
+          <div className="font-medium">{major?.name || "N/A"}</div>
+          {major?.code && <div className="text-xs text-gray-500">({major.code})</div>}
+        </div>
+      );
+    },
   },
   {
-    accessorKey: "academicYearId",
+    accessorKey: "academic_year",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Academic Year ID <ArrowUpDown className="ml-2 h-4 w-4" />
+        Academic Year <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("academicYearId")}</div>,
-  },
-  {
-    accessorKey: "curriculumId",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Curriculum ID <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("curriculumId")}</div>,
+    cell: ({ row }) => <div className="text-center">{row.getValue("academic_year")}</div>,
   },
   {
     id: "actions",
@@ -130,13 +138,17 @@ export const availableClassColumns: ColumnDef<ClassModel>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(classItem.id.toString())}>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText((classItem.id || 0).toString())}>
               Copy Class ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit Class</DropdownMenuItem>
-            <DropdownMenuItem>View Details</DropdownMenuItem>
-            <DropdownMenuItem>Register for Class</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditClass?.(classItem)}>Edit Class</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewDetails?.(classItem)}>View Details</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onRegisterClass?.(classItem)}>Register for Class</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onRemoveClass?.(classItem)} className="text-red-600 focus:text-red-600">
+              Remove from Registration Period
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -146,27 +158,39 @@ export const availableClassColumns: ColumnDef<ClassModel>[] = [
 
 interface AvailableClassTableProps {
   availableClasses?: ClassModel[];
+  registrationPeriodId?: string;
   onEditClass?: (classItem: ClassModel) => void;
   onViewDetails?: (classItem: ClassModel) => void;
   onRegisterClass?: (classItem: ClassModel) => void;
   onDeleteClass?: (classItem: ClassModel) => void;
+  onClassRemoved?: (classItem: ClassModel) => void;
 }
 
 export default function AvailableClassForRegis({
   availableClasses = mockClasses,
+  registrationPeriodId,
   onEditClass,
   onViewDetails,
   onRegisterClass,
   onDeleteClass,
+  onClassRemoved,
 }: AvailableClassTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [removeDialogOpen, setRemoveDialogOpen] = React.useState(false);
+  const [selectedClassForRemoval, setSelectedClassForRemoval] = React.useState<ClassModel | null>(null);
+  const [isRemoving, setIsRemoving] = React.useState(false);
+
+  const handleRemoveClass = (classItem: ClassModel) => {
+    setSelectedClassForRemoval(classItem);
+    setRemoveDialogOpen(true);
+  };
 
   const table = useReactTable({
     data: availableClasses,
-    columns: availableClassColumns,
+    columns: createAvailableClassColumns(onEditClass, onViewDetails, onRegisterClass, handleRemoveClass),
     state: {
       sorting,
       columnFilters,
@@ -186,13 +210,60 @@ export default function AvailableClassForRegis({
 
   const isAnyRowSelected = Object.keys(rowSelection).length > 0;
 
+  const handleConfirmRemove = async () => {
+    if (!selectedClassForRemoval || !registrationPeriodId) return;
+
+    try {
+      setIsRemoving(true);
+      await registrationPeriodService.removeAvailableClass(registrationPeriodId, [selectedClassForRemoval.id || 0]);
+      toast.success(`Class ${selectedClassForRemoval.class_code} removed successfully!`);
+      onClassRemoved?.(selectedClassForRemoval);
+      setRemoveDialogOpen(false);
+      setSelectedClassForRemoval(null);
+    } catch (error) {
+      console.error("Error removing class:", error);
+      toast.error("Failed to remove class from registration period");
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
+  const handleCancelRemove = () => {
+    setRemoveDialogOpen(false);
+    setSelectedClassForRemoval(null);
+  };
+
+  const handleBulkRemove = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedClasses = selectedRows.map((row) => row.original);
+
+    if (!registrationPeriodId) return;
+
+    try {
+      setIsRemoving(true);
+      const classIds = selectedClasses.map((cls) => cls.id || 0);
+      await registrationPeriodService.removeAvailableClass(registrationPeriodId, classIds);
+      toast.success(`${selectedClasses.length} class(es) removed successfully!`);
+
+      // Notify parent component about removed classes
+      selectedClasses.forEach((cls) => onClassRemoved?.(cls));
+
+      setRowSelection({});
+    } catch (error) {
+      console.error("Error removing classes:", error);
+      toast.error("Failed to remove some classes. Please try again.");
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   return (
     <div className="w-full flex flex-col">
       <div className="flex items-center py-4 gap-4">
         <Input
           placeholder="Filter available classes..."
-          value={(table.getColumn("classCode")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("classCode")?.setFilterValue(event.target.value)}
+          value={(table.getColumn("class_code")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("class_code")?.setFilterValue(event.target.value)}
           className="max-w-sm shadow-md"
         />
         <div className="flex items-center gap-2">
@@ -220,8 +291,15 @@ export default function AvailableClassForRegis({
           </DropdownMenu>
 
           {isAnyRowSelected && (
-            <Button variant="destructive" size="sm" className="text-white shadow-md">
-              <TrashIcon className="w-4 h-4 mr-2" /> Delete Selected
+            <Button
+              variant="destructive"
+              size="sm"
+              className="text-white shadow-md"
+              onClick={handleBulkRemove}
+              disabled={isRemoving}
+            >
+              <TrashIcon className="w-4 h-4 mr-2" />
+              {isRemoving ? "Removing..." : `Remove ${table.getFilteredSelectedRowModel().rows.length} Selected`}
             </Button>
           )}
         </div>
@@ -252,7 +330,7 @@ export default function AvailableClassForRegis({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={availableClassColumns.length} className="h-24 text-center">
+                  <TableCell colSpan={createAvailableClassColumns().length} className="h-24 text-center">
                     No available classes found.
                   </TableCell>
                 </TableRow>
@@ -318,6 +396,15 @@ export default function AvailableClassForRegis({
           </div>
         </div>
       </div>
+
+      {/* Remove Class Confirmation Dialog */}
+      <ConfirmRemoveClassDialog
+        open={removeDialogOpen}
+        onClose={handleCancelRemove}
+        onConfirm={handleConfirmRemove}
+        classItem={selectedClassForRemoval}
+        isRemoving={isRemoving}
+      />
     </div>
   );
 }

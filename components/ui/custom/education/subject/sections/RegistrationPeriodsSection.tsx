@@ -1,21 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { mockRegistrationPeriods, RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
 import { Button } from "@/components/ui/button";
 import RegisPeriodItem from "@/components/ui/custom/education/registration_period/RegisPeriodItem";
 import { RegistrationPeriodTable } from "@/components/ui/custom/education/registration_period/RegistrationPeriodTable";
 import { Clock, Grid, List, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import AddRegistrationPeriodDialog from "../../registration_period/AddRegistrationPeriodDialog";
 
 export default function RegistrationPeriodsSection() {
   const [registrationViewMode, setRegistrationViewMode] = useState<"cards" | "table">("cards");
   const [open, setOpen] = useState(false);
+  const [registrationPeriods, setRegistrationPeriods] = useState<RegistrationPeriod[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRegistrationPeriods = async () => {
+      try {
+        setIsLoading(true);
+        const periodsData = await registrationPeriodService.getRegistrationPeriods();
+        setRegistrationPeriods(periodsData);
+      } catch (error) {
+        console.error("Error fetching registration periods:", error);
+        toast.error("Failed to load registration periods");
+        // Fallback to mock data
+        setRegistrationPeriods(mockRegistrationPeriods);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRegistrationPeriods();
+  }, []);
 
   const handleAddRegistrationPeriod = (period: RegistrationPeriod) => {
+    // Add the new period to the list
+    setRegistrationPeriods((prev) => [period, ...prev]);
     console.log("Add period:", period);
+  };
+
+  const handleDeleteRegistrationPeriod = (period: RegistrationPeriod) => {
+    // Remove the period from the list
+    setRegistrationPeriods((prev) => prev.filter((p) => p.id !== period.id));
+    console.log("Delete period:", period);
   };
 
   return (
@@ -57,19 +88,23 @@ export default function RegistrationPeriodsSection() {
       </div>
 
       {/* Content Display */}
-      {registrationViewMode === "cards" ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-gray-500">Loading registration periods...</div>
+        </div>
+      ) : registrationViewMode === "cards" ? (
         <div className="grid grid-cols-2 gap-6">
-          {mockRegistrationPeriods.map((period) => (
+          {registrationPeriods.map((period) => (
             <RegisPeriodItem
               key={period.id}
               period={period}
               onEdit={(period) => console.log("Edit period:", period)}
-              onDelete={(period) => console.log("Delete period:", period)}
+              onDelete={handleDeleteRegistrationPeriod}
             />
           ))}
         </div>
       ) : (
-        <RegistrationPeriodTable periods={mockRegistrationPeriods} />
+        <RegistrationPeriodTable periods={registrationPeriods} onDeletePeriod={handleDeleteRegistrationPeriod} />
       )}
 
       <AddRegistrationPeriodDialog

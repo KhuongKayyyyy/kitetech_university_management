@@ -4,16 +4,16 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
 import { Course, MOCK_AVAILABLE_SUBJECTS } from "@/app/api/model/Course";
-import { mockRegistrationPeriods, RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
+import { RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
+import { registrationPeriodService } from "@/app/api/services/registrationPeriodService";
 import { Button } from "@/components/ui/button";
-import AddAdvailableSubjectClass from "@/components/ui/custom/education/registration_period/AddAdvailableSubject";
 import AddAvailableClass from "@/components/ui/custom/education/registration_period/AddAvailableClass";
 import AvailableClassForRegis from "@/components/ui/custom/education/registration_period/AvailableClassForRegis";
 import { AvailableSubjectTable } from "@/components/ui/custom/education/registration_period/AvailableSubjectTable";
 import EditDatePeriod from "@/components/ui/custom/education/registration_period/EditDatePeriod";
 import EditRegisPeriodDialog from "@/components/ui/custom/education/registration_period/EditRegisPeriodDialog";
 import RegistrationDetailSectionMap from "@/components/ui/custom/education/registration_period/RegistrationDetailSectionMap";
-import AddCourseDialog from "@/components/ui/custom/elearning/course/AddCourseDialog";
+import AddAvailableCourseDialog from "@/components/ui/custom/elearning/course/AddAvailableCourseDialog";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import {
   AlertCircle,
@@ -33,7 +33,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 
 export default function page() {
   const [activeSection, setActiveSection] = useState("overview");
@@ -83,16 +83,26 @@ export default function page() {
   };
 
   useEffect(() => {
-    const fetchRegistrationPeriod = () => {
-      const period = mockRegistrationPeriods.find((p) => p.id === parseInt(id as string));
-      setRegistrationPeriod(period || null);
-      setLoading(false);
+    const fetchRegistrationPeriod = async () => {
+      try {
+        setLoading(true);
+        const period = await registrationPeriodService.getRegistrationPeriod(parseInt(id as string));
+        setRegistrationPeriod(period);
+      } catch (error) {
+        console.error("Error fetching registration period:", error);
+        toast.error("Failed to load registration period details");
+        setRegistrationPeriod(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchRegistrationPeriod();
+    if (id) {
+      fetchRegistrationPeriod();
+    }
   }, [id]);
 
-  const getStatusColor = (status: RegisPeriodStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case RegisPeriodStatus.Open:
         return "bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-emerald-200";
@@ -105,7 +115,7 @@ export default function page() {
     }
   };
 
-  const getStatusIcon = (status: RegisPeriodStatus) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case RegisPeriodStatus.Open:
         return <CheckCircle className="h-5 w-5" />;
@@ -159,6 +169,87 @@ export default function page() {
     }
   };
 
+  const handleAddClasses = async (classIds: number[]) => {
+    try {
+      await registrationPeriodService.addAvailableClass(registrationPeriod!.id.toString(), classIds);
+      toast.success(`${classIds.length} class(es) added successfully!`);
+
+      // Refresh the registration period data to show updated classes
+      const updatedPeriod = await registrationPeriodService.getRegistrationPeriod(parseInt(id as string));
+      setRegistrationPeriod(updatedPeriod);
+    } catch (error) {
+      console.error("Error adding classes:", error);
+      toast.error("Failed to add classes to registration period");
+    }
+  };
+
+  const handleAddCourse = async () => {
+    try {
+      // Refresh the registration period data to show updated subjects
+      const updatedPeriod = await registrationPeriodService.getRegistrationPeriod(parseInt(id as string));
+      setRegistrationPeriod(updatedPeriod);
+    } catch (error) {
+      console.error("Error refreshing registration period:", error);
+      toast.error("Failed to refresh data after adding course");
+    }
+  };
+
+  const handleDeleteSelectedCourses = async (courseIds: number[]) => {
+    try {
+      console.log("Deleting courses with IDs:", courseIds);
+      console.log("Registration period ID:", registrationPeriod!.id);
+      await registrationPeriodService.removeAvailableCourse(registrationPeriod!.id.toString(), courseIds);
+      toast.success(`${courseIds.length} course(s) removed successfully!`);
+
+      // Refresh the registration period data to show updated subjects
+      const updatedPeriod = await registrationPeriodService.getRegistrationPeriod(parseInt(id as string));
+      setRegistrationPeriod(updatedPeriod);
+    } catch (error) {
+      console.error("Error removing courses:", error);
+      console.error("Course IDs that failed:", courseIds);
+      toast.error("Failed to remove courses from registration period");
+    }
+  };
+
+  const handleDeleteClass = async (classItem: ClassModel) => {
+    try {
+      await registrationPeriodService.removeAvailableClass(registrationPeriod!.id.toString(), [classItem.id || 0]);
+      toast.success(`Class ${classItem.class_code} removed successfully!`);
+
+      // Refresh the registration period data
+      const updatedPeriod = await registrationPeriodService.getRegistrationPeriod(parseInt(id as string));
+      setRegistrationPeriod(updatedPeriod);
+    } catch (error) {
+      console.error("Error removing class:", error);
+      toast.error("Failed to remove class from registration period");
+    }
+  };
+
+  const handleClassRemoved = async (classItem: ClassModel) => {
+    // Refresh the registration period data to reflect the removal
+    try {
+      const updatedPeriod = await registrationPeriodService.getRegistrationPeriod(parseInt(id as string));
+      setRegistrationPeriod(updatedPeriod);
+    } catch (error) {
+      console.error("Error refreshing registration period:", error);
+    }
+  };
+
+  const handleEditClass = (classItem: ClassModel) => {
+    console.log("Edit class:", classItem);
+    toast.info("Edit class functionality not yet implemented");
+  };
+
+  const handleViewClassDetails = (classItem: ClassModel) => {
+    console.log("View class details:", classItem);
+    toast.info("View class details functionality not yet implemented");
+  };
+
+  const handleRegisterClass = (classItem: ClassModel) => {
+    console.log("Register class:", classItem);
+    toast.info("Register class functionality not yet implemented");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -207,6 +298,7 @@ export default function page() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       <div className="container mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <Toaster></Toaster>
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -277,13 +369,17 @@ export default function page() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Semester</label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">Fall 2024</p>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {registrationPeriod.semester?.name || "N/A"}
+                        </p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                           Academic Year
                         </label>
-                        <p className="text-lg font-semibold text-gray-900 mt-1">2024-2025</p>
+                        <p className="text-lg font-semibold text-gray-900 mt-1">
+                          {registrationPeriod.semester?.academic_year_id || "N/A"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -295,21 +391,21 @@ export default function page() {
                       <div>
                         <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Start Date</label>
                         <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {formatDateShort(registrationPeriod.startDate)}
+                          {formatDateShort(registrationPeriod.start_date)}
                         </p>
-                        <p className="text-sm text-gray-500">{formatDate(registrationPeriod.startDate)}</p>
+                        <p className="text-sm text-gray-500">{formatDate(registrationPeriod.start_date)}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">End Date</label>
                         <p className="text-lg font-semibold text-gray-900 mt-1">
-                          {formatDateShort(registrationPeriod.endDate)}
+                          {formatDateShort(registrationPeriod.end_date)}
                         </p>
-                        <p className="text-sm text-gray-500">{formatDate(registrationPeriod.endDate)}</p>
+                        <p className="text-sm text-gray-500">{formatDate(registrationPeriod.end_date)}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Duration</label>
                         <p className="text-lg font-semibold text-purple-600 mt-1">
-                          {getDaysDifference(registrationPeriod.startDate, registrationPeriod.endDate)} days
+                          {getDaysDifference(registrationPeriod.start_date, registrationPeriod.end_date)} days
                         </p>
                       </div>
                     </div>
@@ -344,7 +440,7 @@ export default function page() {
                             {Math.max(
                               0,
                               Math.ceil(
-                                (new Date(registrationPeriod.endDate).getTime() - new Date().getTime()) /
+                                (new Date(registrationPeriod.end_date).getTime() - new Date().getTime()) /
                                   (1000 * 60 * 60 * 24),
                               ),
                             )}
@@ -393,8 +489,10 @@ export default function page() {
                       <GraduationCap className="h-6 w-6 text-green-600" />
                       <span className="font-semibold text-green-800">Classes</span>
                     </div>
-                    <p className="text-3xl font-bold text-green-900">{mockClasses.length}</p>
-                    <p className="text-sm text-green-600 mt-1">8 departments</p>
+                    <p className="text-3xl font-bold text-green-900">
+                      {registrationPeriod.courseRegistrationClasses?.length || 0}
+                    </p>
+                    <p className="text-sm text-green-600 mt-1">Available for registration</p>
                   </div>
 
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center">
@@ -402,7 +500,9 @@ export default function page() {
                       <BookOpen className="h-6 w-6 text-purple-600" />
                       <span className="font-semibold text-purple-800">Subjects</span>
                     </div>
-                    <p className="text-3xl font-bold text-purple-900">{MOCK_AVAILABLE_SUBJECTS.length}</p>
+                    <p className="text-3xl font-bold text-purple-900">
+                      {registrationPeriod.courseRegistrationSubjects?.length || 0}
+                    </p>
                     <p className="text-sm text-purple-600 mt-1">Available for registration</p>
                   </div>
 
@@ -445,27 +545,33 @@ export default function page() {
                       </Button>
                     </div>
                     <AddAvailableClass
-                      onAddClasses={function (classIds: number[]): void {
-                        throw new Error("Function not implemented.");
-                      }}
+                      onAddClasses={handleAddClasses}
+                      alreadyAddedClassIds={
+                        registrationPeriod.courseRegistrationClasses?.map((crc) => crc.class.id) || []
+                      }
                     />
                   </div>
                 </div>
 
                 <AvailableClassForRegis
-                  availableClasses={mockClasses}
-                  onEditClass={function (classItem: ClassModel): void {
-                    throw new Error("Function not implemented.");
-                  }}
-                  onViewDetails={function (classItem: ClassModel): void {
-                    throw new Error("Function not implemented.");
-                  }}
-                  onRegisterClass={function (classItem: ClassModel): void {
-                    throw new Error("Function not implemented.");
-                  }}
-                  onDeleteClass={function (classItem: ClassModel): void {
-                    throw new Error("Function not implemented.");
-                  }}
+                  availableClasses={
+                    registrationPeriod.courseRegistrationClasses?.map((crc) => ({
+                      id: crc.class.id,
+                      class_code: crc.class.class_code,
+                      description: crc.class.description,
+                      academic_year: crc.class.academic_year,
+                      major_id: crc.class.major_id,
+                      created_at: crc.class.created_at,
+                      updated_at: crc.class.updated_at,
+                      major: crc.class.major,
+                    })) || []
+                  }
+                  registrationPeriodId={registrationPeriod.id.toString()}
+                  onEditClass={handleEditClass}
+                  onViewDetails={handleViewClassDetails}
+                  onRegisterClass={handleRegisterClass}
+                  onDeleteClass={handleDeleteClass}
+                  onClassRemoved={handleClassRemoved}
                 />
               </div>
             </div>
@@ -504,7 +610,27 @@ export default function page() {
                 </div>
 
                 <AvailableSubjectTable
-                  availableSubjects={MOCK_AVAILABLE_SUBJECTS}
+                  availableSubjects={
+                    registrationPeriod.courseRegistrationSubjects?.map((crs) => ({
+                      id: crs.id,
+                      subject_id: crs.subject_id,
+                      subject_name: crs.subject?.name || "N/A",
+                      semester: registrationPeriod.semester?.name || "N/A",
+                      description: crs.description,
+                      schedules: crs.courseRegistrationSchedules.map((schedule) => ({
+                        id: schedule.id,
+                        sections: schedule.sections,
+                        schedule: schedule.schedule,
+                        created_at: schedule.created_at,
+                        updated_at: schedule.updated_at,
+                      })),
+                      start_date: crs.start_date,
+                      end_date: crs.end_date,
+                      location: crs.location,
+                      enrolled: 0, // This would need to be calculated from actual enrollments
+                      max_student: crs.max_student,
+                    })) || []
+                  }
                   onEditSubject={function (subject: Course): void {
                     throw new Error("Function not implemented.");
                   }}
@@ -517,6 +643,7 @@ export default function page() {
                   onAddSubject={function (subject: Course): void {
                     throw new Error("Function not implemented.");
                   }}
+                  onDeleteSelectedCourses={handleDeleteSelectedCourses}
                 />
               </div>
             </div>
@@ -526,7 +653,7 @@ export default function page() {
         {/* Dialogs and Modals */}
         <EditDatePeriod
           requiredFutureDate={true}
-          currentDate={new Date(registrationPeriod.endDate)}
+          currentDate={new Date(registrationPeriod.end_date)}
           onDateSelected={handleDateSelected}
           open={openEditDatePeriod}
           setOpen={setOpenEditDatePeriod}
@@ -536,25 +663,26 @@ export default function page() {
           registrationPeriod={registrationPeriod}
           open={openEditRegisPeriodDialog}
           setOpen={setOpenEditRegisPeriodDialog}
-          onSubmit={(updatedPeriod) => {
-            setRegistrationPeriod((prev) => {
-              if (!prev) return null;
-              return { ...prev, ...updatedPeriod };
-            });
+          onSubmit={async (updatedPeriod) => {
+            try {
+              const updated = await registrationPeriodService.updateRegistrationPeriod({
+                ...registrationPeriod,
+                ...updatedPeriod,
+              });
+              setRegistrationPeriod(updated);
+              toast.success("Registration period updated successfully!");
+            } catch (error) {
+              console.error("Error updating registration period:", error);
+              toast.error("Failed to update registration period");
+            }
           }}
         />
 
-        {/* <AddAdvailableSubject
-          open={openAddAdvailableSubject}
-          setOpen={setOpenAddAdvailableSubject}
-          registrationPeriodId={registrationPeriod.id}
-          onSubmit={handleAddSubject}
-        /> */}
-
-        <AddCourseDialog
+        <AddAvailableCourseDialog
           isOpen={openAddAdvailableSubject}
           onOpenChange={setOpenAddAdvailableSubject}
-          onSubjectClassAdd={handleAddSubject}
+          onCourseAdd={handleAddCourse}
+          registrationPeriodId={registrationPeriod.id.toString()}
         />
       </div>
     </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
-import { MOCK_SEMESTERS } from "@/app/api/model/SemesterModel";
+import { SemesterModel } from "@/app/api/model/SemesterModel";
+import { semesterService } from "@/app/api/services/semesterService";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import { Calendar, Edit2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface EditRegisPeriodDialogProps {
   registrationPeriod: RegistrationPeriod;
@@ -34,19 +36,39 @@ export default function EditRegisPeriodDialog({
   onSubmit,
 }: EditRegisPeriodDialogProps) {
   const [formData, setFormData] = useState({
-    semesterId: registrationPeriod.semesterId.toString(),
-    startDate: registrationPeriod.startDate,
-    endDate: registrationPeriod.endDate,
+    semesterId: registrationPeriod.semester_id.toString(),
+    startDate: registrationPeriod.start_date,
+    endDate: registrationPeriod.end_date,
     status: registrationPeriod.status,
     description: registrationPeriod.description || "",
   });
+  const [semesters, setSemesters] = useState<SemesterModel[]>([]);
+  const [loadingSemesters, setLoadingSemesters] = useState(false);
+
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      if (open) {
+        setLoadingSemesters(true);
+        try {
+          const semestersData = await semesterService.getSemesters();
+          setSemesters(semestersData);
+        } catch (error) {
+          console.error("Error fetching semesters:", error);
+          toast.error("Failed to load semesters");
+        } finally {
+          setLoadingSemesters(false);
+        }
+      }
+    };
+    fetchSemesters();
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      semesterId: parseInt(formData.semesterId),
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      semester_id: parseInt(formData.semesterId),
+      start_date: formData.startDate,
+      end_date: formData.endDate,
       status: formData.status,
       description: formData.description,
     });
@@ -76,10 +98,10 @@ export default function EditRegisPeriodDialog({
             <Label htmlFor="semesterId">Semester</Label>
             <Select value={formData.semesterId} onValueChange={(value) => handleChange("semesterId", value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select semester" />
+                <SelectValue placeholder={loadingSemesters ? "Loading semesters..." : "Select semester"} />
               </SelectTrigger>
               <SelectContent>
-                {MOCK_SEMESTERS.map((semester) => (
+                {semesters.map((semester) => (
                   <SelectItem key={semester.id} value={semester.id.toString()}>
                     {semester.name}
                   </SelectItem>

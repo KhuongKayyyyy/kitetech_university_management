@@ -32,13 +32,13 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, Calendar, ChevronDown, Clock, MoreHorizontal, TrashIcon, Users } from "lucide-react";
 
-interface SubjectClassTableProps {
+interface CourseTableProps {
   subjectClasses: CourseDetailModel[];
   onUpdate?: (updatedSubjectClass: CourseDetailModel) => Promise<void>;
   onDelete?: (subjectClassIds: string[]) => Promise<void>;
 }
 
-export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: SubjectClassTableProps) {
+export function CourseTable({ subjectClasses, onUpdate, onDelete }: CourseTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});

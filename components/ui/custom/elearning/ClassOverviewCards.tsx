@@ -1,11 +1,11 @@
 import React from "react";
 
-import { SubjectClassModel } from "@/app/api/model/SubjectClassModel";
+import { CourseDetailModel } from "@/app/api/model/Course";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, Users } from "lucide-react";
 
 interface ClassOverviewCardsProps {
-  subjectClass: SubjectClassModel;
+  subjectClass: CourseDetailModel;
   studentStats: {
     totalStudents: number;
   };
@@ -20,8 +20,8 @@ export default function ClassOverviewCards({ subjectClass, studentStats }: Class
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{subjectClass.teacher?.name}</div>
-          <p className="text-xs text-muted-foreground">{subjectClass.teacher?.email}</p>
+          <div className="text-2xl font-bold">{subjectClass.instructor}</div>
+          <p className="text-xs text-muted-foreground">Instructor</p>
         </CardContent>
       </Card>
 
@@ -32,7 +32,7 @@ export default function ClassOverviewCards({ subjectClass, studentStats }: Class
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{subjectClass.semester}</div>
-          <p className="text-xs text-muted-foreground">{subjectClass.academicYear}</p>
+          <p className="text-xs text-muted-foreground">Current Semester</p>
         </CardContent>
       </Card>
 
@@ -42,7 +42,7 @@ export default function ClassOverviewCards({ subjectClass, studentStats }: Class
           <Clock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{subjectClass.schedule?.length} sessions</div>
+          <div className="text-2xl font-bold">{subjectClass.schedules?.length || 0} sessions</div>
           <p className="text-xs text-muted-foreground">per week</p>
         </CardContent>
       </Card>
@@ -54,7 +54,7 @@ export default function ClassOverviewCards({ subjectClass, studentStats }: Class
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{studentStats.totalStudents}</div>
-          <p className="text-xs text-muted-foreground">of {subjectClass.maxStudents} max</p>
+          <p className="text-xs text-muted-foreground">enrolled students</p>
         </CardContent>
       </Card>
     </div>

@@ -9,6 +9,7 @@ interface ClassAnalyticsCardsProps {
     highestScore: number;
     lowestScore: number;
     belowAverage: number;
+    aboveAverage: number;
   };
 }
 
@@ -50,12 +51,12 @@ export default function ClassAnalyticsCards({ studentStats }: ClassAnalyticsCard
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Below Average</CardTitle>
-          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <CardTitle className="text-sm font-medium">Above Average</CardTitle>
+          <TrendingUp className="h-4 w-4 text-green-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-orange-600">{studentStats.belowAverage}</div>
-          <p className="text-xs text-muted-foreground">students &lt; 5.0</p>
+          <div className="text-2xl font-bold text-green-600">{studentStats.aboveAverage}</div>
+          <p className="text-xs text-muted-foreground">above class average</p>
         </CardContent>
       </Card>
     </div>

@@ -1,8 +1,11 @@
 import { SubjectModel } from "./SubjectModel";
 
 export interface Schedule {
+  id: number;
   sections: number;
   schedule: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Course {
@@ -17,6 +20,28 @@ export interface Course {
   teacher_username: string;
 }
 
+export interface CourseMember {
+  id: number;
+  classroom_id: number;
+  user_id: number;
+  role: string;
+  joined_at: string;
+  is_active: boolean;
+  user: {
+    id: number;
+    username: string;
+    password: string;
+    role: string;
+    full_name: string;
+    email: string;
+    isActive: boolean;
+    isDeleted: boolean;
+    faculty_id: number;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 export interface CourseDetailModel {
   id: number;
   name: string;
@@ -28,12 +53,13 @@ export interface CourseDetailModel {
   semester: string;
   type: string;
   instructor: string;
-  start_date: string;
-  end_date: string;
+  start_date: string | null;
+  end_date: string | null;
   created_at: string;
   updated_at: string;
+  schedules: Schedule[];
   subject: SubjectModel;
-  schedules?: Schedule[];
+  members: CourseMember[];
 }
 
 

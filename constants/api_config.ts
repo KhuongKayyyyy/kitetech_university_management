@@ -100,12 +100,15 @@ export const API_CONFIG = {
 
   // Course - this is for class in semester:
   GET_COURSES: "/api/classrooms",
-  GET_COURSE: (id: string) => `/api/classrooms/${id}`,
+  GET_COURSE: (id: string) => `/api/classrooms/${id}/admin`,
+  GET_COURSE_SCORE_BY_COURSE_ID: (course_id: string) => `/api/classrooms/${course_id}/grades`,
   ADD_COURSE: "/api/classrooms",
   UPDATE_COURSE: (id: string) => `/api/classrooms/${id}`,
   DELETE_COURSE: (id: string) => `/api/classrooms/${id}`,
   DOWNLOAD_COURSE_TEMPLATE: "/api/classrooms/excel/template",
   IMPORT_COURSE: "/api/classrooms/excel/import",
-  
-  
+  GET_AVAILABLE_STUDENTS_TO_ADD_TO_COURSE: (course_id: string) => `/api/classrooms/${course_id}/available-users?role=STUDENT`,
+  ADD_STUDENTS_TO_COURSE: (course_id: string) => `/api/classrooms/${course_id}/members`,
+  DOWNLOAD_STUDENTS_TO_COURSE_TEMPLATE: (course_id: string) => `/api/classrooms/${course_id}/students/excel/template`,
+  IMPORT_STUDENTS_TO_COURSE: "/api/classrooms/excel/import",
 };

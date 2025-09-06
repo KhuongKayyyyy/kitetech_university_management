@@ -1,13 +1,13 @@
 import React from "react";
 
-import { SubjectClassModel } from "@/app/api/model/SubjectClassModel";
+import { CourseDetailModel } from "@/app/api/model/Course";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, Edit, MapPin, Users } from "lucide-react";
 
 interface ClassScheduleTabProps {
-  subjectClass: SubjectClassModel;
+  subjectClass: CourseDetailModel;
 }
 
 export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps) {
@@ -33,10 +33,11 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
   };
 
   const getTimeSlotColor = (time: string) => {
-    if (time.includes("7h") || time.includes("8h")) return "bg-blue-50 border-blue-200";
-    if (time.includes("9h")) return "bg-green-50 border-green-200";
-    if (time.includes("13h") || time.includes("14h")) return "bg-yellow-50 border-yellow-200";
-    if (time.includes("15h") || time.includes("16h")) return "bg-orange-50 border-orange-200";
+    if (!time) return "bg-gray-50 border-gray-200";
+    if (time.includes("7:") || time.includes("8:")) return "bg-blue-50 border-blue-200";
+    if (time.includes("9:")) return "bg-green-50 border-green-200";
+    if (time.includes("13:") || time.includes("14:")) return "bg-yellow-50 border-yellow-200";
+    if (time.includes("15:") || time.includes("16:")) return "bg-orange-50 border-orange-200";
     return "bg-gray-50 border-gray-200";
   };
 
@@ -58,34 +59,47 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {subjectClass.schedule?.map((session, index) => (
-              <div
-                key={index}
-                className={`flex items-center justify-between p-4 border rounded-lg ${getTimeSlotColor(session.time_of_sheet)}`}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getDayColor(session.date)}>
-                        {session.date.charAt(0).toUpperCase() + session.date.slice(1)}
-                      </Badge>
-                      <span className="font-medium">{session.sheet}</span>
+            {subjectClass.schedules && subjectClass.schedules.length > 0 ? (
+              subjectClass.schedules.map((schedule, index) => {
+                // Parse the schedule string (e.g., "Monday 7:30-9:30")
+                const scheduleParts = schedule.schedule?.split(" ") || [];
+                const day = scheduleParts[0] || "";
+                const time = scheduleParts.slice(1).join(" ") || "";
+
+                return (
+                  <div
+                    key={schedule.id || index}
+                    className={`flex items-center justify-between p-4 border rounded-lg ${getTimeSlotColor(time)}`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getDayColor(day)}>{day.charAt(0).toUpperCase() + day.slice(1)}</Badge>
+                          <span className="font-medium">Section {schedule.sections}</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">{time}</div>
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">{session.time_of_sheet}</div>
+                    <div className="text-right">
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>Duration: 2 hours</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">Room: {subjectClass.location || "TBD"}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>Duration: 2.5 hours</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-1">Room: TBD</div>
-                </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8">
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Schedule Available</h3>
+                <p className="text-muted-foreground">This class doesn't have any scheduled sessions yet.</p>
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
@@ -98,7 +112,7 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{subjectClass.schedule?.length}</div>
+            <div className="text-2xl font-bold">{subjectClass.schedules?.length || 0}</div>
             <p className="text-xs text-muted-foreground">per week</p>
           </CardContent>
         </Card>
@@ -109,7 +123,7 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{(subjectClass.schedule?.length || 0) * 2.5}</div>
+            <div className="text-2xl font-bold">{(subjectClass.schedules?.length || 0) * 2}</div>
             <p className="text-xs text-muted-foreground">hours per week</p>
           </CardContent>
         </Card>
@@ -120,7 +134,9 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Set(subjectClass.schedule?.map((s) => s.date) || []).size}</div>
+            <div className="text-2xl font-bold">
+              {new Set(subjectClass.schedules?.map((s) => s.schedule?.split(" ")[0]) || []).size}
+            </div>
             <p className="text-xs text-muted-foreground">different days</p>
           </CardContent>
         </Card>
@@ -152,7 +168,7 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Academic Year:</span>
-                    <span>{subjectClass.academicYear}</span>
+                    <span>{subjectClass.semester}</span>
                   </div>
                 </div>
               </div>
@@ -161,19 +177,21 @@ export default function ClassScheduleTab({ subjectClass }: ClassScheduleTabProps
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Sessions:</span>
-                    <span>{subjectClass.schedule?.length} per week</span>
+                    <span>{subjectClass.schedules?.length || 0} per week</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Hours:</span>
-                    <span>{(subjectClass.schedule?.length || 0) * 2.5} hours/week</span>
+                    <span>{(subjectClass.schedules?.length || 0) * 2} hours/week</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Days Active:</span>
-                    <span>{new Set(subjectClass.schedule?.map((s) => s.date) || []).size} days</span>
+                    <span>
+                      {new Set(subjectClass.schedules?.map((s) => s.schedule?.split(" ")[0]) || []).size} days
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Max Students:</span>
-                    <span>{subjectClass.maxStudents}</span>
+                    <span className="text-muted-foreground">Enrolled Students:</span>
+                    <span>{subjectClass.enrolled}</span>
                   </div>
                 </div>
               </div>

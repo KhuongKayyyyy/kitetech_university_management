@@ -7,6 +7,12 @@ export const gradingFormulaService = {
     const response = await gradingFormulaRepository.getGradingFormulas();
     return response.data;
   },
+  getGradingFormula: async (id: string) => {
+    const response = await gradingFormulaRepository.getGradingFormula(id);
+    return response.data;
+  },
+
+
 
   addGradingFormula: async (formula: GradingFormulaModel) => {
     // First, create the grading formula

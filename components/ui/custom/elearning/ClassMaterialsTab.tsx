@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SubjectClassModel } from "@/app/api/model/SubjectClassModel";
+import { CourseDetailModel } from "@/app/api/model/Course";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 interface ClassMaterialsTabProps {
-  subjectClass: SubjectClassModel;
+  subjectClass: CourseDetailModel;
 }
 
 export default function ClassMaterialsTab({ subjectClass }: ClassMaterialsTabProps) {
@@ -99,7 +99,7 @@ export default function ClassMaterialsTab({ subjectClass }: ClassMaterialsTabPro
             <div className="mt-4 flex items-center space-x-2">
               <Badge variant="outline">{subjectClass.subject?.credits} credits</Badge>
               <Badge variant="outline">{subjectClass.semester}</Badge>
-              {subjectClass.isActive ? (
+              {subjectClass.is_active ? (
                 <Badge className="bg-green-100 text-green-800">Active</Badge>
               ) : (
                 <Badge className="bg-gray-100 text-gray-800">Inactive</Badge>

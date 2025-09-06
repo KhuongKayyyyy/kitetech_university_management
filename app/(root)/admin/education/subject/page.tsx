@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { formulaSubjects, subjects } from "@/app/api/fakedata";
+import { SubjectModel } from "@/app/api/model/model";
 import { mockRegistrationPeriods } from "@/app/api/model/RegistrationPeriodModel";
+import { gradingFormulaService } from "@/app/api/services/gradingFormulaService";
+import { subjectService } from "@/app/api/services/subjectService";
 import GradingFormulasSection from "@/components/ui/custom/education/subject/sections/GradingFormulasSection";
 import RegistrationPeriodsSection from "@/components/ui/custom/education/subject/sections/RegistrationPeriodsSection";
 import SubjectsSection from "@/components/ui/custom/education/subject/sections/SubjectsSection";
@@ -12,6 +15,34 @@ import { Toaster } from "sonner";
 
 const SubjectPage = () => {
   const [activeTab, setActiveTab] = useState<"subjects" | "formulas" | "registration">("subjects");
+  const [subjectsCount, setSubjectsCount] = useState(0);
+  const [gradingFormulasCount, setGradingFormulasCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch subjects count
+        const subjectsData = await subjectService.getSubjects();
+        setSubjectsCount(subjectsData.length);
+
+        // Fetch grading formulas count
+        const gradingFormulasData = await gradingFormulaService.getGradingFormulas();
+        setGradingFormulasCount(gradingFormulasData.length);
+      } catch (error) {
+        console.error("Error fetching data counts:", error);
+        // Fallback to mock data counts if service fails
+        setSubjectsCount(subjects.length);
+        setGradingFormulasCount(formulaSubjects.length);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCounts();
+  }, []);
 
   return (
     <div className="px-6 bg-gray-50 py-6 min-h-screen">
@@ -41,7 +72,7 @@ const SubjectPage = () => {
           >
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              Subjects ({subjects.length})
+              Subjects ({isLoading ? "..." : subjectsCount})
             </div>
           </button>
           <button
@@ -54,7 +85,7 @@ const SubjectPage = () => {
           >
             <div className="flex items-center gap-2">
               <Calculator className="w-4 h-4" />
-              Grading Formulas ({formulaSubjects.length})
+              Grading Formulas ({isLoading ? "..." : gradingFormulasCount})
             </div>
           </button>
           <button

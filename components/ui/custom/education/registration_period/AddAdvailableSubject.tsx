@@ -20,7 +20,7 @@ interface AddAvailableSubjectProps {
   onSubmit: (availableSubject: any) => void;
 }
 
-export default function AddAdvailableSubject({
+export default function AddAdvailableSubjectClass({
   open,
   setOpen,
   registrationPeriodId,

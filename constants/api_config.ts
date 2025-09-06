@@ -96,4 +96,16 @@ export const API_CONFIG = {
   DELETE_TEACHER: (id: string) => `/api/teachers/${id}`,
   DOWNLOAD_TEACHER_TEMPLATE: "/api/teachers/excel/template",
   IMPORT_TEACHER: "/api/teachers/excel/import",
+
+
+  // Course - this is for class in semester:
+  GET_COURSES: "/api/classrooms",
+  GET_COURSE: (id: string) => `/api/classrooms/${id}`,
+  ADD_COURSE: "/api/classrooms",
+  UPDATE_COURSE: (id: string) => `/api/classrooms/${id}`,
+  DELETE_COURSE: (id: string) => `/api/classrooms/${id}`,
+  DOWNLOAD_COURSE_TEMPLATE: "/api/classrooms/excel/template",
+  IMPORT_COURSE: "/api/classrooms/excel/import",
+  
+  
 };

@@ -2,18 +2,18 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
-import { AvailableSubject, MOCK_AVAILABLE_SUBJECTS } from "@/app/api/model/AvailableSubject";
 import { ClassModel, mockClasses } from "@/app/api/model/ClassModel";
+import { Course, MOCK_AVAILABLE_SUBJECTS } from "@/app/api/model/Course";
 import { mockRegistrationPeriods, RegistrationPeriod } from "@/app/api/model/RegistrationPeriodModel";
 import { Button } from "@/components/ui/button";
-import AddAdvailableSubject from "@/components/ui/custom/education/registration_period/AddAdvailableSubject";
+import AddAdvailableSubjectClass from "@/components/ui/custom/education/registration_period/AddAdvailableSubject";
 import AddAvailableClass from "@/components/ui/custom/education/registration_period/AddAvailableClass";
 import AvailableClassForRegis from "@/components/ui/custom/education/registration_period/AvailableClassForRegis";
 import { AvailableSubjectTable } from "@/components/ui/custom/education/registration_period/AvailableSubjectTable";
 import EditDatePeriod from "@/components/ui/custom/education/registration_period/EditDatePeriod";
 import EditRegisPeriodDialog from "@/components/ui/custom/education/registration_period/EditRegisPeriodDialog";
 import RegistrationDetailSectionMap from "@/components/ui/custom/education/registration_period/RegistrationDetailSectionMap";
-import AddSubjectClassDialog from "@/components/ui/custom/elearning/course/AddSubjectClassDialog";
+import AddCourseDialog from "@/components/ui/custom/elearning/course/AddCourseDialog";
 import { RegisPeriodStatus } from "@/constants/enum/RegisPeriodStatus";
 import {
   AlertCircle,
@@ -33,6 +33,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 export default function page() {
   const [activeSection, setActiveSection] = useState("overview");
@@ -146,8 +147,16 @@ export default function page() {
     setOpenEditDatePeriod(true);
   };
 
-  const handleAddSubject = (subject: AvailableSubject) => {
-    console.log(subject);
+  const handleAddSubject = async (subject: Course) => {
+    try {
+      console.log("Adding subject class:", subject);
+      // Here you can add logic to refresh the available subjects list
+      // or update the UI state
+      toast.success("Subject class added successfully!");
+    } catch (error) {
+      console.error("Error adding subject class:", error);
+      toast.error("Failed to add subject class");
+    }
   };
 
   if (loading) {
@@ -496,16 +505,16 @@ export default function page() {
 
                 <AvailableSubjectTable
                   availableSubjects={MOCK_AVAILABLE_SUBJECTS}
-                  onEditSubject={function (subject: AvailableSubject): void {
+                  onEditSubject={function (subject: Course): void {
                     throw new Error("Function not implemented.");
                   }}
-                  onViewRegistrations={function (subject: AvailableSubject): void {
+                  onViewRegistrations={function (subject: Course): void {
                     throw new Error("Function not implemented.");
                   }}
-                  onDeleteSubject={function (subject: AvailableSubject): void {
+                  onDeleteSubject={function (subject: Course): void {
                     throw new Error("Function not implemented.");
                   }}
-                  onAddSubject={function (subject: AvailableSubject): void {
+                  onAddSubject={function (subject: Course): void {
                     throw new Error("Function not implemented.");
                   }}
                 />
@@ -542,7 +551,11 @@ export default function page() {
           onSubmit={handleAddSubject}
         /> */}
 
-        <AddSubjectClassDialog isOpen={openAddAdvailableSubject} onOpenChange={setOpenAddAdvailableSubject} />
+        <AddCourseDialog
+          isOpen={openAddAdvailableSubject}
+          onOpenChange={setOpenAddAdvailableSubject}
+          onSubjectClassAdd={handleAddSubject}
+        />
       </div>
     </div>
   );

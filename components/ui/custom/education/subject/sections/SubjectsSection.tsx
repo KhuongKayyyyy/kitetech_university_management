@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AddSubjectDialog } from "@/components/ui/custom/education/subject/AddSubjectDialog";
 import SubjectItem from "@/components/ui/custom/education/subject/SubjectItem";
 import { SubjectTable } from "@/components/ui/custom/education/subject/SubjectTable";
+import { API_CONFIG } from "@/constants/api_config";
 import { useDepartments } from "@/hooks/useDeparment";
 import { useSubjects } from "@/hooks/useSubject";
 import { BookOpen, Download, Grid, List, Plus, Search, Upload } from "lucide-react";
@@ -189,8 +190,13 @@ export default function SubjectsSection() {
 
   const handleDownloadTemplateSubject = async () => {
     try {
-      const response = await subjectService.downloadSubjectTemplate();
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const downloadResponse = await fetch(API_CONFIG.DOWNLOAD_SUBJECT_TEMPLATE);
+      if (!downloadResponse.ok) {
+        throw new Error("Failed to download template");
+      }
+
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "subject_template.xlsx";

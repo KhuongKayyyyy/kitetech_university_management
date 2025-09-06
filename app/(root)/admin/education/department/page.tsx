@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import DepartmentItem from "@/components/ui/custom/education/department/DepartmentItem";
 import { DepartmentTable } from "@/components/ui/custom/education/department/DepartmentTable";
 import { NewDepartmentDialog } from "@/components/ui/custom/education/department/NewDepartmentDialog";
+import { API_CONFIG } from "@/constants/api_config";
 import { useDepartments } from "@/hooks/useDeparment";
 import { Building, Download, Grid, List, Plus, Search, Trash2, Upload } from "lucide-react";
 import { toast, Toaster } from "sonner";
@@ -78,8 +79,13 @@ const DepartmentPage = () => {
 
   const handleDownloadTemplateDepartment = async () => {
     try {
-      const response = await departmentService.downloadDepartmentTemplate();
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const downloadResponse = await fetch(API_CONFIG.DOWNLOAD_DEPARTMENT_TEMPLATE);
+      if (!downloadResponse.ok) {
+        throw new Error("Failed to download template");
+      }
+
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "department_template.xlsx";

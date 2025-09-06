@@ -9,6 +9,7 @@ import AddClassDialog from "@/components/ui/custom/education/class/AddClassDialo
 import ClassItem from "@/components/ui/custom/education/class/ClassItem";
 import { ClassTable } from "@/components/ui/custom/education/class/ClassTable";
 import { Skeleton } from "@/components/ui/skeleton";
+import { API_CONFIG } from "@/constants/api_config";
 import { BookOpen, ChevronLeft, ChevronRight, Download, Grid, List, Plus, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -101,11 +102,16 @@ const page = () => {
 
   const handleDownloadTemplateClass = async () => {
     try {
-      const response = await classService.downloadClassTemplate();
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const downloadResponse = await fetch(API_CONFIG.DOWNLOAD_CLASS_TEMPLATE);
+      if (!downloadResponse.ok) {
+        throw new Error("Failed to download template");
+      }
+
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "classes_template.xlsx";
+      a.download = "class_template.xlsx";
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (error) {

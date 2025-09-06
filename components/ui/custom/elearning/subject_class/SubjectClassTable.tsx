@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { SubjectClassModel } from "@/app/api/model/SubjectClassModel";
+import { CourseDetailModel } from "@/app/api/model/Course";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,8 +33,8 @@ import {
 import { ArrowUpDown, Calendar, ChevronDown, Clock, MoreHorizontal, TrashIcon, Users } from "lucide-react";
 
 interface SubjectClassTableProps {
-  subjectClasses: SubjectClassModel[];
-  onUpdate?: (updatedSubjectClass: SubjectClassModel) => Promise<void>;
+  subjectClasses: CourseDetailModel[];
+  onUpdate?: (updatedSubjectClass: CourseDetailModel) => Promise<void>;
   onDelete?: (subjectClassIds: string[]) => Promise<void>;
 }
 
@@ -46,7 +46,7 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   // Create columns with access to the onUpdate function
-  const subjectClassColumns: ColumnDef<SubjectClassModel>[] = React.useMemo(
+  const subjectClassColumns: ColumnDef<CourseDetailModel>[] = React.useMemo(
     () => [
       {
         id: "select",
@@ -92,13 +92,13 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
         ),
       },
       {
-        accessorKey: "teacher",
+        accessorKey: "instructor",
         header: ({ column }) => (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Teacher <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => <div className="capitalize font-medium">{row.original.teacher?.name || "-"}</div>,
+        cell: ({ row }) => <div className="capitalize font-medium">{row.original.instructor || "-"}</div>,
       },
       {
         accessorKey: "semester",
@@ -116,17 +116,13 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
         ),
       },
       {
-        accessorKey: "schedule",
+        accessorKey: "schedules",
         header: "Schedule",
         cell: ({ row }) => {
-          const schedule = row.original.schedule;
-          if (!schedule || schedule.length === 0) {
+          const schedules = row.original.schedules;
+          if (!schedules || schedules.length === 0) {
             return <div className="text-center text-muted-foreground">-</div>;
           }
-
-          const scheduleText = schedule
-            .map((s) => `${s.date.charAt(0).toUpperCase() + s.date.slice(1)} ${s.time_of_sheet}`)
-            .join(", ");
 
           return (
             <TooltipProvider>
@@ -135,15 +131,15 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
                   <div className="flex items-center gap-2 cursor-help">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground truncate max-w-32">
-                      {schedule.length} session{schedule.length > 1 ? "s" : ""}
+                      {schedules.length} session{schedules.length > 1 ? "s" : ""}
                     </span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
                   <div className="space-y-1">
-                    {schedule.map((s, index) => (
+                    {schedules.map((s, index) => (
                       <div key={index} className="text-sm">
-                        <strong>{s.date.charAt(0).toUpperCase() + s.date.slice(1)}</strong>: {s.time_of_sheet}
+                        <strong>{s.schedule}</strong>: {s.sections} section{s.sections > 1 ? "s" : ""}
                       </div>
                     ))}
                   </div>
@@ -155,11 +151,11 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
         enableSorting: false,
       },
       {
-        accessorKey: "enrollment",
+        accessorKey: "enrolled",
         header: "Enrollment",
         cell: ({ row }) => {
-          const enrolled = row.original.enrolledStudents?.length || 0;
-          const max = row.original.maxStudents || 0;
+          const enrolled = row.original.enrolled || 0;
+          const max = 50; // Default max students, you might want to add this to the model
           const percentage = max > 0 ? (enrolled / max) * 100 : 0;
 
           return (
@@ -180,25 +176,25 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
         enableSorting: false,
       },
       {
-        accessorKey: "academicYear",
+        accessorKey: "location",
         header: ({ column }) => (
           <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Academic Year <ArrowUpDown className="ml-2 h-4 w-4" />
+            Location <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm">{row.getValue("academicYear") || "-"}</span>
+            <span className="text-sm">{row.getValue("location") || "-"}</span>
           </div>
         ),
       },
       {
-        accessorKey: "isActive",
+        accessorKey: "is_active",
         header: "Status",
         cell: ({ row }) => (
-          <Badge variant={row.getValue("isActive") ? "default" : "secondary"} className="text-xs">
-            {row.getValue("isActive") ? "Active" : "Inactive"}
+          <Badge variant={row.getValue("is_active") ? "default" : "secondary"} className="text-xs">
+            {row.getValue("is_active") ? "Active" : "Inactive"}
           </Badge>
         ),
       },
@@ -265,7 +261,7 @@ export function SubjectClassTable({ subjectClasses, onUpdate, onDelete }: Subjec
     if (!onDelete) return;
 
     try {
-      const selectedIds = selectedSubjectClasses.map((subjectClass) => subjectClass.id!);
+      const selectedIds = selectedSubjectClasses.map((subjectClass) => subjectClass.id.toString());
       await onDelete(selectedIds);
       setRowSelection({});
       setShowDeleteConfirm(false);

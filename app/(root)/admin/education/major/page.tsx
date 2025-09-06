@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import MajorItem from "@/components/ui/custom/education/major/MajorItem";
 import { MajorTable } from "@/components/ui/custom/education/major/MajorTable";
 import { NewMajorDialog } from "@/components/ui/custom/education/major/NewMajorDialog";
+import { API_CONFIG } from "@/constants/api_config";
 import { useDepartments } from "@/hooks/useDeparment";
 import { useMajors } from "@/hooks/useMajor";
 import { Building, Download, GraduationCap, Grid, List, Plus, Search, Upload } from "lucide-react";
@@ -190,8 +191,13 @@ const MajorPage = () => {
 
   const handleDownloadTemplateMajor = async () => {
     try {
-      const response = await majorService.downloadMajorTemplate();
-      const url = window.URL.createObjectURL(new Blob([response]));
+      const downloadResponse = await fetch(API_CONFIG.DOWNLOAD_MAJOR_TEMPLATE);
+      if (!downloadResponse.ok) {
+        throw new Error("Failed to download template");
+      }
+
+      const blob = await downloadResponse.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "major_template.xlsx";

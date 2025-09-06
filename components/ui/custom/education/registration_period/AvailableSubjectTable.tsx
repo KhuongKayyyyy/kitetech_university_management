@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { AvailableSubject } from "@/app/api/model/AvailableSubject";
+import { Course } from "@/app/api/model/Course";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -30,7 +30,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
 
-export const availableSubjectColumns: ColumnDef<AvailableSubject>[] = [
+export const availableSubjectColumns: ColumnDef<Course>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -70,82 +70,83 @@ export const availableSubjectColumns: ColumnDef<AvailableSubject>[] = [
     cell: ({ row }) => <div className="capitalize">{row.getValue("subject_id")}</div>,
   },
   {
-    accessorKey: "subject_name",
+    accessorKey: "description",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Subject Name <ArrowUpDown className="ml-2 h-4 w-4" />
+        Description <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("subject_name")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.getValue("description")}</div>,
   },
   {
-    accessorKey: "day_of_week",
+    accessorKey: "semester",
     header: ({ column }) => (
       <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Day of Week <ArrowUpDown className="ml-2 h-4 w-4" />
+        Semester <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div className="capitalize">{row.getValue("day_of_week")}</div>,
+    cell: ({ row }) => <div className="capitalize">{row.getValue("semester")}</div>,
   },
   {
-    accessorKey: "start_period",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Start Period <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("start_period")}</div>,
-  },
-  {
-    accessorKey: "end_period",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        End Period <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("end_period")}</div>,
-  },
-  {
-    accessorKey: "weeks",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Weeks <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("weeks")}</div>,
-  },
-  {
-    accessorKey: "max_registrations",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Max Registrations <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="text-center">{row.getValue("max_registrations")}</div>,
-  },
-  {
-    accessorKey: "current_registrations",
-    header: ({ column }) => (
-      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        Current Registrations <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
+    accessorKey: "schedules",
+    header: "Schedule",
     cell: ({ row }) => {
-      const current = row.getValue("current_registrations") as number;
-      const max = row.original.max_registrations;
-      const percentage = (current / max) * 100;
-
+      const schedules = row.getValue("schedules") as { sections: number; schedule: string }[];
       return (
         <div className="text-center">
-          <span
-            className={`font-medium ${percentage >= 90 ? "text-red-600" : percentage >= 75 ? "text-yellow-600" : "text-green-600"}`}
-          >
-            {current}
-          </span>
-          <span className="text-muted-foreground"> / {max}</span>
+          {schedules.map((schedule, index) => (
+            <div key={index} className="text-sm">
+              Section {schedule.sections} on {schedule.schedule}
+            </div>
+          ))}
         </div>
       );
     },
+  },
+  {
+    accessorKey: "start_date",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Start Date <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("start_date")}</div>,
+  },
+  {
+    accessorKey: "end_date",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        End Date <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("end_date")}</div>,
+  },
+  {
+    accessorKey: "location",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Location <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("location")}</div>,
+  },
+  {
+    accessorKey: "enrolled",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Enrolled <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="text-center">{row.getValue("enrolled")}</div>,
+  },
+  {
+    accessorKey: "teacher_username",
+    header: ({ column }) => (
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        Teacher <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => <div className="capitalize">{row.getValue("teacher_username")}</div>,
   },
   {
     id: "actions",
@@ -163,7 +164,7 @@ export const availableSubjectColumns: ColumnDef<AvailableSubject>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(availableSubject.id.toString())}>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(availableSubject.subject_id.toString())}>
               Copy Subject ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -177,11 +178,11 @@ export const availableSubjectColumns: ColumnDef<AvailableSubject>[] = [
 ];
 
 interface AvailableSubjectTableProps {
-  availableSubjects: AvailableSubject[];
-  onEditSubject: (subject: AvailableSubject) => void;
-  onViewRegistrations: (subject: AvailableSubject) => void;
-  onDeleteSubject: (subject: AvailableSubject) => void;
-  onAddSubject: (subject: AvailableSubject) => void;
+  availableSubjects: Course[];
+  onEditSubject: (subject: Course) => void;
+  onViewRegistrations: (subject: Course) => void;
+  onDeleteSubject: (subject: Course) => void;
+  onAddSubject: (subject: Course) => void;
 }
 
 export function AvailableSubjectTable({

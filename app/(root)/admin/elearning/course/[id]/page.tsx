@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ClassAnalyticsCards from "@/components/ui/custom/elearning/ClassAnalyticsCards";
 import ClassOverviewCards from "@/components/ui/custom/elearning/ClassOverviewCards";
 import ClassScheduleTab from "@/components/ui/custom/elearning/ClassScheduleTab";
+import ExportDataDialog from "@/components/ui/custom/elearning/ExportDataDialog";
 import ScoreManagementTab from "@/components/ui/custom/elearning/ScoreManagementTab";
 import StudentManagementTab from "@/components/ui/custom/elearning/StudentManagementTab";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -233,6 +234,7 @@ export default function SubjectClassDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingScores, setIsLoadingScores] = useState(false);
   const [isLoadingFormula, setIsLoadingFormula] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   // Fetch course scores
   const fetchCourseScores = async (courseId: number) => {
@@ -539,7 +541,7 @@ export default function SubjectClassDetailPage() {
               <Download className="w-4 h-4 mr-2" />
               Refresh Scores
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setShowExportDialog(true)}>
               <Download className="w-4 h-4 mr-2" />
               Export Data
             </Button>
@@ -600,6 +602,19 @@ export default function SubjectClassDetailPage() {
           <ClassScheduleTab subjectClass={subjectClass} />
         </TabsContent>
       </Tabs>
+
+      {/* Export Data Dialog */}
+      {subjectClass && (
+        <ExportDataDialog
+          open={showExportDialog}
+          onClose={() => setShowExportDialog(false)}
+          subjectClass={subjectClass}
+          courseScores={courseScores}
+          gradingFormula={gradingFormula}
+          studentStats={studentStats}
+        />
+      )}
+
       <Toaster />
     </div>
   );

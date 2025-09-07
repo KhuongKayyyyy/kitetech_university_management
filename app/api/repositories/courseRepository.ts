@@ -84,4 +84,9 @@
     },
 
     getRegistedStudentList: (available_course_id: string) => axiosClient.get(API_CONFIG.GET_REGISTED_STUDENT_LIST(available_course_id)),
+
+    registerStudentToCourse: (course_registration_subject_id: number, user_ids: number[]) => axiosClient.post(API_CONFIG.REGISTER_STUDENT_TO_COURSE, {
+      user_ids: user_ids,
+      course_registration_subject_id: course_registration_subject_id
+    }),
   };

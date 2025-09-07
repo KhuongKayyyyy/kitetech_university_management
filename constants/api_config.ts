@@ -125,4 +125,5 @@ export const API_CONFIG = {
   ADD_AVAILABLE_COURSE: (course_registration_id: string) => `/api/course-registration-management/${course_registration_id}/subjects`,  
   REMOVE_AVAILABLE_COURSE: (available_course_id: string) => `/api/course-registration-management/${available_course_id}/subjects`,
   GET_REGISTED_STUDENT_LIST: (available_course_id : string) => `/api/student-course-registration/admin/${available_course_id}`,
+  REGISTER_STUDENT_TO_COURSE:  `/api/student-course-registration/admin/register-users`,
 };

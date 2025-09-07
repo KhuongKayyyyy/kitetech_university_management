@@ -65,5 +65,10 @@ export const subjectClassService = {
     const response = await courseRepository.getRegistedStudentList(available_course_id);
     return response.data;
   },
+
+  registerStudentToCourse: async (course_registration_subject_id: number, user_ids: number[]) => {
+    const response = await courseRepository.registerStudentToCourse(course_registration_subject_id, user_ids);
+    return response.data;
+  },
 };
 

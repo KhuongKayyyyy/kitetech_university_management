@@ -165,11 +165,10 @@ export default function CreateCurriculumPage() {
           if (subject) {
             allSelectedSubjects.push({
               id: subject.SubjectID,
-              subjectId: subject.SubjectID,
               name: subject.SubjectName,
               credits: subject.TotalCredits,
-              majorId: subject.MajorID,
               faculty_id: 1,
+              gradingFormulaId: 1,
             });
           }
         });

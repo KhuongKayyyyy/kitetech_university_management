@@ -534,16 +534,6 @@ export default function page() {
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filter
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Export
-                      </Button>
-                    </div>
                     <AddAvailableClass
                       onAddClasses={handleAddClasses}
                       alreadyAddedClassIds={
@@ -592,16 +582,6 @@ export default function page() {
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filter
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Export Data
-                      </Button>
-                    </div>
                     <Button onClick={() => setOpenAddAdvailableSubject(true)}>
                       <Plus className="w-4 h-4 mr-2" />
                       Add Subject Class
@@ -645,8 +625,22 @@ export default function page() {
                     throw new Error("Function not implemented.");
                   }}
                   onDeleteSelectedCourses={handleDeleteSelectedCourses}
+                  onRefreshData={async () => {
+                    // Refresh the registration period data to show updated enrollment counts
+                    try {
+                      const updatedPeriod = await registrationPeriodService.getRegistrationPeriod(
+                        parseInt(id as string),
+                      );
+                      setRegistrationPeriod(updatedPeriod);
+                    } catch (error) {
+                      console.error("Error refreshing registration period:", error);
+                      toast.error("Failed to refresh data");
+                    }
+                  }}
                   registrationPeriodId={registrationPeriod.id.toString()}
-                  registrationPeriodName={registrationPeriod.description || `Registration Period ${registrationPeriod.id}`}
+                  registrationPeriodName={
+                    registrationPeriod.description || `Registration Period ${registrationPeriod.id}`
+                  }
                 />
               </div>
             </div>

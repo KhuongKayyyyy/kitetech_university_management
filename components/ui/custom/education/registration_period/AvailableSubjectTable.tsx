@@ -4,6 +4,8 @@ import * as React from "react";
 
 import RegistedStudentList from "@/app/(root)/admin/education/subject/RegistedStudentList";
 import { Course } from "@/app/api/model/Course";
+import { UserModel } from "@/app/api/model/UserModel";
+import { subjectClassService } from "@/app/api/services/courseService";
 import { ExportService } from "@/app/api/services/exportService";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,12 +32,16 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, Download, MoreHorizontal, TrashIcon } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Download, MoreHorizontal, TrashIcon, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
+import AvailableStudentToAdd from "./AvailableStudentToAdd";
 import { ConfirmDeleteCoursesDialog } from "./ConfirmDeleteCoursesDialog";
 
-const createAvailableSubjectColumns = (onViewRegistrations: (course: Course) => void): ColumnDef<Course>[] => [
+const createAvailableSubjectColumns = (
+  onViewRegistrations: (course: Course) => void,
+  onAddStudentsToCourse: (course: Course) => void,
+): ColumnDef<Course>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -178,6 +184,7 @@ const createAvailableSubjectColumns = (onViewRegistrations: (course: Course) => 
             <DropdownMenuItem onClick={() => onViewRegistrations(availableSubject)}>
               View Registrations
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAddStudentsToCourse(availableSubject)}>Add Students</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -192,6 +199,7 @@ interface AvailableSubjectTableProps {
   onDeleteSubject: (subject: Course) => void;
   onAddSubject: (subject: Course) => void;
   onDeleteSelectedCourses: (courseIds: number[]) => void;
+  onRefreshData?: () => void; // Callback to refresh the data after student registration
   registrationPeriodId?: string;
   registrationPeriodName?: string;
 }
@@ -203,6 +211,7 @@ export function AvailableSubjectTable({
   onDeleteSubject,
   onAddSubject,
   onDeleteSelectedCourses,
+  onRefreshData,
   registrationPeriodId,
   registrationPeriodName,
 }: AvailableSubjectTableProps) {
@@ -215,16 +224,85 @@ export function AvailableSubjectTable({
   const [showStudentList, setShowStudentList] = React.useState(false);
   const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
   const [isExporting, setIsExporting] = React.useState(false);
+  const [showAddStudentsDialog, setShowAddStudentsDialog] = React.useState(false);
+  const [courseForAddingStudents, setCourseForAddingStudents] = React.useState<Course | null>(null);
+  const [registeredStudentIds, setRegisteredStudentIds] = React.useState<number[]>([]);
+  const [isRegisteringStudents, setIsRegisteringStudents] = React.useState(false);
 
   const handleViewRegistrations = (course: Course) => {
     setSelectedCourse(course);
     setShowStudentList(true);
   };
 
+  const fetchRegisteredStudents = async (courseId: string) => {
+    try {
+      const registeredStudents = await subjectClassService.getRegistedStudentList(courseId);
+      const studentIds = registeredStudents.map((student: any) => student.id);
+      setRegisteredStudentIds(studentIds);
+      return studentIds;
+    } catch (error) {
+      console.error("Error fetching registered students:", error);
+      setRegisteredStudentIds([]);
+      return [];
+    }
+  };
+
+  const handleAddStudentsToCourse = async (course: Course) => {
+    setCourseForAddingStudents(course);
+
+    // Fetch currently registered students to exclude them from the selection
+    await fetchRegisteredStudents(course.id.toString());
+
+    setShowAddStudentsDialog(true);
+  };
+
+  const handleStudentsSelected = async (selectedStudents: UserModel[]) => {
+    if (!courseForAddingStudents) return;
+
+    try {
+      setIsRegisteringStudents(true);
+
+      // Extract user IDs from selected students
+      const userIds = selectedStudents.map((student) => student.id!);
+
+      console.log(`Registering ${selectedStudents.length} students to course:`, courseForAddingStudents.subject_name);
+      console.log("Selected students:", selectedStudents);
+      console.log("User IDs:", userIds);
+      console.log("Course registration subject ID:", courseForAddingStudents.id);
+
+      // Call the API to register students to the course
+      await subjectClassService.registerStudentToCourse(courseForAddingStudents.id, userIds);
+
+      toast.success(
+        `Successfully registered ${selectedStudents.length} students to ${courseForAddingStudents.subject_name}`,
+      );
+
+      // Close the dialog
+      setShowAddStudentsDialog(false);
+      setCourseForAddingStudents(null);
+      setRegisteredStudentIds([]);
+
+      // Refresh the data to update enrollment counts and registered students list
+      if (onRefreshData) {
+        onRefreshData();
+      }
+    } catch (error) {
+      console.error("Error registering students to course:", error);
+      toast.error("Failed to register students to the course. Please try again.");
+    } finally {
+      setIsRegisteringStudents(false);
+    }
+  };
+
   const handleExportToExcel = async () => {
     try {
       if (!registrationPeriodId) {
         toast.error("Registration period ID is required for export");
+        return;
+      }
+
+      if (!availableSubjects || availableSubjects.length === 0) {
+        toast.error("No courses available to export");
         return;
       }
 
@@ -236,10 +314,12 @@ export function AvailableSubjectTable({
       };
 
       await ExportService.exportAvailableCoursesToExcel(exportData);
-      toast.success("Excel file exported successfully!");
+      toast.success(
+        `Excel file exported successfully! ${availableSubjects.length} courses with student data included.`,
+      );
     } catch (error) {
       console.error("Error exporting to Excel:", error);
-      toast.error("Failed to export Excel file");
+      toast.error("Failed to export Excel file. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -247,7 +327,7 @@ export function AvailableSubjectTable({
 
   const table = useReactTable({
     data: availableSubjects,
-    columns: createAvailableSubjectColumns(handleViewRegistrations),
+    columns: createAvailableSubjectColumns(handleViewRegistrations, handleAddStudentsToCourse),
     state: {
       sorting,
       columnFilters,
@@ -337,15 +417,20 @@ export function AvailableSubjectTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="shadow-md" 
+          <Button
+            variant="outline"
+            size="sm"
+            className="shadow-md"
             onClick={handleExportToExcel}
-            disabled={isExporting}
+            disabled={isExporting || availableSubjects.length === 0}
+            title={
+              availableSubjects.length === 0
+                ? "No courses to export"
+                : `Export ${availableSubjects.length} courses with student data`
+            }
           >
-            <Download className="w-4 h-4 mr-2" /> 
-            {isExporting ? "Exporting..." : "Export Excel"}
+            <Download className="w-4 h-4 mr-2" />
+            {isExporting ? "Exporting..." : `Export Excel (${availableSubjects.length} courses)`}
           </Button>
 
           {isAnyRowSelected && (
@@ -381,7 +466,15 @@ export function AvailableSubjectTable({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={createAvailableSubjectColumns(() => {}).length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={
+                      createAvailableSubjectColumns(
+                        () => {},
+                        () => {},
+                      ).length
+                    }
+                    className="h-24 text-center"
+                  >
                     No available subjects found.
                   </TableCell>
                 </TableRow>
@@ -465,6 +558,15 @@ export function AvailableSubjectTable({
           courseName={selectedCourse.subject_name}
         />
       )}
+
+      <AvailableStudentToAdd
+        isOpen={showAddStudentsDialog}
+        onOpenChange={setShowAddStudentsDialog}
+        onStudentsSelected={handleStudentsSelected}
+        title={`Add Students to ${courseForAddingStudents?.subject_name || "Course"}`}
+        description={`Select students to register for ${courseForAddingStudents?.subject_name || "this course"}. Already registered students are excluded from the list.`}
+        alreadySelectedStudentIds={registeredStudentIds}
+      />
     </div>
   );
 }

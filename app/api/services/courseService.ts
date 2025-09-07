@@ -60,5 +60,10 @@ export const subjectClassService = {
     const response = await courseRepository.importStudentsToCourse(file);
     return response.data;
   },
+
+  getRegistedStudentList: async (available_course_id: string) => {
+    const response = await courseRepository.getRegistedStudentList(available_course_id);
+    return response.data;
+  },
 };
 

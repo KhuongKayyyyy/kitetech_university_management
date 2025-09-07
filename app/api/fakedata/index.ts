@@ -29,11 +29,10 @@ export const curriculumData = [
     id: 1,
     name: FakeCurriculumInfo.name,
     academicYear: FakeCurriculumInfo.academicYear,
-    departmentId: FakeCurriculumInfo.facultyId,
-    majorId: FakeCurriculumInfo.majorId,
+    departmentId: FakeCurriculumInfo.facultyId.toString(),
+    majorId: FakeCurriculumInfo.majorId.toString(),
     totalCredits: FakeCurriculumInfo.totalCredits,
-    totalCourses: Object.keys(FakeCurriculumSubjects).length,
-    status: "active"
+    totalCourses: Object.keys(FakeCurriculumSubjects).length
   }
 ];
 

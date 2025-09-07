@@ -41,7 +41,17 @@ export default function Page() {
   const [majors, setMajors] = useState<MajorModel[]>(
     allMajorsWithDept.filter((major) => major !== undefined) as MajorModel[],
   );
-  const [curriculums, setCurriculums] = useState<CurriculumModel[]>(curriculumData);
+  const [curriculums, setCurriculums] = useState<CurriculumModel[]>([
+    {
+      id: 1,
+      name: "Computer Science Curriculum",
+      academicYear: "2024-2025",
+      departmentId: "1",
+      majorId: "1",
+      totalCredits: 120,
+      totalCourses: 40
+    }
+  ]);
 
   const params = useParams();
   const searchParams = useSearchParams();

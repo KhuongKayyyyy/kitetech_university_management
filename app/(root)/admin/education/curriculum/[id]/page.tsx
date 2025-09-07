@@ -4,6 +4,7 @@ import React from "react";
 
 import { curriculumData } from "@/app/api/fakedata";
 import { FakeCurriculumSubjects } from "@/app/api/fakedata/FakeCurriculumV2Data";
+import { CurriculumModel } from "@/app/api/model/CurriculumModel";
 import { CurriculumnSubjectModel } from "@/app/api/model/CurriculumnSubjectModel";
 import { Button } from "@/components/ui/button";
 import CurriculumItem from "@/components/ui/custom/education/curriculum/CurriculumItem";
@@ -34,7 +35,19 @@ export default function page() {
       </div>
 
       {/* Curriculum Item */}
-      <CurriculumItem curriculum={curriculumData[0] as CurriculumModel} onEdit={() => {}} onDelete={() => {}} />
+      <CurriculumItem 
+        curriculum={{
+          id: 1,
+          name: "Computer Science Curriculum",
+          academicYear: "2024-2025",
+          departmentId: "1",
+          majorId: "1",
+          totalCredits: 120,
+          totalCourses: 40
+        }} 
+        onEdit={() => {}} 
+        onDelete={() => {}} 
+      />
 
       {/* Generated Curriculum Board - Using V2 Data */}
       <GeneratedCurriBoard subjects={curriculumSubjectsArray} />

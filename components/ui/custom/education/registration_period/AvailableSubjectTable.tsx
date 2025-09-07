@@ -2,7 +2,9 @@
 
 import * as React from "react";
 
+import RegistedStudentList from "@/app/(root)/admin/education/subject/RegistedStudentList";
 import { Course } from "@/app/api/model/Course";
+import { ExportService } from "@/app/api/services/exportService";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,11 +30,12 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, TrashIcon } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Download, MoreHorizontal, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { ConfirmDeleteCoursesDialog } from "./ConfirmDeleteCoursesDialog";
 
-export const availableSubjectColumns: ColumnDef<Course>[] = [
+const createAvailableSubjectColumns = (onViewRegistrations: (course: Course) => void): ColumnDef<Course>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -144,8 +147,9 @@ export const availableSubjectColumns: ColumnDef<Course>[] = [
       const maxStudent = row.original.max_student;
       return (
         <div className="text-center">
-          <span className="font-medium">{enrolled}</span>
-          <span className="text-muted-foreground">/{maxStudent}</span>
+          <span className="font-medium">
+            {enrolled}/{maxStudent}
+          </span>
         </div>
       );
     },
@@ -171,7 +175,9 @@ export const availableSubjectColumns: ColumnDef<Course>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Edit Subject</DropdownMenuItem>
-            <DropdownMenuItem>View Registrations</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewRegistrations(availableSubject)}>
+              View Registrations
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -186,6 +192,8 @@ interface AvailableSubjectTableProps {
   onDeleteSubject: (subject: Course) => void;
   onAddSubject: (subject: Course) => void;
   onDeleteSelectedCourses: (courseIds: number[]) => void;
+  registrationPeriodId?: string;
+  registrationPeriodName?: string;
 }
 
 export function AvailableSubjectTable({
@@ -195,6 +203,8 @@ export function AvailableSubjectTable({
   onDeleteSubject,
   onAddSubject,
   onDeleteSelectedCourses,
+  registrationPeriodId,
+  registrationPeriodName,
 }: AvailableSubjectTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -202,10 +212,42 @@ export function AvailableSubjectTable({
   const [rowSelection, setRowSelection] = React.useState({});
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [showStudentList, setShowStudentList] = React.useState(false);
+  const [selectedCourse, setSelectedCourse] = React.useState<Course | null>(null);
+  const [isExporting, setIsExporting] = React.useState(false);
+
+  const handleViewRegistrations = (course: Course) => {
+    setSelectedCourse(course);
+    setShowStudentList(true);
+  };
+
+  const handleExportToExcel = async () => {
+    try {
+      if (!registrationPeriodId) {
+        toast.error("Registration period ID is required for export");
+        return;
+      }
+
+      setIsExporting(true);
+      const exportData = {
+        registrationPeriodId,
+        registrationPeriodName: registrationPeriodName || `Registration Period ${registrationPeriodId}`,
+        courses: availableSubjects,
+      };
+
+      await ExportService.exportAvailableCoursesToExcel(exportData);
+      toast.success("Excel file exported successfully!");
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export Excel file");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const table = useReactTable({
     data: availableSubjects,
-    columns: availableSubjectColumns,
+    columns: createAvailableSubjectColumns(handleViewRegistrations),
     state: {
       sorting,
       columnFilters,
@@ -295,6 +337,17 @@ export function AvailableSubjectTable({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="shadow-md" 
+            onClick={handleExportToExcel}
+            disabled={isExporting}
+          >
+            <Download className="w-4 h-4 mr-2" /> 
+            {isExporting ? "Exporting..." : "Export Excel"}
+          </Button>
+
           {isAnyRowSelected && (
             <Button variant="destructive" size="sm" className="text-white shadow-md" onClick={handleDeleteSelected}>
               <TrashIcon className="w-4 h-4 mr-2" /> Delete Selected
@@ -328,7 +381,7 @@ export function AvailableSubjectTable({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={availableSubjectColumns.length} className="h-24 text-center">
+                  <TableCell colSpan={createAvailableSubjectColumns(() => {}).length} className="h-24 text-center">
                     No available subjects found.
                   </TableCell>
                 </TableRow>
@@ -403,6 +456,15 @@ export function AvailableSubjectTable({
         courseNames={selectedCourseNames}
         isLoading={isDeleting}
       />
+
+      {selectedCourse && (
+        <RegistedStudentList
+          isOpen={showStudentList}
+          onOpenChange={setShowStudentList}
+          availableCourseId={selectedCourse.id.toString()}
+          courseName={selectedCourse.subject_name}
+        />
+      )}
     </div>
   );
 }

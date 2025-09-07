@@ -20,6 +20,7 @@ export interface Course {
   location: string;
   enrolled: number;
   max_student: number;
+  teacher_username: string;
 }
 
 export interface CourseMember {
@@ -74,12 +75,18 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     description: "Fundamentals of programming using C language.",
     schedules: [
       {
+        id: 1,
         sections: 2,
-        schedule: "Monday"
+        schedule: "Monday",
+        created_at: "2025-09-06T11:09:14.752Z",
+        updated_at: "2025-09-06T11:09:14.752Z"
       },
       {
+        id: 2,
         sections: 4,
-        schedule: "Wednesday"
+        schedule: "Wednesday",
+        created_at: "2025-09-06T11:09:14.752Z",
+        updated_at: "2025-09-06T11:09:14.752Z"
       }
     ],
     start_date: "2025-09-06",
@@ -96,12 +103,18 @@ export const MOCK_AVAILABLE_SUBJECTS: Course[] = [
     description: "Advanced mathematics for computer science.",
     schedules: [
       {
+        id: 5,
         sections: 3,
-        schedule: "Tuesday"
+        schedule: "Tuesday",
+        created_at: "2025-09-06T11:09:14.752Z",
+        updated_at: "2025-09-06T11:09:14.752Z"
       },
       {
+        id: 6,
         sections: 2,
-        schedule: "Thursday"
+        schedule: "Thursday",
+        created_at: "2025-09-06T11:09:14.752Z",
+        updated_at: "2025-09-06T11:09:14.752Z"
       }
     ],
     start_date: "2025-09-06",

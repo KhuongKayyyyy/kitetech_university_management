@@ -599,7 +599,7 @@ export default function page() {
                       </Button>
                       <Button variant="outline" size="sm">
                         <Download className="w-4 h-4 mr-2" />
-                        Export
+                        Export Data
                       </Button>
                     </div>
                     <Button onClick={() => setOpenAddAdvailableSubject(true)}>
@@ -627,8 +627,9 @@ export default function page() {
                       start_date: crs.start_date,
                       end_date: crs.end_date,
                       location: crs.location,
-                      enrolled: 0, // This would need to be calculated from actual enrollments
+                      enrolled: crs.studentCourseRegistrations?.length || 0,
                       max_student: crs.max_student,
+                      teacher_username: "N/A", // Placeholder since this data isn't available in the current API response
                     })) || []
                   }
                   onEditSubject={function (subject: Course): void {
@@ -644,6 +645,8 @@ export default function page() {
                     throw new Error("Function not implemented.");
                   }}
                   onDeleteSelectedCourses={handleDeleteSelectedCourses}
+                  registrationPeriodId={registrationPeriod.id.toString()}
+                  registrationPeriodName={registrationPeriod.description || `Registration Period ${registrationPeriod.id}`}
                 />
               </div>
             </div>

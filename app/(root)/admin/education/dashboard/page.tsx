@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from "react";
 
 import { AcademicYearModel } from "@/app/api/model/AcademicYearModel";
-import { MOCK_SEMESTERS } from "@/app/api/model/SemesterModel";
+import { SemesterModel } from "@/app/api/model/SemesterModel";
 import { MOCK_SEMESTER_WEEKS } from "@/app/api/model/SemesterWeekModel";
 import { academicYearService } from "@/app/api/services/academicYearService";
+import { semesterService } from "@/app/api/services/semesterService";
 import { Button } from "@/components/ui/button";
 import AcademicYearSection from "@/components/ui/custom/education/academic_year/AcademicYearSection";
 import AddAcademicYearDialog from "@/components/ui/custom/education/academic_year/AddAcademicYearDialog";
@@ -17,10 +18,10 @@ import { BookOpen, Building2, Calendar, GraduationCap, Plus, Users } from "lucid
 
 export default function Page() {
   const [academicYear, setAcademicYear] = useState<AcademicYearModel[]>([]);
+  const [semesters, setSemesters] = useState<SemesterModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [semestersLoading, setSemestersLoading] = useState(true);
   const [open, setOpen] = useState(false);
-
-  const { semesters, setSemesters, loading: semestersLoading, error: semestersError } = useSemesters();
 
   useEffect(() => {
     const fetchAcademicYears = async () => {
@@ -34,6 +35,20 @@ export default function Page() {
       }
     };
     fetchAcademicYears();
+  }, []);
+
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      try {
+        const semesterData = await semesterService.getSemesters();
+        setSemesters(semesterData);
+      } catch (error) {
+        console.error("Failed to fetch semesters", error);
+      } finally {
+        setSemestersLoading(false);
+      }
+    };
+    fetchSemesters();
   }, []);
 
   const statsData = [
@@ -83,7 +98,7 @@ export default function Page() {
     }
   };
 
-  if (loading) {
+  if (loading || semestersLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg text-gray-600">Loading...</div>
@@ -142,7 +157,7 @@ export default function Page() {
 
       {/* Semester Weeks Section */}
       <div className="mb-8">
-        <SemesterWeekSection weeks={MOCK_SEMESTER_WEEKS} semesters={MOCK_SEMESTERS} />
+        <SemesterWeekSection weeks={MOCK_SEMESTER_WEEKS} semesters={semesters} />
       </div>
 
       {/* Add Academic Year Dialog */}

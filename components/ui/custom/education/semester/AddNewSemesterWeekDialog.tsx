@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { MOCK_SEMESTERS, SemesterModel } from "@/app/api/model/SemesterModel";
+import { SemesterModel } from "@/app/api/model/SemesterModel";
 import { SemesterWeekModel } from "@/app/api/model/SemesterWeekModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +35,7 @@ export default function AddNewSemesterWeekDialog({
   onOpenChange,
   onSemesterWeekAdd,
   trigger,
-  semesters = MOCK_SEMESTERS,
+  semesters = [],
   selectedSemester,
 }: AddNewSemesterWeekDialogProps) {
   const [formData, setFormData] = useState<Omit<SemesterWeekModel, "id">>({

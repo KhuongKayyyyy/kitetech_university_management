@@ -50,6 +50,32 @@ export interface CourseRegistrationSchedule {
   updated_at: string;
 }
 
+export interface StudentCourseRegistration {
+  id: number;
+  user_id: number;
+  course_registration_subject_id: number;
+  status: string;
+  registered_at: string;
+  notes: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegisteredStudent {
+  id: number;
+  username: string;
+  password: string;
+  role: string;
+  full_name: string;
+  email: string;
+  isActive: boolean;
+  isDeleted: boolean;
+  faculty_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CourseRegistrationSubject {
   id: number;
   course_registration_id: number;
@@ -64,6 +90,7 @@ export interface CourseRegistrationSubject {
   updated_at: string;
   subject: Subject;
   courseRegistrationSchedules: CourseRegistrationSchedule[];
+  studentCourseRegistrations: StudentCourseRegistration[];
 }
 
 export interface Semester {
@@ -231,6 +258,19 @@ export const mockRegistrationPeriods: RegistrationPeriod[] = [
             created_at: "2025-09-06T11:09:14.752Z",
             updated_at: "2025-09-06T11:09:14.752Z"
           }
+        ],
+        studentCourseRegistrations: [
+          {
+            id: 9,
+            user_id: 54,
+            course_registration_subject_id: 2,
+            status: "Approved",
+            registered_at: "2025-09-07T10:59:07.000Z",
+            notes: null,
+            rejection_reason: null,
+            created_at: "2025-09-07T03:59:12.964Z",
+            updated_at: "2025-09-07T03:59:12.964Z"
+          }
         ]
       },
       {
@@ -271,6 +311,30 @@ export const mockRegistrationPeriods: RegistrationPeriod[] = [
             schedule: "Wednesday",
             created_at: "2025-09-06T13:47:48.746Z",
             updated_at: "2025-09-06T13:47:48.746Z"
+          }
+        ],
+        studentCourseRegistrations: [
+          {
+            id: 6,
+            user_id: 53,
+            course_registration_subject_id: 3,
+            status: "Approved",
+            registered_at: "2025-09-07T10:45:39.000Z",
+            notes: null,
+            rejection_reason: null,
+            created_at: "2025-09-07T03:45:44.330Z",
+            updated_at: "2025-09-07T03:45:44.330Z"
+          },
+          {
+            id: 8,
+            user_id: 54,
+            course_registration_subject_id: 3,
+            status: "Approved",
+            registered_at: "2025-09-07T10:59:07.000Z",
+            notes: null,
+            rejection_reason: null,
+            created_at: "2025-09-07T03:59:12.964Z",
+            updated_at: "2025-09-07T03:59:12.964Z"
           }
         ]
       }
